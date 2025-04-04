@@ -272,6 +272,10 @@ PrefabInstance:
       propertyPath: cameraShake
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6764649303477741847, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
+      propertyPath: initialSpeed
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 8701067600650517779, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
       propertyPath: m_Name
       value: Player
