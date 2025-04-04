@@ -1,5 +1,4 @@
 using UnityEngine;
-using static UnityEngine.UI.GridLayoutGroup;
 
 [ExecuteAlways]
 public class PlayerController : MonoBehaviour
@@ -9,7 +8,7 @@ public class PlayerController : MonoBehaviour
         FirstPerson,
         ThirdPerson
     }
-    [HideInInspector] public CharacterController controller;
+    [HideInInspector] public Rigidbody rb; // Changed from CharacterController to Rigidbody
     [HideInInspector] public Animator anim;
 
     [SerializeField] CameraType cameraType;
@@ -27,8 +26,6 @@ public class PlayerController : MonoBehaviour
 
     [Header("Mouse Look Settings")]
     public float mouseSensitivity = 2f;
-
-    
 
     [Header("DO NOT TOUCH")]
     [HideInInspector] public Camera camera;
@@ -55,7 +52,7 @@ public class PlayerController : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Locked;
         SetUpCamera();
-        controller = GetComponent<CharacterController>();
+        rb = GetComponent<Rigidbody>(); // Get Rigidbody instead of CharacterController
         anim = GetComponent<Animator>();
         initialSpeed = speed;
         if (cameraType == CameraType.FirstPerson)
@@ -65,13 +62,11 @@ public class PlayerController : MonoBehaviour
                 camera.transform.SetParent(fpsCamera);
                 camera.transform.localPosition = Vector3.zero;
             }
-            
         }
-
         spawnPoint = transform.position;
     }
 
-    void Update()
+    void FixedUpdate() // Changed to FixedUpdate for physics-based movement
     {
         if (Application.isPlaying)
         {
@@ -89,13 +84,21 @@ public class PlayerController : MonoBehaviour
         else
         {
             SetUpCamera();
+            foreach (GameObject cam in GameObject.FindGameObjectsWithTag("MainCamera"))
+            {
+                if (cam != camera.gameObject)
+                {
+                    DestroyImmediate(cam);
+                }
+            }
         }
     }
 
     void HandleMovement()
     {
-        isGrounded = controller.isGrounded;
-        if (isGrounded && velocity.y < 0)
+        // Check if grounded using Physics.Raycast
+        isGrounded = Physics.Raycast(transform.position, Vector3.down, 1.1f);
+        if (isGrounded && rb.linearVelocity.y < 0)
         {
             velocity.y = -2f;
         }
@@ -106,8 +109,8 @@ public class PlayerController : MonoBehaviour
         Vector3 move;
         if (!isSliding)
         {
-            move = transform.right * horizontal + transform.forward * vertical;
-            controller.Move(move * speed * Time.deltaTime);
+            move = (transform.right * horizontal + transform.forward * vertical).normalized;
+            rb.MovePosition(rb.position + move * speed * Time.fixedDeltaTime);
         }
 
         if (Input.GetButtonDown("Jump") && isGrounded)
@@ -115,8 +118,9 @@ public class PlayerController : MonoBehaviour
             Jump();
         }
 
-        velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+        // Apply gravity
+        velocity.y += gravity * Time.fixedDeltaTime;
+        rb.AddForce(velocity * Time.fixedDeltaTime, ForceMode.VelocityChange);
 
         if (!isSliding)
         {
@@ -126,11 +130,13 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void Jump()
+    public void Jump()
     {
         anim.SetTrigger("jump");
-        velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, Mathf.Sqrt(jumpHeight * -2f * gravity), rb.linearVelocity.z);
     }
+
+    // Your existing HandleMouseLook and SetUpCamera methods remain unchanged
 
     void HandleMouseLook()
     {
@@ -146,13 +152,10 @@ public class PlayerController : MonoBehaviour
         }
         else if (cameraType == CameraType.ThirdPerson)
         {
-            // Update camera rotation
             tpsYaw += mouseX;
             tpsPitch -= mouseY;
             tpsPitch = Mathf.Clamp(tpsPitch, -20f, 60f);
             tpsCameraPivot.rotation = Quaternion.Euler(tpsPitch, tpsYaw, 0f);
-
-            // Update player rotation to match camera's Y rotation
             transform.rotation = Quaternion.Euler(0f, tpsYaw, 0f);
         }
     }
@@ -162,9 +165,7 @@ public class PlayerController : MonoBehaviour
         switch (cameraType)
         {
             case CameraType.FirstPerson:
-                
                 camera.transform.position = fpsCamera.position;
-                
                 camera.transform.rotation = Quaternion.Euler(transform.forward);
                 break;
             case CameraType.ThirdPerson:
@@ -175,6 +176,18 @@ public class PlayerController : MonoBehaviour
                 break;
         }
         camera.fieldOfView = cameraFOV;
+    }
+
+    // New collision methods
+    void OnCollisionEnter(Collision collision)
+    {
+        // Add your collision handling code here
+        Debug.Log("Collided with: " + collision.gameObject.name);
+    }
+
+    void OnCollisionStay(Collision collision)
+    {
+        // Add your continuous collision handling code here
     }
 
     public float GetAnimationLength(string animationName)
@@ -191,7 +204,7 @@ public class PlayerController : MonoBehaviour
 
     public void Respawn()
     {
-        controller.enabled = false;
+        rb.linearVelocity = Vector3.zero;
         Debug.Log("Respawning");
         if (lastCheckpoint == Vector3.zero)
         {
@@ -199,7 +212,6 @@ public class PlayerController : MonoBehaviour
             this.transform.position = spawnPoint;
         }
         else this.transform.position = lastCheckpoint;
-        controller.enabled = true;
     }
 
     public void OnTriggerEnter(Collider other)
@@ -215,7 +227,5 @@ public class PlayerController : MonoBehaviour
                 Respawn();
             }
         }
-        
     }
-
 }

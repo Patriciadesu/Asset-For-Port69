@@ -13,8 +13,9 @@ public class MultipleJump : PlayerExtension
 
         if (Input.GetKeyDown(activateKey) && jumpCount < maxJumps)
         {
-            player.velocity.y = Mathf.Sqrt(player.jumpHeight * -2f * player.gravity);
-            player.anim.SetTrigger("jump");
+            if (jumpCount == 0) { 
+                player.Jump();
+            }
             jumpCount++;
         }
     }

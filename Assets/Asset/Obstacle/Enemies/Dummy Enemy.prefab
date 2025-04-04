@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5799072965341674289}
   m_Layer: 0
   m_Name: Dummy Enemy
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -103,6 +103,7 @@ MonoBehaviour:
   shootingType: 0
   detectionBehavior: 1
   showDetectionRange: 1
+  canDestroy: 0
   detectionRange: 10
   detectionTime: 1.5
   fireRate: 1
@@ -110,7 +111,7 @@ MonoBehaviour:
   maxDetectionAngle: 30
   bulletPrefab: {fileID: 6178862386368883232, guid: 9b3381ba3d384b44ab846f79ad74dc21, type: 3}
   firePoint: {fileID: 6597308420030671422}
-  bulletLifeTime: 2
+  bulletLifeTime: 5
   bulletSpeed: 5
   player: {fileID: 0}
   detectionAngle: 0

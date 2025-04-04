@@ -9,13 +9,14 @@ public class Roll : PlayerExtension
     private Vector3 slideDirection;
     private float slideAnimSpeed;
 
-
     public override void Apply(PlayerController player)
     {
-        if(_player == null) _player = player;
-        if (player.isSliding) 
+        if (_player == null) _player = player;
+        if (player.isSliding)
         {
-            player.controller.Move((slideDirection * slideSpeed) * player.speed * Time.deltaTime);
+            // Changed from controller.Move to Rigidbody movement
+            Vector3 slideVelocity = (slideDirection * slideSpeed) * player.speed;
+            _player.rb.linearVelocity = new Vector3(slideVelocity.x, _player.rb.linearVelocity.y, slideVelocity.z);
         }
         else
         {
@@ -23,19 +24,33 @@ public class Roll : PlayerExtension
             {
                 slideAnimSpeed = slideSpeed / player.GetAnimationLength("Slide");
                 player.isSliding = true;
-                player.controller.height /= 2;
-                player.controller.center = new Vector3(player.controller.center.x, player.controller.center.y / 2, player.controller.center.z);
+
+                // Modify collider instead of controller properties
+                CapsuleCollider collider = player.GetComponent<CapsuleCollider>();
+                if (collider != null)
+                {
+                    collider.height /= 2;
+                    collider.center = new Vector3(collider.center.x, collider.center.y / 2, collider.center.z);
+                }
+
                 slideDirection = player.transform.forward; // Lock slide direction
                 player.anim.speed = slideAnimSpeed;
                 player.anim.SetTrigger("Slide");
-                this.Invoke("StopSlide", slideDuration+0.25f);
+                this.Invoke("StopSlide", slideDuration + 0.25f);
             }
         }
     }
+
     void StopSlide()
     {
-        _player.controller.height *= 2;
-        _player.controller.center = new Vector3(_player.controller.center.x, _player.controller.center.y * 2, _player.controller.center.z);
+        // Modify collider back instead of controller
+        CapsuleCollider collider = _player.GetComponent<CapsuleCollider>();
+        if (collider != null)
+        {
+            collider.height *= 2;
+            collider.center = new Vector3(collider.center.x, collider.center.y * 2, collider.center.z);
+        }
+
         _player.isSliding = false;
         _player.anim.speed = 1;
     }
