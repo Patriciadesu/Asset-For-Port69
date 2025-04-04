@@ -41,7 +41,7 @@ public class PlayerController : MonoBehaviour
     private float tpsYaw = 0f;
     private float tpsPitch = 10f;
 
-    [SerializeReference] public PlayerExtension[] extensions;
+    private PlayerExtension[] extensions;
 
     // Player States
     [HideInInspector] public bool isSliding = false;
@@ -223,5 +223,10 @@ public class PlayerController : MonoBehaviour
                 Respawn();
             }
         }
+    }
+
+    public void RefreshExtension()
+    {
+        extensions = GetComponents<PlayerExtension>();
     }
 }

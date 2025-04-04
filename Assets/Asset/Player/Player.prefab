@@ -5876,9 +5876,9 @@ GameObject:
   m_Component:
   - component: {fileID: 4650198011838732946}
   - component: {fileID: 5615009900942704330}
-  - component: {fileID: 6764649303477741847}
   - component: {fileID: 1611693637559534253}
   - component: {fileID: 828572469451222913}
+  - component: {fileID: 6764649303477741847}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -5929,47 +5929,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &6764649303477741847
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8701067600650517779}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 400a17ab5c91a1249a0ade3fe6c30bc4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rb: {fileID: 1611693637559534253}
-  anim: {fileID: 5615009900942704330}
-  cameraType: 0
-  cameraShake: 0
-  cameraFOV: 60.4
-  cameraOffsetX: 0
-  cameraOffsetY: 0
-  cameraLookUp: 1
-  speed: 5
-  initialSpeed: 5
-  jumpHeight: 1.5
-  gravity: -9.81
-  mouseSensitivity: 2
-  camera: {fileID: 665297410919183699}
-  fpsCamera: {fileID: 8759067225569670240}
-  tpsCamera: {fileID: 4518386566613520550}
-  tpsCameraPivot: {fileID: 6390838078909368975}
-  velocity: {x: 0, y: 0, z: 0}
-  lastCheckpoint: {x: 0, y: 0, z: 0}
-  spawnPoint: {x: 509, y: 0, z: 599}
-  extensions:
-  - {fileID: 7016952246544214502, guid: 378eaa287d2269546a72408821d1213e, type: 3}
-  - {fileID: 5702177974832692514, guid: 54f0877aa83b6804a8a0a1d58a1ba5cb, type: 3}
-  - {fileID: 6916309515191236655, guid: f14ec9526b0dc214999a832232e852ee, type: 3}
-  - {fileID: 4502731809338924304, guid: a543bed0804748e4088f8b560ef8540b, type: 3}
-  isSliding: 0
-  isGrounded: 0
-  isReflecting: 0
-  isCrouching: 0
 --- !u!54 &1611693637559534253
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -6020,6 +5979,43 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &6764649303477741847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8701067600650517779}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 400a17ab5c91a1249a0ade3fe6c30bc4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rb: {fileID: 1611693637559534253}
+  anim: {fileID: 5615009900942704330}
+  cameraType: 0
+  cameraShake: 0
+  cameraFOV: 60.4
+  cameraOffsetX: 0
+  cameraOffsetY: 0
+  cameraLookUp: 1
+  speed: 5
+  initialSpeed: 5
+  jumpHeight: 1.5
+  gravity: -9.81
+  speedMultiplier: 1
+  mouseSensitivity: 2
+  camera: {fileID: 665297410919183699}
+  fpsCamera: {fileID: 8759067225569670240}
+  tpsCamera: {fileID: 4518386566613520550}
+  tpsCameraPivot: {fileID: 6390838078909368975}
+  velocity: {x: 0, y: 0, z: 0}
+  lastCheckpoint: {x: 0, y: 0, z: 0}
+  spawnPoint: {x: 509, y: 0, z: 599}
+  isSliding: 0
+  isGrounded: 0
+  isReflecting: 0
+  isCrouching: 0
 --- !u!1 &8737779754631215672
 GameObject:
   m_ObjectHideFlags: 0
