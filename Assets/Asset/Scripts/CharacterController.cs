@@ -8,7 +8,7 @@ public class PlayerController : MonoBehaviour
         FirstPerson,
         ThirdPerson
     }
-    [HideInInspector] public Rigidbody rb; // Changed from CharacterController to Rigidbody
+    [HideInInspector] public Rigidbody rb;
     [HideInInspector] public Animator anim;
 
     [SerializeField] CameraType cameraType;
@@ -23,6 +23,7 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public float initialSpeed;
     public float jumpHeight = 1.5f;
     public float gravity = -9.81f;
+    public float speedMultiplier = 1f;
 
     [Header("Mouse Look Settings")]
     public float mouseSensitivity = 2f;
@@ -42,7 +43,7 @@ public class PlayerController : MonoBehaviour
 
     [SerializeReference] public PlayerExtension[] extensions;
 
-    //Player States
+    // Player States
     [HideInInspector] public bool isSliding = false;
     [HideInInspector] public bool isGrounded = true;
     [HideInInspector] public bool isReflecting = false;
@@ -52,9 +53,10 @@ public class PlayerController : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Locked;
         SetUpCamera();
-        rb = GetComponent<Rigidbody>(); // Get Rigidbody instead of CharacterController
+        rb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();
         initialSpeed = speed;
+        speedMultiplier = 1f; // Initialize to no effect
         if (cameraType == CameraType.FirstPerson)
         {
             if (cameraShake)
@@ -66,7 +68,7 @@ public class PlayerController : MonoBehaviour
         spawnPoint = transform.position;
     }
 
-    void FixedUpdate() // Changed to FixedUpdate for physics-based movement
+    void FixedUpdate()
     {
         if (Application.isPlaying)
         {
@@ -96,7 +98,6 @@ public class PlayerController : MonoBehaviour
 
     void HandleMovement()
     {
-        // Check if grounded using Physics.Raycast
         isGrounded = Physics.Raycast(transform.position, Vector3.down, 1.1f);
         if (isGrounded && rb.linearVelocity.y < 0)
         {
@@ -110,7 +111,8 @@ public class PlayerController : MonoBehaviour
         if (!isSliding)
         {
             move = (transform.right * horizontal + transform.forward * vertical).normalized;
-            rb.MovePosition(rb.position + move * speed * Time.fixedDeltaTime);
+            // Apply speedMultiplier to the movement speed
+            rb.MovePosition(rb.position + move * speed * speedMultiplier * Time.fixedDeltaTime);
         }
 
         if (Input.GetButtonDown("Jump") && isGrounded)
@@ -118,7 +120,6 @@ public class PlayerController : MonoBehaviour
             Jump();
         }
 
-        // Apply gravity
         velocity.y += gravity * Time.fixedDeltaTime;
         rb.AddForce(velocity * Time.fixedDeltaTime, ForceMode.VelocityChange);
 
@@ -135,8 +136,6 @@ public class PlayerController : MonoBehaviour
         anim.SetTrigger("jump");
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, Mathf.Sqrt(jumpHeight * -2f * gravity), rb.linearVelocity.z);
     }
-
-    // Your existing HandleMouseLook and SetUpCamera methods remain unchanged
 
     void HandleMouseLook()
     {
@@ -178,16 +177,13 @@ public class PlayerController : MonoBehaviour
         camera.fieldOfView = cameraFOV;
     }
 
-    // New collision methods
     void OnCollisionEnter(Collision collision)
     {
-        // Add your collision handling code here
         Debug.Log("Collided with: " + collision.gameObject.name);
     }
 
     void OnCollisionStay(Collision collision)
     {
-        // Add your continuous collision handling code here
     }
 
     public float GetAnimationLength(string animationName)
