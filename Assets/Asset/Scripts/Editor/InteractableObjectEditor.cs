@@ -3,34 +3,30 @@ using UnityEditor;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 
 [CustomEditor(typeof(InteractableObject))]
 public class InteractableObjectEditor : Editor
 {
     private Dictionary<string, bool> effectToggles = new Dictionary<string, bool>();
     private List<Type> effectTypes = new List<Type>();
+    private string searchFilter = "";
+
+    private bool showEffects = true;
 
     public override void OnInspectorGUI()
     {
         InteractableObject interactable = (InteractableObject)target;
 
         DrawDefaultInspector();
+        EditorGUILayout.Space(10);
 
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Effects", EditorStyles.boldLabel);
-
-        foreach (Type effectType in effectTypes)
+        showEffects = EditorGUILayout.BeginFoldoutHeaderGroup(showEffects, "Manage Object Effects");
+        if (showEffects)
         {
-            string effectName = effectType.Name;
-            bool currentToggle = effectToggles[effectName];
-            bool newToggle = EditorGUILayout.Toggle(effectName, currentToggle);
-
-            if (newToggle != currentToggle)
-            {
-                effectToggles[effectName] = newToggle;
-                ToggleEffect(interactable, effectType, newToggle);
-            }
+            DrawEffectsUI(interactable);
         }
+        EditorGUILayout.EndFoldoutHeaderGroup();
 
         if (GUI.changed)
         {
@@ -39,35 +35,79 @@ public class InteractableObjectEditor : Editor
         }
     }
 
+    private void DrawEffectsUI(InteractableObject interactable)
+    {
+        EditorGUILayout.Space(5);
+        EditorGUILayout.LabelField("Search and Toggle Effects", EditorStyles.boldLabel);
+
+        using (new EditorGUILayout.VerticalScope("box"))
+        {
+            searchFilter = EditorGUILayout.TextField("Search", searchFilter).Trim();
+
+            var filteredEffects = effectTypes
+                .Where(t => string.IsNullOrEmpty(searchFilter) || t.Name.ToLower().Contains(searchFilter.ToLower()))
+                .OrderBy(t => t.Name)
+                .ToList();
+
+            if (filteredEffects.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No effects match your search.", MessageType.Info);
+                return;
+            }
+
+            foreach (Type effectType in filteredEffects)
+            {
+                string effectName = effectType.Name;
+
+                if (!effectToggles.ContainsKey(effectName))
+                    effectToggles[effectName] = interactable.GetComponent(effectType) != null;
+
+                bool currentToggle = effectToggles[effectName];
+                bool newToggle = EditorGUILayout.ToggleLeft(effectName, currentToggle);
+
+                if (newToggle != currentToggle)
+                {
+                    effectToggles[effectName] = newToggle;
+                    ToggleEffect(interactable, effectType, newToggle);
+                }
+            }
+        }
+    }
+
     private void ToggleEffect(InteractableObject interactable, Type effectType, bool enable)
     {
         if (enable)
         {
             if (interactable.GetComponent(effectType) == null)
-            {
                 interactable.gameObject.AddComponent(effectType);
-            }
         }
         else
         {
             Component effect = interactable.GetComponent(effectType);
             if (effect != null)
-            {
                 DestroyImmediate(effect);
-            }
         }
     }
 
     void OnEnable()
     {
-        // Find all types that inherit from ObjectEffect
         effectTypes.Clear();
         effectToggles.Clear();
 
         Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
         foreach (Assembly assembly in assemblies)
         {
-            foreach (Type type in assembly.GetTypes())
+            Type[] types = null;
+            try
+            {
+                types = assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                types = e.Types.Where(t => t != null).ToArray();
+            }
+
+            foreach (Type type in types)
             {
                 if (type.IsSubclassOf(typeof(ObjectEffect)) && !type.IsAbstract)
                 {
