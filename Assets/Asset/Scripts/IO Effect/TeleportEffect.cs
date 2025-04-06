@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class TeleportEffect : ObjectEffect
@@ -9,7 +10,7 @@ public class TeleportEffect : ObjectEffect
         OffsetFromCurrentPosition
     }
 
-    [SerializeField] private TeleportType teleportType = TeleportType.ToPosition;
+    [SerializeField] private TeleportType teleportType = TeleportType.OffsetFromCurrentPosition;
 
     [SerializeField] private Vector3 teleportDestination;
     [SerializeField] private Transform targetObject;
@@ -49,6 +50,19 @@ public class TeleportEffect : ObjectEffect
             }
 
             Debug.Log($"{gameObject.name} teleported player to {finalPosition}");
+        }
+    }
+    private void OnDrawGizmos()
+    {
+        if(teleportType == TeleportType.OffsetFromCurrentPosition)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(transform.position + offset,2);
+        }
+        if (teleportType == TeleportType.ToPosition)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(transform.position + offset, 2);
         }
     }
 }
