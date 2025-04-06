@@ -13,9 +13,10 @@ public class MultipleJump : PlayerExtension
 
         if (Input.GetKeyDown(activateKey) && jumpCount < maxJumps)
         {
-            if (jumpCount == 0) { 
-                player.Jump();
-            }
+            player.Jump();
+            //if (jumpCount == 0) { 
+            //    player.Jump();
+            //}
             jumpCount++;
         }
     }

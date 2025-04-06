@@ -4,7 +4,7 @@ public class Roll : PlayerExtension
 {
     PlayerController _player;
     public KeyCode activateKey = KeyCode.Q;
-    public float slideSpeed = 10f;
+    public float slideSpeed = 2f;
     public float slideDuration = 0.5f;
     private Vector3 slideDirection;
     private float slideAnimSpeed;

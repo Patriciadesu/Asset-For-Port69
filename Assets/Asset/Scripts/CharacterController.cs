@@ -40,7 +40,7 @@ public class PlayerController : MonoBehaviour
     private float xRotation = 0f;
     private float tpsYaw = 0f;
     private float tpsPitch = 10f;
-
+    private float gravityCooldown = 0;
     private PlayerExtension[] extensions;
 
     // Player States
@@ -66,13 +66,22 @@ public class PlayerController : MonoBehaviour
             }
         }
         spawnPoint = transform.position;
+        RefreshExtension();
+    }
+
+    private void FixedUpdate()
+    {
+        if (Application.isPlaying)
+        {
+            HandleMovement();
+            
+        }
     }
 
     void Update()
     {
         if (Application.isPlaying)
         {
-            HandleMovement();
             HandleMouseLook();
             if (!cameraShake && cameraType == CameraType.FirstPerson)
             {
@@ -98,7 +107,7 @@ public class PlayerController : MonoBehaviour
 
     void HandleMovement()
     {
-        isGrounded = Physics.Raycast(transform.position, Vector3.down, 1.1f);
+        //isGrounded = Physics.Raycast(transform.position, Vector3.down, GetComponent<CapsuleCollider>().center.y+0.2f);
         if (isGrounded && rb.linearVelocity.y < 0)
         {
             velocity.y = -2f;
@@ -179,11 +188,16 @@ public class PlayerController : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("Collided with: " + collision.gameObject.name);
+        isGrounded = true;
     }
 
     void OnCollisionStay(Collision collision)
     {
+        isGrounded = true;
+    }
+    private void OnCollisionExit(Collision collision)
+    {
+        isGrounded = false;
     }
 
     public float GetAnimationLength(string animationName)
