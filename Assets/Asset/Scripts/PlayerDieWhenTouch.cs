@@ -7,8 +7,7 @@ public class PlayerDieWhenTouch : MonoBehaviour
     {
         if(TryGetComponent<MeshCollider>(out MeshCollider meshCollider))
         {
-            meshCollider.convex = true;
-            meshCollider.isTrigger = true;
+            meshCollider.convex = false;
         }
         else if(TryGetComponent<Collider>(out Collider collider))
         {

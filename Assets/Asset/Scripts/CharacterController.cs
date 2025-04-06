@@ -68,7 +68,7 @@ public class PlayerController : MonoBehaviour
         spawnPoint = transform.position;
     }
 
-    void FixedUpdate()
+    void Update()
     {
         if (Application.isPlaying)
         {

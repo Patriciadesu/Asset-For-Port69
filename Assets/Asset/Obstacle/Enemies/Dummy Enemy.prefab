@@ -109,6 +109,7 @@ MonoBehaviour:
   fireRate: 1
   rotateSpeed: 45
   maxDetectionAngle: 30
+  rotationOffset: 0
   bulletPrefab: {fileID: 6178862386368883232, guid: 9b3381ba3d384b44ab846f79ad74dc21, type: 3}
   firePoint: {fileID: 6597308420030671422}
   bulletLifeTime: 5

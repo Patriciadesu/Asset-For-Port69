@@ -25,6 +25,8 @@ public class Turret : MonoBehaviour
     public float fireRate = 1f;
     public float rotateSpeed = 45f;
     public float maxDetectionAngle = 30f;
+    public float rotationOffset = 0;
+    public Vector3 front => Quaternion.Euler(0, rotationOffset, 0) * transform.forward;
     private Vector3 initiateFront;
 
     [Header("Bullet Settings")]
@@ -44,7 +46,7 @@ public class Turret : MonoBehaviour
         player = GameObject.FindGameObjectWithTag("Player").transform;
         detectionAngle = maxDetectionAngle;
         SetState(new IdleState(this));
-        initiateFront = transform.forward;
+        initiateFront = front;
 
         //  Initialize LineRenderer for real-time visualization
         lineRenderer = gameObject.AddComponent<LineRenderer>();
@@ -100,7 +102,7 @@ public class Turret : MonoBehaviour
                 return staticAngle <= detectionAngle;
             case DetectionBehavior.ConeRotate:
                 Vector3 directionToPlayer = (player.position - transform.position).normalized;
-                float angle = Vector3.Angle(transform.forward, directionToPlayer);
+                float angle = Vector3.Angle(front, directionToPlayer);
                 return angle <= detectionAngle;
             default:
                 return false;
@@ -113,7 +115,7 @@ public class Turret : MonoBehaviour
         switch (shootingType)
         {
             case ShootingType.Straight:
-                bullet.GetComponent<Rigidbody>().AddForce(transform.forward * bulletSpeed, ForceMode.Impulse);
+                bullet.GetComponent<Rigidbody>().AddForce(front * bulletSpeed, ForceMode.Impulse);
                 break;
             case ShootingType.ToPlayer:
                 bullet.GetComponent<Rigidbody>().AddForce((player.transform.position - transform.position).normalized * bulletSpeed, ForceMode.Impulse);
@@ -144,7 +146,7 @@ public class Turret : MonoBehaviour
             Vector3 point;
             if (detectionBehavior == DetectionBehavior.ConeRotate)
             {
-                point = transform.position + (rotation * transform.forward) * detectionRange;
+                point = transform.position + (rotation * front) * detectionRange;
             }
             else // ConeStatic
             {
@@ -174,6 +176,9 @@ public class Turret : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawRay(transform.position, front);
+
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
 
@@ -183,8 +188,8 @@ public class Turret : MonoBehaviour
         switch (detectionBehavior)
         {
             case DetectionBehavior.ConeRotate:
-                leftBoundary = Quaternion.Euler(0, -maxDetectionAngle, 0) * transform.forward;
-                rightBoundary = Quaternion.Euler(0, maxDetectionAngle, 0) * transform.forward;
+                leftBoundary = Quaternion.Euler(0, -maxDetectionAngle, 0) * front;
+                rightBoundary = Quaternion.Euler(0, maxDetectionAngle, 0) * front;
                 Gizmos.color = Color.red;
                 Gizmos.DrawRay(transform.position, leftBoundary * detectionRange);
                 Gizmos.DrawRay(transform.position, rightBoundary * detectionRange);
@@ -193,8 +198,8 @@ public class Turret : MonoBehaviour
             case DetectionBehavior.ConeStatic:
                 if (initiateFront == Vector3.zero)
                 {
-                    leftBoundary = Quaternion.Euler(0, -maxDetectionAngle, 0) * transform.forward;
-                    rightBoundary = Quaternion.Euler(0, maxDetectionAngle, 0) * transform.forward;
+                    leftBoundary = Quaternion.Euler(0, -maxDetectionAngle, 0) * front;
+                    rightBoundary = Quaternion.Euler(0, maxDetectionAngle, 0) * front;
                 }
                 else
                 {
