@@ -20,10 +20,14 @@ public class Crouch : PlayerExtension
         if (_player.isCrouching)
         {
             _player.speed = crouchSpeed;
+            _player.GetComponent<CapsuleCollider>().height /= 2;
+            _player.GetComponent<CapsuleCollider>().center = new Vector3(_player.GetComponent<CapsuleCollider>().center.x, _player.GetComponent<CapsuleCollider>().center.y / 2, _player.GetComponent<CapsuleCollider>().center.z);
         }
         else
         {
             _player.speed = _player.initialSpeed;
+            _player.GetComponent<CapsuleCollider>().height *= 2;
+            _player.GetComponent<CapsuleCollider>().center = new Vector3(_player.GetComponent<CapsuleCollider>().center.x, _player.GetComponent<CapsuleCollider>().center.y * 2, _player.GetComponent<CapsuleCollider>().center.z);
         }
     }
 }

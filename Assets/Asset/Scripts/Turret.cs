@@ -95,7 +95,8 @@ public class Turret : MonoBehaviour
         switch (detectionBehavior)
         {
             case DetectionBehavior.Area:
-                return PlayerInRange();
+                bool isInRange = PlayerInRange();
+                return isInRange;
             case DetectionBehavior.ConeStatic:
                 Vector3 staticDirectionToPlayer = (player.position - transform.position).normalized;
                 float staticAngle = Vector3.Angle(initiateFront, staticDirectionToPlayer);
@@ -118,7 +119,7 @@ public class Turret : MonoBehaviour
                 bullet.GetComponent<Rigidbody>().AddForce(front * bulletSpeed, ForceMode.Impulse);
                 break;
             case ShootingType.ToPlayer:
-                bullet.GetComponent<Rigidbody>().AddForce((player.transform.position - transform.position).normalized * bulletSpeed, ForceMode.Impulse);
+                bullet.GetComponent<Rigidbody>().AddForce((player.transform.position - firePoint.position).normalized * bulletSpeed, ForceMode.Impulse);
                 break;
         }
         bullet.GetComponent<Bullet>().owner = gameObject;

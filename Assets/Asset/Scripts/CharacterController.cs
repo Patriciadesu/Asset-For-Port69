@@ -180,7 +180,7 @@ public class PlayerController : MonoBehaviour
                 tpsCamera.transform.localPosition = new Vector3(0, 3.5f + cameraOffsetY, -3 + cameraOffsetX);
                 camera.transform.position = tpsCamera.position;
                 camera.transform.LookAt(tpsCameraPivot);
-                tpsCameraPivot.transform.position = new Vector3(tpsCameraPivot.transform.position.x, cameraLookUp, tpsCameraPivot.transform.position.z);
+                tpsCameraPivot.transform.localPosition = new Vector3(0, cameraLookUp,0);
                 break;
         }
         camera.fieldOfView = cameraFOV;
