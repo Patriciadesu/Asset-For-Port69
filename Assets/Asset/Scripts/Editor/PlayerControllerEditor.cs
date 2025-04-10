@@ -56,7 +56,8 @@ public class PlayerControllerEditor : Editor
             EditorGUILayout.PropertyField(cameraLookUpProp);
         }
 
-
+        EditorGUILayout.Space(10);
+        EditorGUILayout.LabelField("Player Movement", EditorStyles.boldLabel);
         // Draw remaining fields except the ones handled above
         SerializedProperty property = serializedObject.GetIterator();
         property.NextVisible(true);

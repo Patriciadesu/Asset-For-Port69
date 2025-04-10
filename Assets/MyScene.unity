@@ -127,6 +127,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 665297410919183699, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
+      propertyPath: m_ClearFlags
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1611693637559534253, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
       propertyPath: m_UseGravity
       value: 1
@@ -177,27 +181,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4934212916135012706, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -0.009000003
       objectReference: {fileID: 0}
     - target: {fileID: 4934212916135012706, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3
+      value: 1.794621
       objectReference: {fileID: 0}
     - target: {fileID: 4934212916135012706, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -2.5
+      value: 0.15540516
       objectReference: {fileID: 0}
     - target: {fileID: 4934212916135012706, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.97507
+      value: 0.9999619
       objectReference: {fileID: 0}
     - target: {fileID: 4934212916135012706, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.22189745
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 4934212916135012706, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0.008726535
       objectReference: {fileID: 0}
     - target: {fileID: 6764649303477741847, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
       propertyPath: jumpForce
@@ -205,7 +209,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6764649303477741847, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
       propertyPath: cameraType
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6764649303477741847, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
       propertyPath: coyoteTime
@@ -230,6 +234,10 @@ PrefabInstance:
     - target: {fileID: 6764649303477741847, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
       propertyPath: customizableCamera
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8157396321443196516, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
+      propertyPath: m_RenderPostProcessing
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8701067600650517779, guid: e5c9ae4cc885fb3418a57ee133bbd223, type: 3}
       propertyPath: m_Name

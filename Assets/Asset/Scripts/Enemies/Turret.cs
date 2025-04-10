@@ -35,7 +35,7 @@ public class Turret : MonoBehaviour
     [SerializeField] private float bulletLifeTime = 2f;
     [SerializeField] private float bulletSpeed = 5f;
 
-    [HideInInspector] public Transform player;
+    [HideInInspector] public PlayerController player;
     [HideInInspector] public float detectionAngle;
     private State currentState;
     private LineRenderer lineRenderer;  //  LineRenderer for visualizing detection area
@@ -43,7 +43,7 @@ public class Turret : MonoBehaviour
     private void Start()
     {
         gameObject.tag = "Enemy";
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
         detectionAngle = maxDetectionAngle;
         SetState(new IdleState(this));
         initiateFront = front;
@@ -87,7 +87,7 @@ public class Turret : MonoBehaviour
 
     public bool PlayerInRange()
     {
-        return Vector3.Distance(transform.position, player.position) <= detectionRange;
+        return Vector3.Distance(transform.position, player.transform.position) <= detectionRange;
     }
 
     public bool IsPlayerInSight()
@@ -98,11 +98,11 @@ public class Turret : MonoBehaviour
                 bool isInRange = PlayerInRange();
                 return isInRange;
             case DetectionBehavior.ConeStatic:
-                Vector3 staticDirectionToPlayer = (player.position - transform.position).normalized;
+                Vector3 staticDirectionToPlayer = (player.transform.position - transform.position).normalized;
                 float staticAngle = Vector3.Angle(initiateFront, staticDirectionToPlayer);
                 return staticAngle <= detectionAngle;
             case DetectionBehavior.ConeRotate:
-                Vector3 directionToPlayer = (player.position - transform.position).normalized;
+                Vector3 directionToPlayer = (player.transform.position - transform.position).normalized;
                 float angle = Vector3.Angle(front, directionToPlayer);
                 return angle <= detectionAngle;
             default:
@@ -259,7 +259,7 @@ public class DetectingState : State
     {
         turret.detectionAngle = Mathf.Lerp(30f, 60f, 1 - (timer / turret.detectionTime));
 
-        Vector3 direction = (turret.player.position - turret.transform.position).normalized;
+        Vector3 direction = (turret.player.transform.position - turret.transform.position).normalized;
         Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
         turret.transform.rotation = Quaternion.Slerp(turret.transform.rotation, lookRotation, Time.deltaTime * 2);
 
@@ -291,7 +291,7 @@ public class ShootingState : State
             return;
         }
 
-        Vector3 direction = (turret.player.position - turret.transform.position).normalized;
+        Vector3 direction = (turret.player.transform.position - turret.transform.position).normalized;
         Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
         turret.transform.rotation = Quaternion.Slerp(turret.transform.rotation, lookRotation, Time.deltaTime * 2);
 
