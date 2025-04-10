@@ -55,12 +55,7 @@ public class PlayerControllerEditor : Editor
             EditorGUILayout.PropertyField(cameraOffsetYProp);
             EditorGUILayout.PropertyField(cameraLookUpProp);
         }
-        if (cameraTypeProp.enumValueIndex == (int)PlayerController.CameraType.FirstPerson)
-        {
-            SerializedProperty cameraShakeProp = serializedObject.FindProperty("cameraShake");
 
-            EditorGUILayout.PropertyField(cameraShakeProp);
-        }
 
         // Draw remaining fields except the ones handled above
         SerializedProperty property = serializedObject.GetIterator();
