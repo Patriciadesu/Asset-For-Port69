@@ -6,14 +6,14 @@ public class MultipleJump : PlayerExtension
     public int maxJumps = 2;
     private int jumpCount;
 
-    public override void OnUpdate(PlayerController player)
+    public void Update()
     {
-        if (player.isGrounded)
+        if (_player.isGrounded)
             jumpCount = 0;
 
         if (Input.GetKeyDown(activateKey) && jumpCount < maxJumps)
         {
-            player.Jump();
+            _player.Jump();
             jumpCount++;
         }
     }

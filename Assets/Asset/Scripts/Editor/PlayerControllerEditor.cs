@@ -2,13 +2,18 @@
 using UnityEngine;
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Reflection;
+using NaughtyAttributes.Editor;
+using NaughtyAttributes;
+using UnityEngine.UIElements;
 
 [CustomEditor(typeof(PlayerController))]
-public class PlayerControllerEditor : Editor
+public class PlayerControllerEditor : NaughtyInspector
 {
     private bool showDoNotTouch = false; // Track foldout state
+    private bool showPlayerAction = true;
     private Dictionary<string, bool> extensionToggles = new Dictionary<string, bool>();
     private List<Type> extensionTypes = new List<Type>();
     private void OnEnable()
@@ -31,83 +36,41 @@ public class PlayerControllerEditor : Editor
     }
     public override void OnInspectorGUI()
     {
+        
+        base.OnInspectorGUI();
+        EditorGUILayout.Space();
         SerializedObject serializedObject = new SerializedObject(target);
         PlayerController player = (PlayerController)target;
-        serializedObject.Update();
 
-        #region camera
-        // Draw "Cameras & Settings" header
-        EditorGUILayout.LabelField("Cameras & Settings", EditorStyles.boldLabel);
+        #region Player Action
+        GUIStyle boldFoldoutStyle = new GUIStyle(EditorStyles.foldout);
+        boldFoldoutStyle.fontStyle = FontStyle.Bold;
 
-        SerializedProperty cameraTypeProp = serializedObject.FindProperty("cameraType");
-        EditorGUILayout.PropertyField(cameraTypeProp);
+        showPlayerAction = EditorGUILayout.Foldout(showPlayerAction, "Player's Action", true, boldFoldoutStyle);
 
-        SerializedProperty cameraFOVProp = serializedObject.FindProperty("cameraFOV");
-        EditorGUILayout.PropertyField(cameraFOVProp);
 
-        if (cameraTypeProp.enumValueIndex == (int)PlayerController.CameraType.ThirdPerson)
+        if (showPlayerAction)
         {
-            SerializedProperty cameraOffsetXProp = serializedObject.FindProperty("cameraOffsetX");
-            SerializedProperty cameraOffsetYProp = serializedObject.FindProperty("cameraOffsetY");
-            SerializedProperty cameraLookUpProp = serializedObject.FindProperty("cameraLookUp");
-
-            EditorGUILayout.PropertyField(cameraOffsetXProp);
-            EditorGUILayout.PropertyField(cameraOffsetYProp);
-            EditorGUILayout.PropertyField(cameraLookUpProp);
-        }
-
-        EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("Player Movement", EditorStyles.boldLabel);
-        // Draw remaining fields except the ones handled above
-        SerializedProperty property = serializedObject.GetIterator();
-        property.NextVisible(true);
-
-        while (property.NextVisible(false))
-        {
-            if (property.name != "cameraType" && property.name != "cameraFOV" &&
-                property.name != "cameraOffsetX" && property.name != "cameraOffsetY" && property.name != "cameraLookUp" && property.name != "cameraShake")
+            foreach (Type extensionType in extensionTypes)
             {
-                EditorGUILayout.PropertyField(property);
+                string effectName = extensionType.Name;
+                bool currentToggle = extensionToggles[effectName];
+                bool newToggle = EditorGUILayout.Toggle(effectName, currentToggle);
+
+                if (newToggle != currentToggle)
+                {
+                    extensionToggles[effectName] = newToggle;
+                    ToggleEffect(player, extensionType, newToggle);
+                }
+            }
+            if (GUI.changed)
+            {
+                player.RefreshExtension();
+                EditorUtility.SetDirty(player);
             }
         }
         #endregion
 
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Player Action", EditorStyles.boldLabel);
-
-        foreach (Type extensionType in extensionTypes)
-        {
-            string effectName = extensionType.Name;
-            bool currentToggle = extensionToggles[effectName];
-            bool newToggle = EditorGUILayout.Toggle(effectName, currentToggle);
-
-            if (newToggle != currentToggle)
-            {
-                extensionToggles[effectName] = newToggle;
-                ToggleEffect(player, extensionType, newToggle);
-            }
-        }
-        if (GUI.changed)
-        {
-            player.RefreshExtension();
-            EditorUtility.SetDirty(player);
-        }
-        #region Do Not Touch
-        // Foldout for "DO NOT TOUCH" section
-        showDoNotTouch = EditorGUILayout.Foldout(showDoNotTouch, "DO NOT TOUCH", true);
-        if (showDoNotTouch)
-        {
-            SerializedProperty cameraProp = serializedObject.FindProperty("camera");
-            SerializedProperty fpsCameraProp = serializedObject.FindProperty("fpsCamera");
-            SerializedProperty tpsCameraProp = serializedObject.FindProperty("tpsCamera");
-            SerializedProperty tpsCameraPivotProp = serializedObject.FindProperty("tpsCameraPivot");
-
-            EditorGUILayout.PropertyField(cameraProp);
-            EditorGUILayout.PropertyField(fpsCameraProp);
-            EditorGUILayout.PropertyField(tpsCameraProp);
-            EditorGUILayout.PropertyField(tpsCameraPivotProp);
-        }
-        #endregion
         serializedObject.ApplyModifiedProperties();
     }
 
@@ -131,3 +94,6 @@ public class PlayerControllerEditor : Editor
     }
 
 }
+
+
+

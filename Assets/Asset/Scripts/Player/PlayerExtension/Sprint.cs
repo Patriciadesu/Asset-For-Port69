@@ -2,20 +2,20 @@ using UnityEngine;
 
 public class Sprint : PlayerExtension
 {
-    PlayerController _player;
     public KeyCode activateKey = KeyCode.LeftShift;
     public float sprintSpeed = 8f;
-    public override void OnUpdate(PlayerController player)
+
+    public void Update()
     {
-        if (Input.GetKey(activateKey))
+        if (Input.GetKeyDown(activateKey))
         {
-            player.additionalSpeed += sprintSpeed;
-            player.animator.SetBool("isRunning", true);
+            _player.additionalSpeed += sprintSpeed;
+            _player.animator.SetBool("isRunning", true);
         }
-        else
+        if(Input.GetKeyUp(activateKey)) 
         {
-            player.additionalSpeed -= sprintSpeed;
-            player.animator.SetBool("isRunning", false);
+            _player.additionalSpeed -= sprintSpeed;
+            _player.animator.SetBool("isRunning", false);
         }
     }
 }

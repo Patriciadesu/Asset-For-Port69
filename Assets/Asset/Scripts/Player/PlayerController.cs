@@ -1,76 +1,94 @@
 using NaughtyAttributes;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 [ExecuteAlways]
 public class PlayerController : MonoBehaviour
 {
+    #region Properties
+
+    // Enums
     public enum CameraType
     {
         FirstPerson,
         ThirdPerson
     }
+
+    // Components
     [HideInInspector] public Rigidbody rigidbody => GetComponent<Rigidbody>();
     [HideInInspector] public Animator animator => GetComponent<Animator>();
     [HideInInspector] public CapsuleCollider capsuleCollider => GetComponent<CapsuleCollider>();
+
+    // Capsule Info
     private float capsuleHeight => capsuleCollider.height;
     private float capsuleRadius => capsuleCollider.radius;
 
-    [Header("Camera")]
-    [SerializeField] CameraType cameraType;
-    [SerializeField,Range(30, 120)] float cameraFOV;
-    [Range(-2, 2)] public float cameraOffsetX;
-    [Range(-2, 2)] public float cameraOffsetY;
-    [Range(0, 2)] public float cameraLookUp;
+    // Camera Settings
+    [Foldout("Camera", true),SerializeField] CameraType cameraType;
+    [Foldout("Camera", true), SerializeField,Range(30, 120)] float cameraFOV;
+    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(-2, 2)] public float cameraOffsetX;
+    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(-2, 2)] public float cameraOffsetY;
+    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(0, 2)] public float cameraLookUp;
 
-    [Header("Movement Settings")]
-    public float Speed => (speed+additionalSpeed) * speedMultiplier;
-
-    [SerializeField] private float speed = 5f;
+    // Movement Settings
+    public float Speed => (speed + additionalSpeed) * speedMultiplier;
+    [Foldout("Movement Settings", true),SerializeField] private float speed = 5f;
+    [Foldout("Movement Settings", true)] public float jumpForce = 10f;
+    [Foldout("Movement Settings", true)] public float fallMultiplier = 3f;
+    [Foldout("Movement Settings", true)] public float gravityMultiplier = 2.5f;
     [HideInInspector] public float speedMultiplier = 1f;
     [HideInInspector] public float additionalSpeed = 0;
-    public float jumpForce = 10f;
-    public float fallMultiplier = 3f;
-    public float gravityMultiplier = 2.5f;
+
+    // Movement Timers
     private float coyoteTime = 0.01f;
     private float jumpBufferTime = 0.05f;
     private float lastGroundedTime;
     private float lastJumpPressedTime;
 
-    [Header("Mouse Look Settings")]
-    public float mouseSensitivity = 2f;
+    // Ground Check
+    private float groundCheckDistance = 0.1f;
 
-    [Header("DO NOT TOUCH")]
-    [HideInInspector] public Camera camera;
-    [HideInInspector] public Transform fpsCamera;
-    [HideInInspector] public Transform tpsCamera;
-    [HideInInspector] public Transform tpsCameraPivot;
+    // Mouse Look Settings
+    [Foldout("Mouse Look Settings", true)] public float mouseSensitivity = 2f;
 
+    [Foldout("DO NOT TOUCH")] public Camera camera;
+    [Foldout("DO NOT TOUCH")] public Transform fpsCamera;
+    [Foldout("DO NOT TOUCH")] public Transform tpsCamera;
+    [Foldout("DO NOT TOUCH")] public Transform tpsCameraPivot;
+
+    // Player States
+    [HideInInspector] public bool isSliding = false;
+    [HideInInspector] public bool isGrounded = true;
+    [HideInInspector] public bool isReflecting = false;
+    [HideInInspector] public bool isCrouching = false;
+    [HideInInspector] public bool isWallRunning = false;
+
+    // Internal State
     [HideInInspector] public Vector3 velocity;
     [HideInInspector] public Vector3 lastCheckpoint;
     [HideInInspector] public Vector3 spawnPoint;
     private float xRotation = 0f;
     private float tpsYaw = 0f;
     private float tpsPitch = 10f;
-    private PlayerExtension[] extensions;
-    public float groundCheckDistance = 0.1f;
-    // Player States
-    [HideInInspector] public bool isSliding = false;
-    [HideInInspector]public bool isGrounded = true;
-    [HideInInspector] public bool isReflecting = false;
-    [HideInInspector] public bool isCrouching = false;
 
+    // Extensions
+    private PlayerExtension[] extensions;
+
+    #endregion
+
+    #region Unity Method
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         SetUpCamera();
         //rigidbody = GetComponent<Rigidbody>();
         //animator = GetComponent<Animator>();
-        if (cameraType == CameraType.FirstPerson)
-        {
-            camera.transform.SetParent(fpsCamera);
-            camera.transform.localPosition = Vector3.zero;
-        }
+        //if (cameraType == CameraType.FirstPerson)
+        //{
+        //    camera.transform.SetParent(fpsCamera);
+        //    camera.transform.localPosition = Vector3.zero;
+        //}
         spawnPoint = transform.position;
         RefreshExtension();
         foreach (var extension in extensions)
@@ -96,9 +114,9 @@ public class PlayerController : MonoBehaviour
         if (Application.isPlaying)
         {
             HandleMouseLook();
-            foreach (var extension in extensions)
+            if(cameraType==CameraType.FirstPerson)
             {
-                extension.OnUpdate(this);
+                camera.transform.position = fpsCamera.transform.position;
             }
         }
         else
@@ -113,59 +131,24 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
-    void OnCollisionEnter(Collision collision)
-    {
-        foreach (var extension in extensions)
-        {
-            extension.OnEnterCollision(this);
-        }
-    }
-    void OnCollisionStay(Collision collision)
-    {
-        foreach (var extension in extensions)
-        {
-            extension.OnStayCollision(this);
-        }
-    }
-    private void OnCollisionExit(Collision collision)
-    {
-        foreach (var extension in extensions)
-        {
-            extension.OnExitCollision(this);
-        }
-    }
-    public void OnTriggerEnter(Collider other)
-    {
-        foreach (var extension in extensions)
-        {
-            extension.OnEnterTrigger(this);
-        }
-    }
-    public void OnTriggerStay(Collider other)
-    {
-        foreach (var extension in extensions)
-        {
-            extension.OnStayTrigger(this);
-        }
-    }
-    public void OnTriggerExit(Collider other)
-    {
-        foreach (var extension in extensions)
-        {
-            extension.OnExitTrigger(this);
-        }
-    }
+    #endregion
 
+    #region User Define Method
     //Done
     void ApplyGravity()
     {
+        float _fallMultiplier = isWallRunning? fallMultiplier/1.5f : fallMultiplier;
         if (rigidbody.linearVelocity.y <= 0)
         {
-            rigidbody.linearVelocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
+            rigidbody.linearVelocity += Vector3.up * Physics.gravity.y * (_fallMultiplier - 1) * Time.deltaTime;
         }
         else if (rigidbody.linearVelocity.y > 0 && !Input.GetButton("Jump"))
         {
             rigidbody.linearVelocity += Vector3.up * Physics.gravity.y * (gravityMultiplier - 1) * Time.deltaTime;
+        }
+        if (isGrounded && rigidbody.linearVelocity.y < 0)
+        {
+            velocity.y = -2f;
         }
     }
     //Done
@@ -189,16 +172,11 @@ public class PlayerController : MonoBehaviour
     //Done
     void Move()
     {
-        if (isGrounded && rigidbody.linearVelocity.y < 0)
-        {
-            velocity.y = -2f;
-        }
-
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
 
         Vector3 move;
-        if (!isSliding)
+        if (!isSliding && !isWallRunning)
         {
             move = (transform.right * horizontal + transform.forward * vertical).normalized;
             rigidbody.MovePosition(rigidbody.position + move * Speed* Time.fixedDeltaTime);
@@ -307,6 +285,10 @@ public class PlayerController : MonoBehaviour
     {
         extensions = GetComponents<PlayerExtension>();
     }
+
+    #endregion
+
+    #region Gizmos
     //Done
     void OnDrawGizmosSelected()
     {
@@ -324,4 +306,7 @@ public class PlayerController : MonoBehaviour
         Gizmos.DrawLine(point1 - Vector3.up * groundCheckDistance + Vector3.left * radius, point2 + Vector3.left * radius);
         Gizmos.DrawLine(point1 - Vector3.up * groundCheckDistance + Vector3.right * radius, point2 + Vector3.right * radius);
     }
+
+    #endregion
+
 }

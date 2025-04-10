@@ -2,13 +2,8 @@ using UnityEngine;
 
 public class Crouch : PlayerExtension
 {
-    PlayerController _player;
     public float crouchSpeed = 2f;
-    public override void OnStart(PlayerController player)
-    {
-        _player = player;
-    }
-    public override void OnUpdate(PlayerController player)
+    public void Update()
     {
         if (Input.GetKeyDown(KeyCode.C))
         {

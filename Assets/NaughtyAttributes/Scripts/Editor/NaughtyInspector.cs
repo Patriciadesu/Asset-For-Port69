@@ -120,7 +120,19 @@ namespace NaughtyAttributes.Editor
                     _foldouts[group.Key] = new SavedBool($"{target.GetInstanceID()}.{group.Key}", false);
                 }
 
-                _foldouts[group.Key].Value = EditorGUILayout.Foldout(_foldouts[group.Key].Value, group.Key, true);
+                // Get a representative property from the group to access its FoldoutAttribute
+                SerializedProperty representativeProperty = visibleProperties.First();
+                FoldoutAttribute foldoutAttribute = PropertyUtility.GetAttribute<FoldoutAttribute>(representativeProperty);
+
+                // Create the appropriate style based on the IsBold property
+                GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout);
+                if (foldoutAttribute.IsBold)
+                {
+                    foldoutStyle.fontStyle = FontStyle.Bold;
+                }
+
+                // Use the appropriate style for the foldout
+                _foldouts[group.Key].Value = EditorGUILayout.Foldout(_foldouts[group.Key].Value, group.Key, true, foldoutStyle);
                 if (_foldouts[group.Key].Value)
                 {
                     foreach (var property in visibleProperties)
@@ -135,7 +147,7 @@ namespace NaughtyAttributes.Editor
 
         protected void DrawNonSerializedFields(bool drawHeader = false)
         {
-            if (_nonSerializedFields.Any())
+            if (_nonSerializedFields != null && _nonSerializedFields.Any())
             {
                 if (drawHeader)
                 {
@@ -154,7 +166,7 @@ namespace NaughtyAttributes.Editor
 
         protected void DrawNativeProperties(bool drawHeader = false)
         {
-            if (_nativeProperties.Any())
+            if (_nativeProperties != null && _nativeProperties.Any())
             {
                 if (drawHeader)
                 {
@@ -173,7 +185,7 @@ namespace NaughtyAttributes.Editor
 
         protected void DrawButtons(bool drawHeader = false)
         {
-            if (_methods.Any())
+            if (_methods!=null&&_methods.Any())
             {
                 if (drawHeader)
                 {

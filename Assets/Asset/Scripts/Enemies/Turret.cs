@@ -1,12 +1,14 @@
 using System;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Turret : MonoBehaviour
 {
     public enum ShootingType
     {
-        ToPlayer,
-        Straight
+        ShootToPlayer,
+        PredictPlayerMove
     };
     public enum DetectionBehavior
     {
@@ -39,7 +41,21 @@ public class Turret : MonoBehaviour
     [HideInInspector] public float detectionAngle;
     private State currentState;
     private LineRenderer lineRenderer;  //  LineRenderer for visualizing detection area
+    private struct PositionSample
+    {
+        public Vector3 position;
+        public float time;
 
+        public PositionSample(Vector3 pos, float t)
+        {
+            position = pos;
+            time = t;
+        }
+    }
+    private List<PositionSample> positionHistory = new List<PositionSample>();
+    private float sampleInterval = 0.5f;                // Time between samples (adjustable)
+    private float maxHistoryTime = 2f;                  // How long to keep samples
+    private float nextSampleTime;
     private void Start()
     {
         gameObject.tag = "Enemy";
@@ -63,6 +79,7 @@ public class Turret : MonoBehaviour
     private void Update()
     {
         currentState.Update();
+        TrackPlayerMovement();
         DrawDetectionArea(); //  Update detection visualization in real-time
     }
 
@@ -87,7 +104,7 @@ public class Turret : MonoBehaviour
 
     public bool PlayerInRange()
     {
-        return Vector3.Distance(transform.position, player.transform.position) <= detectionRange;
+        return Vector3.Distance(transform.position, player.transform.TransformPoint(player.capsuleCollider.center)) <= detectionRange;
     }
 
     public bool IsPlayerInSight()
@@ -98,11 +115,11 @@ public class Turret : MonoBehaviour
                 bool isInRange = PlayerInRange();
                 return isInRange;
             case DetectionBehavior.ConeStatic:
-                Vector3 staticDirectionToPlayer = (player.transform.position - transform.position).normalized;
+                Vector3 staticDirectionToPlayer = (player.transform.TransformPoint(player.capsuleCollider.center) - transform.position).normalized;
                 float staticAngle = Vector3.Angle(initiateFront, staticDirectionToPlayer);
                 return staticAngle <= detectionAngle;
             case DetectionBehavior.ConeRotate:
-                Vector3 directionToPlayer = (player.transform.position - transform.position).normalized;
+                Vector3 directionToPlayer = (player.transform.TransformPoint(player.capsuleCollider.center) - transform.position).normalized;
                 float angle = Vector3.Angle(front, directionToPlayer);
                 return angle <= detectionAngle;
             default:
@@ -115,17 +132,82 @@ public class Turret : MonoBehaviour
         GameObject bullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
         switch (shootingType)
         {
-            case ShootingType.Straight:
-                bullet.GetComponent<Rigidbody>().AddForce(front * bulletSpeed, ForceMode.Impulse);
+            case ShootingType.ShootToPlayer:
+                bullet.GetComponent<Rigidbody>().AddForce((player.transform.TransformPoint(player.capsuleCollider.center) - firePoint.position).normalized * bulletSpeed, ForceMode.Impulse);
                 break;
-            case ShootingType.ToPlayer:
-                bullet.GetComponent<Rigidbody>().AddForce((player.transform.position - firePoint.position).normalized * bulletSpeed, ForceMode.Impulse);
+            case ShootingType.PredictPlayerMove:
+                Vector3 targetPosition = PredictPlayerPosition();
+                bullet.GetComponent<Rigidbody>().AddForce((targetPosition - firePoint.position).normalized * bulletSpeed, ForceMode.Impulse);
                 break;
         }
         bullet.GetComponent<Bullet>().owner = gameObject;
         Destroy(bullet, bulletLifeTime);
     }
+    private void TrackPlayerMovement()
+    {
+        if (player == null || firePoint == null) return;
 
+        float currentTime = Time.time;
+
+        // Sample position at intervals
+        if (currentTime >= nextSampleTime)
+        {
+            Vector3 currentPosition = player.transform.TransformPoint(player.capsuleCollider.center); // Using base position, adjust if needed
+            positionHistory.Add(new PositionSample(currentPosition, currentTime));
+            nextSampleTime = currentTime + sampleInterval;
+
+            // Clean up old samples
+            positionHistory.RemoveAll(sample => currentTime - sample.time > maxHistoryTime);
+        }
+    }
+
+    public Vector3 PredictPlayerPosition(float predictionTime = 2f)
+    {
+        if (positionHistory.Count < 2)
+        {
+            Debug.LogWarning("Not enough position samples for prediction");
+            return player != null ? player.transform.TransformPoint(player.capsuleCollider.center) : Vector3.zero;
+        }
+
+        // Calculate velocity from recent position changes
+        Vector3 velocity = CalculateVelocityFromHistory();
+
+        // Current position
+        Vector3 currentPosition = player.transform.TransformPoint(player.capsuleCollider.center);
+
+        // Calculate travel time based on distance
+        float distanceToTarget = Vector3.Distance(firePoint.position, currentPosition);
+        float travelTime = distanceToTarget / bulletSpeed;
+        travelTime = Mathf.Min(travelTime, predictionTime);
+
+        // Predict position
+        Vector3 predictedPosition = currentPosition + velocity * travelTime;
+
+        // Debug visualization
+        Debug.DrawLine(firePoint.position, predictedPosition, Color.green, 1f);
+
+        return predictedPosition;
+    }
+
+    private Vector3 CalculateVelocityFromHistory()
+    {
+        if (positionHistory.Count < 2) return Vector3.zero;
+
+        // Use the two most recent samples
+        PositionSample newest = positionHistory[positionHistory.Count - 1];
+        PositionSample previous = positionHistory[positionHistory.Count - 2];
+
+        float timeDelta = newest.time - previous.time;
+        if (timeDelta <= 0f) return Vector3.zero;
+
+        Vector3 positionDelta = newest.position - previous.position;
+        return positionDelta / timeDelta;
+    }
+
+    public void ClearHistory()
+    {
+        positionHistory.Clear();
+    }
     private void DrawDetectionArea()
     {
         if (detectionBehavior == DetectionBehavior.Area)
@@ -259,7 +341,7 @@ public class DetectingState : State
     {
         turret.detectionAngle = Mathf.Lerp(30f, 60f, 1 - (timer / turret.detectionTime));
 
-        Vector3 direction = (turret.player.transform.position - turret.transform.position).normalized;
+        Vector3 direction = (turret.player.transform.TransformPoint(turret.player.capsuleCollider.center) - turret.transform.position).normalized;
         Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
         turret.transform.rotation = Quaternion.Slerp(turret.transform.rotation, lookRotation, Time.deltaTime * 2);
 
@@ -291,7 +373,7 @@ public class ShootingState : State
             return;
         }
 
-        Vector3 direction = (turret.player.transform.position - turret.transform.position).normalized;
+        Vector3 direction = (turret.player.transform.TransformPoint(turret.player.capsuleCollider.center) - turret.transform.position).normalized;
         Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
         turret.transform.rotation = Quaternion.Slerp(turret.transform.rotation, lookRotation, Time.deltaTime * 2);
 
