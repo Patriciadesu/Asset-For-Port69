@@ -5,7 +5,7 @@ public class Crouch : PlayerExtension
     public float crouchSpeed = 2f;
     public void Update()
     {
-        if (Input.GetKeyDown(KeyCode.C))
+        if (Input.GetKeyDown(KeyCode.C)&&_player.CanCrouch)
         {
             ToggleCrouch();
         }

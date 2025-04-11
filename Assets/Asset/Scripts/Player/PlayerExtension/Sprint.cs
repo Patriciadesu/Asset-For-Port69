@@ -7,7 +7,7 @@ public class Sprint : PlayerExtension
 
     public void Update()
     {
-        if (Input.GetKeyDown(activateKey))
+        if (Input.GetKeyDown(activateKey) && _player.CanMove)
         {
             _player.additionalSpeed += sprintSpeed;
             _player.animator.SetBool("isRunning", true);

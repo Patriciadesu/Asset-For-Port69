@@ -16,7 +16,7 @@ public class Roll : PlayerExtension
         }
         else
         {
-            if (Input.GetKeyDown(activateKey))
+            if (Input.GetKeyDown(activateKey) && _player.CanSlide)
             {
                 slideAnimSpeed = slideSpeed / _player.GetAnimationLength("Slide");
                 _player.isSliding = true;

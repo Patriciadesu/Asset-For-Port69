@@ -1,7 +1,7 @@
 using NaughtyAttributes;
-using System.Text.RegularExpressions;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 [ExecuteAlways]
 public class PlayerController : MonoBehaviour
@@ -25,15 +25,15 @@ public class PlayerController : MonoBehaviour
     private float capsuleRadius => capsuleCollider.radius;
 
     // Camera Settings
-    [Foldout("Camera", true),SerializeField] CameraType cameraType;
-    [Foldout("Camera", true), SerializeField,Range(30, 120)] float cameraFOV;
+    [Foldout("Camera", true), SerializeField] CameraType cameraType;
+    [Foldout("Camera", true), SerializeField, Range(30, 120)] float cameraFOV;
     [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(-2, 2)] public float cameraOffsetX;
     [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(-2, 2)] public float cameraOffsetY;
     [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(0, 2)] public float cameraLookUp;
 
     // Movement Settings
     public float Speed => (speed + additionalSpeed) * speedMultiplier;
-    [Foldout("Movement Settings", true),SerializeField] private float speed = 5f;
+    [Foldout("Movement Settings", true), SerializeField] private float speed = 5f;
     [Foldout("Movement Settings", true)] public float jumpForce = 10f;
     [Foldout("Movement Settings", true)] public float fallMultiplier = 3f;
     [Foldout("Movement Settings", true)] public float gravityMultiplier = 2.5f;
@@ -47,7 +47,7 @@ public class PlayerController : MonoBehaviour
     private float lastJumpPressedTime;
 
     // Ground Check
-    private float groundCheckDistance = 0.1f;
+    private float groundCheckDistance = 0.5f;
 
     // Mouse Look Settings
     [Foldout("Mouse Look Settings", true)] public float mouseSensitivity = 2f;
@@ -58,11 +58,70 @@ public class PlayerController : MonoBehaviour
     [Foldout("DO NOT TOUCH")] public Transform tpsCameraPivot;
 
     // Player States
-    [HideInInspector] public bool isSliding = false;
-    [HideInInspector] public bool isGrounded = true;
-    [HideInInspector] public bool isReflecting = false;
-    [HideInInspector] public bool isCrouching = false;
-    [HideInInspector] public bool isWallRunning = false;
+    public bool isSliding = false;
+    public bool isGrounded = true;
+    public bool isCrouching = false;
+    public bool isWallRunning = false;
+    public bool CanSlide
+    {
+        get
+        {
+            List<bool> states = new List<bool>() 
+            { 
+                !isGrounded,
+                isWallRunning
+            };
+            return states.All(x => x==false);
+        }
+    }
+    public bool CanJump
+    {
+        get
+        {
+            List<bool> states = new List<bool>()
+            {
+                !isGrounded,
+                isWallRunning
+            };
+            return states.All(x => x == false);
+        }
+    }
+    public bool CanMove
+    {
+        get
+        {
+            List<bool> states = new List<bool>()
+            {
+                isWallRunning,
+                isSliding
+            };
+            return states.All(x => x == false);
+        }
+    }
+    public bool CanCrouch
+    {
+        get
+        {
+            List<bool> states = new List<bool>()
+            {
+                isWallRunning,
+                isSliding
+            };
+            return states.All(x => x == false);
+        }
+    }
+    public bool CanRideWall
+    {
+        get
+        {
+            List<bool> states = new List<bool>()
+            {
+                isGrounded,
+                isSliding
+            };
+            return states.All(x => x == false);
+        }
+    }
 
     // Internal State
     [HideInInspector] public Vector3 velocity;
@@ -82,13 +141,6 @@ public class PlayerController : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Locked;
         SetUpCamera();
-        //rigidbody = GetComponent<Rigidbody>();
-        //animator = GetComponent<Animator>();
-        //if (cameraType == CameraType.FirstPerson)
-        //{
-        //    camera.transform.SetParent(fpsCamera);
-        //    camera.transform.localPosition = Vector3.zero;
-        //}
         spawnPoint = transform.position;
         RefreshExtension();
         foreach (var extension in extensions)
@@ -100,21 +152,22 @@ public class PlayerController : MonoBehaviour
     {
         if (Application.isPlaying)
         {
-            if (isGrounded)
-            {
-                lastGroundedTime = Time.time;
-            }
             Move();
             ApplyGravity();
-            CheckGrounded();
         }
     }
     void Update()
     {
         if (Application.isPlaying)
         {
+            CheckGrounded();
+            JumpHandler();
             HandleMouseLook();
-            if(cameraType==CameraType.FirstPerson)
+            if (isGrounded)
+            {
+                lastGroundedTime = Time.time;
+            }
+            if (cameraType==CameraType.FirstPerson)
             {
                 camera.transform.position = fpsCamera.transform.position;
             }
@@ -137,7 +190,7 @@ public class PlayerController : MonoBehaviour
     //Done
     void ApplyGravity()
     {
-        float _fallMultiplier = isWallRunning? fallMultiplier/1.5f : fallMultiplier;
+        float _fallMultiplier = isWallRunning? 1 : fallMultiplier;
         if (rigidbody.linearVelocity.y <= 0)
         {
             rigidbody.linearVelocity += Vector3.up * Physics.gravity.y * (_fallMultiplier - 1) * Time.deltaTime;
@@ -176,12 +229,19 @@ public class PlayerController : MonoBehaviour
         float vertical = Input.GetAxis("Vertical");
 
         Vector3 move;
-        if (!isSliding && !isWallRunning)
+        if (CanMove)
         {
             move = (transform.right * horizontal + transform.forward * vertical).normalized;
             rigidbody.MovePosition(rigidbody.position + move * Speed* Time.fixedDeltaTime);
+
+            animator.SetFloat("MoveX", horizontal);
+            animator.SetFloat("MoveY", vertical);
+            animator.SetBool("isRun", horizontal != 0 || vertical != 0);
         }
-        if (Input.GetButtonDown("Jump"))
+    }
+    void JumpHandler()
+    {
+        if (Input.GetButtonDown("Jump")&&CanJump)
         {
             lastJumpPressedTime = Time.time;
         }
@@ -189,12 +249,6 @@ public class PlayerController : MonoBehaviour
         {
             Jump();
             lastJumpPressedTime = -999f; // Reset to prevent double fire
-        }
-        if (!isSliding)
-        {
-            animator.SetFloat("MoveX", horizontal);
-            animator.SetFloat("MoveY", vertical);
-            animator.SetBool("isRun", horizontal != 0 || vertical != 0);
         }
     }
     //Done
@@ -209,7 +263,6 @@ public class PlayerController : MonoBehaviour
     {
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-
         if (cameraType == CameraType.FirstPerson)
         {
             transform.Rotate(Vector3.up * mouseX);

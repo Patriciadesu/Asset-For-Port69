@@ -11,7 +11,7 @@ public class MultipleJump : PlayerExtension
         if (_player.isGrounded)
             jumpCount = 0;
 
-        if (Input.GetKeyDown(activateKey) && jumpCount < maxJumps)
+        if (Input.GetKeyDown(activateKey) && jumpCount < maxJumps && !_player.isWallRunning)
         {
             _player.Jump();
             jumpCount++;

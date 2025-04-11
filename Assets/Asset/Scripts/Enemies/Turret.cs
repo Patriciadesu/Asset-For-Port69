@@ -21,7 +21,6 @@ public class Turret : MonoBehaviour
     [SerializeField] ShootingType shootingType;
     [SerializeField] DetectionBehavior detectionBehavior;
     [SerializeField] bool showDetectionRange = true;
-    [SerializeField] bool canDestroy = false;
     public float detectionRange = 10f;
     public float detectionTime = 1.5f;
     public float fireRate = 1f;
@@ -140,7 +139,6 @@ public class Turret : MonoBehaviour
                 bullet.GetComponent<Rigidbody>().AddForce((targetPosition - firePoint.position).normalized * bulletSpeed, ForceMode.Impulse);
                 break;
         }
-        bullet.GetComponent<Bullet>().owner = gameObject;
         Destroy(bullet, bulletLifeTime);
     }
     private void TrackPlayerMovement()
@@ -241,20 +239,6 @@ public class Turret : MonoBehaviour
 
         // Ensure the first point is at the turret position
         lineRenderer.SetPosition(0, transform.position);
-    }
-
-    public void OnTriggerEnter(Collider other)
-    {
-        if (canDestroy)
-        {
-            if (other.TryGetComponent<Bullet>(out Bullet bullet))
-            {
-                if (bullet.owner.tag != "Enemy")
-                {
-                    Destroy(gameObject);
-                }
-            }
-        }
     }
 
     private void OnDrawGizmos()
