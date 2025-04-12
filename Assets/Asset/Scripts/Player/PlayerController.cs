@@ -62,16 +62,18 @@ public class PlayerController : MonoBehaviour
     public bool isGrounded = true;
     public bool isCrouching = false;
     public bool isWallRunning = false;
+    public bool isGrappling = false;
     public bool CanSlide
     {
         get
         {
             List<bool> states = new List<bool>() 
             { 
-                !isGrounded,
-                isWallRunning
+                isGrounded,
+                !isWallRunning,
+                !isGrappling
             };
-            return states.All(x => x==false);
+            return states.Any(x => x==true);
         }
     }
     public bool CanJump
@@ -80,10 +82,11 @@ public class PlayerController : MonoBehaviour
         {
             List<bool> states = new List<bool>()
             {
-                !isGrounded,
-                isWallRunning
+                isGrounded,
+                !isWallRunning,
+                !isGrappling
             };
-            return states.All(x => x == false);
+            return states.Any(x => x == true);
         }
     }
     public bool CanMove
@@ -92,10 +95,11 @@ public class PlayerController : MonoBehaviour
         {
             List<bool> states = new List<bool>()
             {
-                isWallRunning,
-                isSliding
+                !isWallRunning,
+                !isSliding,
+                !isGrappling
             };
-            return states.All(x => x == false);
+            return states.Any(x => x == true);
         }
     }
     public bool CanCrouch
@@ -104,10 +108,11 @@ public class PlayerController : MonoBehaviour
         {
             List<bool> states = new List<bool>()
             {
-                isWallRunning,
-                isSliding
+                ! isWallRunning,
+                ! isSliding,
+                !isGrappling
             };
-            return states.All(x => x == false);
+            return states.Any(x => x == true);
         }
     }
     public bool CanRideWall
@@ -116,10 +121,22 @@ public class PlayerController : MonoBehaviour
         {
             List<bool> states = new List<bool>()
             {
-                isGrounded,
-                isSliding
+                !isGrounded,
+                !isSliding
             };
-            return states.All(x => x == false);
+            return states.Any(x => x == true);
+        }
+    }
+
+    public bool CancleGravity
+    {
+        get
+        {
+            List<bool> states = new List<bool>()
+            {
+                isGrappling
+            };
+            return states.Any(x => x == true);
         }
     }
 
@@ -337,6 +354,30 @@ public class PlayerController : MonoBehaviour
     public void RefreshExtension()
     {
         extensions = GetComponents<PlayerExtension>();
+    }
+
+    public void JumpToPosition(Vector3 targetPosition, float arcHeight)
+    {
+        // Cancel current velocity
+        rigidbody.linearVelocity = Vector3.zero;
+
+        // Calculate the direction and distance
+        Vector3 direction = (targetPosition - transform.position).normalized;
+        float distance = Vector3.Distance(transform.position, targetPosition);
+
+        // Estimate time to reach target (simplified)
+        float speed = Speed * 2f; // Use player speed or adjust as needed
+        float timeToTarget = distance / speed;
+
+        // Apply an upward impulse for the arc
+        float gravity = Physics.gravity.y * gravityMultiplier;
+        float verticalVelocity = (arcHeight - 0.5f * gravity * timeToTarget * timeToTarget) / timeToTarget;
+
+        // Apply force
+        rigidbody.AddForce(direction * speed + Vector3.up * verticalVelocity, ForceMode.VelocityChange);
+
+        // Update animator if needed
+        animator.SetTrigger("jump");
     }
 
     #endregion

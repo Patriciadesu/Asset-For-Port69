@@ -3,8 +3,8 @@ using NaughtyAttributes;
 using System;
 public class WallRun : PlayerExtension
 {
-    public float wallRideSpeed;
-    public float wallJumpForce;
+    public float wallRideSpeed = 4;
+    public float wallJumpForce = 20;
     private GameObject currentWall;
     private Vector3 direction;
     private Vector3 wallNormal;
