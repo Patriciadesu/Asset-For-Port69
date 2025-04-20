@@ -18,6 +18,7 @@ public class Roll : PlayerExtension
         {
             if (Input.GetKeyDown(activateKey) && _player.CanSlide)
             {
+                _player.camera.transform.SetParent(_player.fpsCamera);
                 slideAnimSpeed = slideSpeed / _player.GetAnimationLength("Slide");
                 _player.isSliding = true;
 
@@ -40,6 +41,7 @@ public class Roll : PlayerExtension
     void StopSlide()
     {
         // Modify collider back instead of controller
+        _player.camera.transform.SetParent(_player.transform);
         CapsuleCollider collider = _player.capsuleCollider;
         if (collider != null)
         {

@@ -8,10 +8,10 @@ public class MultipleJump : PlayerExtension
 
     public void Update()
     {
-        if (_player.isGrounded)
+        if (_player.isGrounded) {
             jumpCount = 0;
-
-        if (Input.GetKeyDown(activateKey) && jumpCount < maxJumps && !_player.isWallRunning)
+        }
+        else if(Input.GetKeyDown(activateKey) && jumpCount < maxJumps && !_player.isWallRunning)
         {
             _player.Jump();
             jumpCount++;

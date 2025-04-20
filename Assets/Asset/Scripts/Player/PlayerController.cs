@@ -58,11 +58,10 @@ public class PlayerController : MonoBehaviour
     [Foldout("DO NOT TOUCH")] public Transform tpsCameraPivot;
 
     // Player States
-    public bool isSliding = false;
-    public bool isGrounded = true;
-    public bool isCrouching = false;
-    public bool isWallRunning = false;
-    public bool isGrappling = false;
+    [HideInInspector]public bool isSliding = false;
+    [HideInInspector] public bool isGrounded = true;
+    [HideInInspector] public bool isCrouching = false;
+    [HideInInspector] public bool isWallRunning = false;
     public bool CanSlide
     {
         get
@@ -70,10 +69,9 @@ public class PlayerController : MonoBehaviour
             List<bool> states = new List<bool>() 
             { 
                 isGrounded,
-                !isWallRunning,
-                !isGrappling
+                !isWallRunning
             };
-            return states.Any(x => x==true);
+            return states.All(x => x==true);
         }
     }
     public bool CanJump
@@ -84,9 +82,8 @@ public class PlayerController : MonoBehaviour
             {
                 isGrounded,
                 !isWallRunning,
-                !isGrappling
             };
-            return states.Any(x => x == true);
+            return states.All(x => x == true);
         }
     }
     public bool CanMove
@@ -96,10 +93,9 @@ public class PlayerController : MonoBehaviour
             List<bool> states = new List<bool>()
             {
                 !isWallRunning,
-                !isSliding,
-                !isGrappling
+                !isSliding
             };
-            return states.Any(x => x == true);
+            return states.All(x => x == true);
         }
     }
     public bool CanCrouch
@@ -109,10 +105,9 @@ public class PlayerController : MonoBehaviour
             List<bool> states = new List<bool>()
             {
                 ! isWallRunning,
-                ! isSliding,
-                !isGrappling
+                ! isSliding
             };
-            return states.Any(x => x == true);
+            return states.All(x => x == true);
         }
     }
     public bool CanRideWall
@@ -124,19 +119,7 @@ public class PlayerController : MonoBehaviour
                 !isGrounded,
                 !isSliding
             };
-            return states.Any(x => x == true);
-        }
-    }
-
-    public bool CancleGravity
-    {
-        get
-        {
-            List<bool> states = new List<bool>()
-            {
-                isGrappling
-            };
-            return states.Any(x => x == true);
+            return states.All(x => x == true);
         }
     }
 

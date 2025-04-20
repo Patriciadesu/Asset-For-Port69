@@ -49,7 +49,18 @@ public class WallRun : PlayerExtension
          _player.isWallRunning = true;
         direction = GetWallParallelDirection(point.normal);
         wallNormal = point.normal;
+        //_player.camera.transform.Rotate(0,0,30);
 
+        _player.animator.SetBool("isWallRiding", true);
+        float side = Vector3.Dot(_player.transform.right, wallNormal);
+        if (side < 0)
+        {
+            _player.animator.SetTrigger("isWallRiding_R");
+        }
+        else
+        {
+            _player.animator.SetTrigger("isWallRiding_L");
+        }
     }
     private void WallRide()
     {
@@ -70,14 +81,16 @@ public class WallRun : PlayerExtension
         Vector3 jumpDirection = wallNormal + Vector3.up; // Away from wall + upward
         _player.rigidbody.linearVelocity = Vector3.zero; // Optional: reset vertical/horizontal speed
         _player.rigidbody.AddForce(jumpDirection.normalized * wallJumpForce, ForceMode.Impulse);
-
+        _player.animator.SetTrigger("jump");
         EndWallRide();
     }
 
     private void EndWallRide()
     {
+        //_player.camera.transform.Rotate(0, 0, -30);
         if (_player.isWallRunning)
         {
+            _player.animator.SetBool("isWallRiding", false);
             _player.isWallRunning = false;
         }
     }
@@ -92,4 +105,7 @@ public class WallRun : PlayerExtension
         Vector3 projected = Vector3.ProjectOnPlane(forward, wallNormal);
         return projected.normalized;
     }
+
+    
+
 }
