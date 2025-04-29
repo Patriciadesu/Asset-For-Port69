@@ -5172,8 +5172,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7631937806620114466}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.22189745, y: -0, z: -0, w: 0.97507}
-  m_LocalPosition: {x: 0, y: 3, z: -2.5}
+  m_LocalRotation: {x: -0, y: -0, z: 0.008726535, w: 0.9999619}
+  m_LocalPosition: {x: -0.009, y: 1.794621, z: 0.15540518}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5879,7 +5879,6 @@ GameObject:
   - component: {fileID: 1611693637559534253}
   - component: {fileID: 828572469451222913}
   - component: {fileID: 6764649303477741847}
-  - component: {fileID: 7940956485847818892}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -5999,6 +5998,7 @@ MonoBehaviour:
   cameraLookUp: 1.8
   cameraDistance: 4
   cameraSmoothness: 0.1
+  freeLookCamera: 1
   speed: 5
   jumpForce: 40
   fallMultiplier: 10
@@ -6016,21 +6016,7 @@ MonoBehaviour:
   isWallRunning: 0
   velocity: {x: 0, y: 0, z: 0}
   lastCheckpoint: {x: 0, y: 0, z: 0}
-  spawnPoint: {x: 80, y: 171, z: 166}
---- !u!114 &7940956485847818892
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8701067600650517779}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 613017a0983d8e94eb719a6c23b102da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  wallRideSpeed: 4
-  wallJumpForce: 20
+  spawnPoint: {x: 0, y: 0, z: 0}
 --- !u!1 &8737779754631215672
 GameObject:
   m_ObjectHideFlags: 0
