@@ -64,7 +64,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f62c9c65cf3354c93be831c8bc075510, type: 3}
   m_Name: ScreenSpaceAmbientOcclusion
   m_EditorClassIdentifier: 
-  m_Active: 0
+  m_Active: 1
   m_Settings:
     AOMethod: 0
     Downsample: 0
@@ -72,7 +72,7 @@ MonoBehaviour:
     Source: 1
     NormalSamples: 1
     Intensity: 2.1
-    DirectLightingStrength: 0.25
+    DirectLightingStrength: 0.296
     Radius: 3.07
     Samples: 1
     BlurQuality: 0

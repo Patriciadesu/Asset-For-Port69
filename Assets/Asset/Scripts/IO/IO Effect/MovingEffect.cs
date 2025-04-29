@@ -1,18 +1,42 @@
 using UnityEngine;
-
+using System.Collections;
+using NaughtyAttributes;
 public class MovingEffect : ObjectEffect
 {
-    [SerializeField] private Vector3 targetPosition;
+    public enum MovingType
+    {
+        FromCurrentPosition,
+        ToDestinatePosition
+    }
+    public MovingType type;
+    [SerializeField,ShowIf("type",MovingType.ToDestinatePosition)] private Vector3 destinatePosition;
+    [SerializeField, ShowIf("type", MovingType.FromCurrentPosition)] private Vector3 offsetPosition;
+    private Vector3 startPosition;
+    private Vector3 targetPosition
+    {
+        get
+        {
+            if (type == MovingType.FromCurrentPosition)
+            {
+                return startPosition + offsetPosition;
+            }
+            else 
+            {
+                return destinatePosition;
+            }
+        }
+    }
     [SerializeField] private float moveSpeed = 2f;
     private Vector3 originalPosition;
 
     private void Start()
     {
+        startPosition = transform.position;
         originalPosition = transform.position;
         StartCoroutine(MoveLoopRoutine());
     }
 
-    private System.Collections.IEnumerator MoveLoopRoutine()
+    private IEnumerator MoveLoopRoutine()
     {
         while (true)
         {
@@ -39,5 +63,11 @@ public class MovingEffect : ObjectEffect
     public override void ApplyEffect(Collision playerCollision)
     {
         
+    }
+
+    public void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(targetPosition, 2);
     }
 }

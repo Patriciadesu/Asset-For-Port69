@@ -3,9 +3,10 @@ using UnityEngine;
 public class Crouch : PlayerExtension
 {
     public float crouchSpeed = 2f;
+    public KeyCode activateKey = KeyCode.C;
     public void Update()
     {
-        if (Input.GetKeyDown(KeyCode.C)&&_player.CanCrouch)
+        if (Input.GetKeyDown(activateKey) &&_player.CanCrouch)
         {
             ToggleCrouch();
         }

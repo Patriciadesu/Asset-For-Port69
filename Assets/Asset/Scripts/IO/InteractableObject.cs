@@ -1,14 +1,18 @@
 using Unity.VisualScripting;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
 public class InteractableObject : MonoBehaviour
 {
+    [SerializeField] bool usePhysic = false;
     private ObjectEffect[] effects;
 
     void Start()
     {
+        GetComponent<Rigidbody>().isKinematic = !usePhysic;
         effects = GetComponents<ObjectEffect>();
         EnsureColliderExists();
+        EnsureRigidbodyExists();
     }
 
     void OnCollisionEnter(Collision collision)
@@ -95,15 +99,15 @@ public class InteractableObject : MonoBehaviour
         {
             Debug.LogError("No Collider Can Be Added Please Add It Manually.");
         }
-        // Ensure a Rigidbody exists
-        if (!TryGetComponent<Rigidbody>(out Rigidbody rb))
-        {
-            rb = gameObject.AddComponent<Rigidbody>();
-            rb.isKinematic = true;
-            Debug.Log($"Added Rigidbody to {gameObject.name} (set to kinematic)");
-        }
     }
 
+    private void EnsureRigidbodyExists()
+    {
+        if(GetComponent<Rigidbody>() == null)
+        {
+            gameObject.AddComponent<Rigidbody>();
+        }
+    }
 
     public void RefreshEffects()
     {
