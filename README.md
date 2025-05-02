@@ -45,5 +45,6 @@ Please make EFFECT that play sound when player step on object
 # Keywords
 - **EFFECT** : ใช้เวลาเจน Effect ใหม่ให้ Interactable Object
 - **PLAYER ACTION** : ใช้เวลาเจน Action หรือ Skill ใหม่ให้ Player
+### Recap
+- **Interactable Object** : จะทำงาน Effect เมื่อ Player แตะโดน
 
-# Recap
