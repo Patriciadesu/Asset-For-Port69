@@ -42,4 +42,8 @@ Please make EFFECT that play sound when player step on object
 ทำไมคำว่า EFFECT ถึงตัวใหญ่หมด???
 มันคือ **Keyword** ที่บอกว่าจะให้เจน Effect ของ Interactable Object นั่นเองคับบบบ หลักๆจะมี 2 Keyword
 
-#
+# Keywords
+- **EFFECT** : ใช้เวลาเจน Effect ใหม่ให้ Interactable Object
+- **PLAYER ACTION** : ใช้เวลาเจน Action หรือ Skill ใหม่ให้ Player
+
+# Recap
