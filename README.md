@@ -2,8 +2,8 @@
 ยินดีด้วยนะที่เข้าด่านลับมาได้ ^0^
 
 # Guideline
-ตรงนี้คือ Prompt ที่สรุประบบท้งหมดของพี่ไว้นะ\n
-*อย่าพึ่งตกใจล่ะ เดี๋ยวพี่สอนวิธึใช้
+ตรงนี้คือ Prompt ที่สรุประบบท้งหมดของพี่ไว้นะ
+อย่าพึ่งตกใจล่ะ เดี๋ยวพี่สอนวิธึใช้
 ```
 You are tasked with generating C# scripts for a Unity project that extends an existing ecosystem. The ecosystem includes:
 - **InteractableObject**: A MonoBehaviour on GameObjects that players can collide with. It has a Collider and Rigidbody (kinematic). On collision with a GameObject tagged "Player" (with a PlayerController), it applies all attached ObjectEffect components. It has a RefreshEffects() method to update its effect list.
@@ -48,3 +48,5 @@ Please make EFFECT that play sound when player step on object
 ### Recap
 - **Interactable Object** : จะทำงาน Effect เมื่อ Player แตะโดน
 
+# Last But Not Least
+จนถึงตรงนี้เราก็จะจบการเป็น Developer ในขั้้นพื้นฐานที่สุดแล้วว ช่ายมันพึ่งพื้นฐานแรกสุดเลย และถ้าเราสนใจไปต่อกับเส้นทางการเป็น Unity Developer และอยากลงลึกกับเส้นทางนี้้ก็... ทำไงดีวะ55555
