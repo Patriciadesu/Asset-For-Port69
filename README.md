@@ -2,7 +2,7 @@
 ยินดีด้วยนะที่เข้าด่านลับมาได้ ^0^
 
 # Guideline
-ตรงนี้คือ Prompt ที่สรุประบบท้งหมดของพี่ไว้นะ
+ตรงนี้คือ Prompt ที่สรุประบบท้งหมดของพี่ไว้นะ\n
 *อย่าพึ่งตกใจล่ะ เดี๋ยวพี่สอนวิธึใช้
 ```
 You are tasked with generating C# scripts for a Unity project that extends an existing ecosystem. The ecosystem includes:
