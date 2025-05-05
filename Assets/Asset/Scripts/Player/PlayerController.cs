@@ -26,13 +26,13 @@ public class PlayerController : MonoBehaviour
 
     // Camera Settings
     [Foldout("Camera", true)] public CameraType cameraType;
-    [Foldout("Camera", true), SerializeField, Range(30, 120)] float cameraFOV = 60f;
-    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(-2, 2)] public float cameraOffsetX = 0f;
-    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(-2, 2)] public float cameraOffsetY = 0.5f;
-    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(0, 2)] public float cameraLookUp = 0.5f;
-    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(1, 10)] public float cameraDistance = 4f;
-    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(0, 1)] public float cameraSmoothness = 0.1f;
-    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson)] public bool freeLookCamera = true;
+    [Foldout("Camera", true), SerializeField, Range(30, 120)] float cameraFOV;
+    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(-2, 2)] public float cameraOffsetX;
+    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(-2, 2)] public float cameraOffsetY;
+    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(0, 2)] public float cameraLookUp;
+
+
+
 
     // Movement Settings
     public float Speed => (speed + additionalSpeed) * speedMultiplier;
@@ -65,11 +65,66 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public bool isGrounded = true;
     [HideInInspector] public bool isCrouching = false;
     [HideInInspector] public bool isWallRunning = false;
-    public bool CanSlide => isGrounded && !isWallRunning;
-    public bool CanJump => isGrounded && !isWallRunning;
-    public bool CanMove => !isWallRunning && !isSliding;
-    public bool CanCrouch => !isWallRunning && !isSliding;
-    public bool CanRideWall => !isGrounded && !isSliding;
+    public bool CanSlide
+    {
+        get
+        {
+            List<bool> states = new List<bool>()
+            {
+                isGrounded,
+                !isWallRunning
+            };
+            return states.All(x => x == true);
+        }
+    }
+    public bool CanJump
+    {
+        get
+        {
+            List<bool> states = new List<bool>()
+            {
+                isGrounded,
+                !isWallRunning,
+            };
+            return states.All(x => x == true);
+        }
+    }
+    public bool CanMove
+    {
+        get
+        {
+            List<bool> states = new List<bool>()
+            {
+                !isWallRunning,
+                !isSliding
+            };
+            return states.All(x => x == true);
+        }
+    }
+    public bool CanCrouch
+    {
+        get
+        {
+            List<bool> states = new List<bool>()
+            {
+                ! isWallRunning,
+                ! isSliding
+            };
+            return states.All(x => x == true);
+        }
+    }
+    public bool CanRideWall
+    {
+        get
+        {
+            List<bool> states = new List<bool>()
+            {
+                !isGrounded,
+                !isSliding
+            };
+            return states.All(x => x == true);
+        }
+    }
 
     // Internal State
     [HideInInspector] public Vector3 velocity;
@@ -78,14 +133,14 @@ public class PlayerController : MonoBehaviour
     private float xRotation = 0f;
     private float tpsYaw = 0f;
     private float tpsPitch = 10f;
-    private Vector3 smoothCameraVelocity;
+
 
     // Extensions
     private PlayerExtension[] extensions;
 
     #endregion
 
-    #region Unity Methods
+    #region Unity Method
 
     void Start()
     {
@@ -97,7 +152,7 @@ public class PlayerController : MonoBehaviour
         {
             extension.OnStart(this);
         }
-        if(cameraType == CameraType.ThirdPerson&&freeLookCamera) camera.transform.parent = null;
+
     }
 
     private void FixedUpdate()
@@ -116,7 +171,7 @@ public class PlayerController : MonoBehaviour
             CheckGrounded();
             JumpHandler();
             HandleMouseLook();
-            UpdateCameraPosition();
+
             if (isGrounded)
             {
                 lastGroundedTime = Time.time;
@@ -141,32 +196,32 @@ public class PlayerController : MonoBehaviour
 
     #endregion
 
-    #region User Defined Methods
-
+    #region User Define Method
+    //Done
     void ApplyGravity()
     {
         float _fallMultiplier = isWallRunning ? 1 : fallMultiplier;
-        Vector3 velocity = rigidbody.linearVelocity;
+        if (rigidbody.linearVelocity.y <= 0)
 
-        // Apply gravity modifiers
-        if (velocity.y <= 0)
+
+
         {
-            velocity += Vector3.up * Physics.gravity.y * (_fallMultiplier - 1) * Time.deltaTime;
+            rigidbody.linearVelocity += Vector3.up * Physics.gravity.y * (_fallMultiplier - 1) * Time.deltaTime;
         }
-        else if (velocity.y > 0 && !Input.GetButton("Jump"))
+        else if (rigidbody.linearVelocity.y > 0 && !Input.GetButton("Jump"))
         {
-            velocity += Vector3.up * Physics.gravity.y * (gravityMultiplier - 1) * Time.deltaTime;
+            rigidbody.linearVelocity += Vector3.up * Physics.gravity.y * (gravityMultiplier - 1) * Time.deltaTime;
+        }
+        if (isGrounded && rigidbody.linearVelocity.y < 0)
+
+
+        {
+            velocity.y = -2f;
         }
 
-        // Stick to ground slightly when grounded
-        if (isGrounded && velocity.y < 0)
-        {
-            velocity.y = 0f;
-        }
 
-        rigidbody.linearVelocity = velocity;
     }
-
+    //Done
     void SetUpCamera()
     {
         switch (cameraType)
@@ -176,52 +231,35 @@ public class PlayerController : MonoBehaviour
                 camera.transform.rotation = Quaternion.Euler(transform.forward);
                 break;
             case CameraType.ThirdPerson:
+                tpsCamera.transform.localPosition = new Vector3(0, 3.5f + cameraOffsetY, -3 + cameraOffsetX);
+                camera.transform.position = tpsCamera.position;
+                camera.transform.LookAt(tpsCameraPivot);
                 tpsCameraPivot.transform.localPosition = new Vector3(0, cameraLookUp, 0);
-                camera.fieldOfView = cameraFOV;
+
                 break;
         }
+        camera.fieldOfView = cameraFOV;
     }
-
+    //Done
     void Move()
     {
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
 
+        Vector3 move;
         if (CanMove)
         {
-            // Calculate movement direction relative to camera
-            Vector3 inputDir = new Vector3(horizontal, 0, vertical).normalized;
-            Vector3 moveDir = Quaternion.Euler(0, tpsYaw, 0) * inputDir;
-
-            // Set horizontal velocity (preserve vertical velocity)
-            Vector3 targetVelocity = moveDir * Speed;
-            Vector3 newVelocity = Vector3.Lerp(
-                new Vector3(rigidbody.linearVelocity.x, 0, rigidbody.linearVelocity.z),
-                targetVelocity,
-                10f * Time.fixedDeltaTime
-            );
-            rigidbody.linearVelocity = new Vector3(newVelocity.x, rigidbody.linearVelocity.y, newVelocity.z);
-
-            // Rotate player to face movement direction if moving
-            if (inputDir.magnitude > 0)
-            {
-                float targetAngle = Mathf.Atan2(moveDir.x, moveDir.z) * Mathf.Rad2Deg;
-                transform.rotation = Quaternion.Slerp(
-                    transform.rotation,
-                    Quaternion.Euler(0, targetAngle, 0),
-                    10f * Time.fixedDeltaTime
-                );
-            }
-
+            move = (transform.right * horizontal + transform.forward * vertical).normalized;
+            rigidbody.MovePosition(rigidbody.position + move * Speed * Time.fixedDeltaTime);
             animator.SetFloat("MoveX", horizontal);
             animator.SetFloat("MoveY", vertical);
             animator.SetBool("isRun", horizontal != 0 || vertical != 0);
         }
-        else
-        {
-            // Stop horizontal movement if cannot move
-            rigidbody.linearVelocity = new Vector3(0, rigidbody.linearVelocity.y, 0);
-        }
+
+
+
+
+
     }
 
     void JumpHandler()
@@ -233,20 +271,20 @@ public class PlayerController : MonoBehaviour
         if (Time.time - lastJumpPressedTime <= jumpBufferTime && Time.time - lastGroundedTime <= coyoteTime)
         {
             Jump();
-            lastJumpPressedTime = -999f;
+            lastJumpPressedTime = -999f; // Reset to prevent double fire
         }
     }
-
+    //Done
     public void Jump()
     {
         animator.SetTrigger("jump");
         rigidbody.linearVelocity = new Vector3(rigidbody.linearVelocity.x, 0f, rigidbody.linearVelocity.z);
         rigidbody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
     }
-
+    //Done
     void HandleMouseLook()
     {
-        if (cameraType == CameraType.ThirdPerson && !Input.GetMouseButton(1)) return;
+
 
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
@@ -263,42 +301,12 @@ public class PlayerController : MonoBehaviour
             tpsYaw += mouseX;
             tpsPitch -= mouseY;
             tpsPitch = Mathf.Clamp(tpsPitch, -20f, 60f);
-        }
-        
-    }
-
-    void UpdateCameraPosition()
-    {
-        if (cameraType != CameraType.ThirdPerson) return;
-
-        // Calculate camera rotation
-        Quaternion camRotation = Quaternion.Euler(tpsPitch, tpsYaw, 0);
-
-        // Calculate look-at target
-        Vector3 lookAtPoint = tpsCameraPivot.position;
-        Vector3 pivotOffset = new Vector3(cameraOffsetX, cameraOffsetY + cameraLookUp, 0);
-
-        // Raycast from pivot + offset
-        Vector3 rayOrigin = lookAtPoint + pivotOffset;
-        Vector3 desiredDirection = camRotation * Vector3.back; // back relative to rotation
-        Vector3 desiredPosition = rayOrigin + desiredDirection * cameraDistance;
-
-        // Check for obstructions
-        float targetDistance = cameraDistance;
-        if (Physics.Raycast(rayOrigin, desiredDirection, out RaycastHit hit, cameraDistance, ~LayerMask.GetMask("Player")))
-        {
-            targetDistance = hit.distance - 0.1f; // Tiny buffer
-            targetDistance = Mathf.Clamp(targetDistance, 0.5f, cameraDistance); // Avoid too close
+            tpsCameraPivot.rotation = Quaternion.Euler(tpsPitch, tpsYaw, 0f);
+            transform.rotation = Quaternion.Euler(0f, tpsYaw, 0f);
         }
 
-        // Set camera position instantly (no smoothing)
-        Vector3 finalPosition = rayOrigin + desiredDirection * targetDistance;
-        camera.transform.position = finalPosition;
-
-        // Orient camera to look at pivot
-        camera.transform.LookAt(lookAtPoint);
     }
-
+    //Done
 
 
     void CheckGrounded()
@@ -315,7 +323,7 @@ public class PlayerController : MonoBehaviour
 
         RaycastHit[] hits = Physics.CapsuleCastAll(
             point1, point2, radius, direction, distance,
-            ~0,
+            ~0, // Everything
             QueryTriggerInteraction.Ignore
         );
 
@@ -330,7 +338,7 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
-
+    //Done
     public void Respawn()
     {
         rigidbody.linearVelocity = Vector3.zero;
@@ -342,7 +350,7 @@ public class PlayerController : MonoBehaviour
         }
         else this.transform.position = lastCheckpoint;
     }
-
+    //Done
     public float GetAnimationLength(string animationName)
     {
         foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips)
@@ -354,7 +362,7 @@ public class PlayerController : MonoBehaviour
         }
         return 0f;
     }
-
+    //Done
     public void RefreshExtension()
     {
         extensions = GetComponents<PlayerExtension>();
@@ -362,23 +370,35 @@ public class PlayerController : MonoBehaviour
 
     public void JumpToPosition(Vector3 targetPosition, float arcHeight)
     {
+        // Cancel current velocity
         rigidbody.linearVelocity = Vector3.zero;
+
+        // Calculate the direction and distance
         Vector3 direction = (targetPosition - transform.position).normalized;
         float distance = Vector3.Distance(transform.position, targetPosition);
-        float speed = Speed * 2f;
+
+        // Estimate time to reach target (simplified)
+        float speed = Speed * 2f; // Use player speed or adjust as needed
         float timeToTarget = distance / speed;
+
+        // Apply an upward impulse for the arc
         float gravity = Physics.gravity.y * gravityMultiplier;
         float verticalVelocity = (arcHeight - 0.5f * gravity * timeToTarget * timeToTarget) / timeToTarget;
+
+        // Apply force
         rigidbody.AddForce(direction * speed + Vector3.up * verticalVelocity, ForceMode.VelocityChange);
+
+        // Update animator if needed
         animator.SetTrigger("jump");
     }
 
     #endregion
 
     #region Gizmos
-
+    //Done
     void OnDrawGizmosSelected()
     {
+
         Vector3 start = transform.position + capsuleCollider.center;
         float radius = capsuleRadius * 0.95f;
         float height = capsuleHeight * 0.5f - radius;
@@ -394,4 +414,5 @@ public class PlayerController : MonoBehaviour
     }
 
     #endregion
+
 }
