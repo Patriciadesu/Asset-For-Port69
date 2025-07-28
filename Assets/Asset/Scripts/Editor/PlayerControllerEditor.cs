@@ -9,7 +9,7 @@ using NaughtyAttributes.Editor;
 using NaughtyAttributes;
 using UnityEngine.UIElements;
 
-[CustomEditor(typeof(PlayerController))]
+[CustomEditor(typeof(Player))]
 public class PlayerControllerEditor : NaughtyInspector
 {
     private bool showDoNotTouch = false; // Track foldout state
@@ -18,6 +18,7 @@ public class PlayerControllerEditor : NaughtyInspector
     private List<Type> extensionTypes = new List<Type>();
     private void OnEnable()
     {
+        base.OnEnable();
         extensionTypes.Clear();
         extensionToggles.Clear();
 
@@ -29,7 +30,7 @@ public class PlayerControllerEditor : NaughtyInspector
                 if (type.IsSubclassOf(typeof(PlayerExtension)) && !type.IsAbstract)
                 {
                     extensionTypes.Add(type);
-                    extensionToggles[type.Name] = ((PlayerController)target).GetComponent(type) != null;
+                    extensionToggles[type.Name] = ((Player)target).GetComponent(type) != null;
                 }
             }
         }
@@ -40,7 +41,7 @@ public class PlayerControllerEditor : NaughtyInspector
         base.OnInspectorGUI();
         EditorGUILayout.Space();
         SerializedObject serializedObject = new SerializedObject(target);
-        PlayerController player = (PlayerController)target;
+        Player player = (Player)target;
 
         #region Player Action
         GUIStyle boldFoldoutStyle = new GUIStyle(EditorStyles.foldout);
@@ -65,7 +66,7 @@ public class PlayerControllerEditor : NaughtyInspector
             }
             if (GUI.changed)
             {
-                player.RefreshExtension();
+                player.SetExtensions();
                 EditorUtility.SetDirty(player);
             }
         }
@@ -74,7 +75,7 @@ public class PlayerControllerEditor : NaughtyInspector
         serializedObject.ApplyModifiedProperties();
     }
 
-    private void ToggleEffect(PlayerController interactable, Type effectType, bool enable)
+    private void ToggleEffect(Player interactable, Type effectType, bool enable)
     {
         if (enable)
         {

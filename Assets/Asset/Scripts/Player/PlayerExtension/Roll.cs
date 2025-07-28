@@ -1,29 +1,38 @@
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class Roll : PlayerExtension
 {
     public KeyCode activateKey = KeyCode.Q;
-    public float slideSpeed = 2f;
-    public float slideDuration = 0.5f;
-    private Vector3 slideDirection;
-    private float slideAnimSpeed;
-    public void Update()
+    public float rollSpeed = 2f;
+    public float rollDuration = 0.5f;
+    private Vector3 rollDirection;
+    private float rollAnimSpeed;
+    private bool isRolling = false;
+    private bool CanRoll
     {
-        if (_player.isSliding)
+        get
         {
-            Vector3 slideVelocity = (slideDirection * slideSpeed) * _player.Speed;
-            _player.rigidbody.linearVelocity = new Vector3(slideVelocity.x, _player.rigidbody.linearVelocity.y, slideVelocity.z);
+            return _player.canMove && _player.isGrounded && _player.canApplyGravity;
+        }
+    }
+    protected override void OnUpdate()
+    {
+        if (isRolling)
+        {
+            Vector3 rollVelocity = (rollDirection * rollSpeed) * _player.Speed;
+            _player.rigidbody.linearVelocity = new Vector3(rollVelocity.x, _player.rigidbody.linearVelocity.y, rollVelocity.z);
         }
         else
         {
-            if (Input.GetKeyDown(activateKey) && _player.CanSlide)
+            if (Input.GetKeyDown(activateKey) && CanRoll)
             {
-                if (_player.cameraType == PlayerController.CameraType.FirstPerson)
+                if (_player.cameraType == Player.CameraType.FirstPerson)
                 {
-                    _player.camera.transform.SetParent(_player.fpsCamera);
+                    _player.camera.transform.SetParent(_player.fpsCameraPivot);
                 }
-                slideAnimSpeed = slideSpeed / _player.GetAnimationLength("Slide");
-                _player.isSliding = true;
+                rollAnimSpeed = rollSpeed / _player.GetAnimationLength("roll");
+                isRolling = true;
 
                 // Modify collider instead of controller properties
                 CapsuleCollider collider = _player.capsuleCollider;
@@ -33,18 +42,18 @@ public class Roll : PlayerExtension
                     collider.center = new Vector3(collider.center.x, collider.center.y / 2, collider.center.z);
                 }
 
-                slideDirection = _player.transform.forward; // Lock slide direction
-                _player.animator.speed = slideAnimSpeed;
-                _player.animator.SetTrigger("Slide");
-                this.Invoke("StopSlide", slideDuration + 0.25f);
+                rollDirection = _player.transform.forward; // Lock roll direction
+                _player.animator.speed = rollAnimSpeed;
+                _player.animator.SetTrigger("roll");
+                this.Invoke("Stoproll", rollDuration + 0.25f);
             }
         }
     }
 
-    void StopSlide()
+    void Stoproll()
     {
         // Modify collider back instead of controller
-        if(_player.cameraType == PlayerController.CameraType.FirstPerson)
+        if(_player.cameraType == Player.CameraType.FirstPerson)
         {
             _player.camera.transform.SetParent(_player.transform);
         }
@@ -55,7 +64,7 @@ public class Roll : PlayerExtension
             collider.center = new Vector3(collider.center.x, collider.center.y * 2, collider.center.z);
         }
 
-        _player.isSliding = false;
+        isRolling = false;
         _player.animator.speed = 1;
     }
 }

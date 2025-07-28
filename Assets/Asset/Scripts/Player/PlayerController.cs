@@ -134,6 +134,11 @@ public class PlayerController : MonoBehaviour
     private float tpsYaw = 0f;
     private float tpsPitch = 10f;
 
+    // Delegates
+    public delegate void FixedUpdateDelegate();
+    public FixedUpdateDelegate OnFixedUpdate;
+    public delegate void UpdateDelegate();
+    public UpdateDelegate OnUpdate;
 
     // Extensions
     private PlayerExtension[] extensions;
@@ -142,25 +147,37 @@ public class PlayerController : MonoBehaviour
 
     #region Unity Method
 
+    void Awake()
+    {
+        SetUpFixedUpdate();
+        SetUpUpdate();
+    }
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
         SetUpCamera();
         spawnPoint = transform.position;
-        RefreshExtension();
-        foreach (var extension in extensions)
-        {
-            extension.OnStart(this);
-        }
-
     }
-
+    private void SetUpFixedUpdate()
+    {
+        OnFixedUpdate = null;
+        OnFixedUpdate += ApplyGravity;
+        OnFixedUpdate += Move;
+    }
+    private void SetUpUpdate()
+    {
+        OnUpdate = null;
+        OnUpdate += CheckGrounded;
+        OnUpdate += JumpHandler;
+        OnUpdate += HandleMouseLook;
+    }
     private void FixedUpdate()
     {
         if (Application.isPlaying)
         {
-            Move();
-            ApplyGravity();
+            OnFixedUpdate?.Invoke();
         }
     }
 
@@ -168,9 +185,7 @@ public class PlayerController : MonoBehaviour
     {
         if (Application.isPlaying)
         {
-            CheckGrounded();
-            JumpHandler();
-            HandleMouseLook();
+            OnUpdate?.Invoke();
 
             if (isGrounded)
             {
@@ -284,8 +299,6 @@ public class PlayerController : MonoBehaviour
     //Done
     void HandleMouseLook()
     {
-
-
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
@@ -304,7 +317,6 @@ public class PlayerController : MonoBehaviour
             tpsCameraPivot.rotation = Quaternion.Euler(tpsPitch, tpsYaw, 0f);
             transform.rotation = Quaternion.Euler(0f, tpsYaw, 0f);
         }
-
     }
     //Done
 
@@ -366,30 +378,6 @@ public class PlayerController : MonoBehaviour
     public void RefreshExtension()
     {
         extensions = GetComponents<PlayerExtension>();
-    }
-
-    public void JumpToPosition(Vector3 targetPosition, float arcHeight)
-    {
-        // Cancel current velocity
-        rigidbody.linearVelocity = Vector3.zero;
-
-        // Calculate the direction and distance
-        Vector3 direction = (targetPosition - transform.position).normalized;
-        float distance = Vector3.Distance(transform.position, targetPosition);
-
-        // Estimate time to reach target (simplified)
-        float speed = Speed * 2f; // Use player speed or adjust as needed
-        float timeToTarget = distance / speed;
-
-        // Apply an upward impulse for the arc
-        float gravity = Physics.gravity.y * gravityMultiplier;
-        float verticalVelocity = (arcHeight - 0.5f * gravity * timeToTarget * timeToTarget) / timeToTarget;
-
-        // Apply force
-        rigidbody.AddForce(direction * speed + Vector3.up * verticalVelocity, ForceMode.VelocityChange);
-
-        // Update animator if needed
-        animator.SetTrigger("jump");
     }
 
     #endregion

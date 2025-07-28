@@ -1,6 +1,9 @@
 using UnityEngine;
 using NaughtyAttributes;
 using System;
+using UnityEngine.Rendering;
+using UnityEngine.Timeline;
+using Unity.VisualScripting;
 public class WallRun : PlayerExtension
 {
     public float wallRideSpeed = 4;
@@ -8,27 +11,23 @@ public class WallRun : PlayerExtension
     private GameObject currentWall;
     private Vector3 direction;
     private Vector3 wallNormal;
+    public bool isWallRunning;
 
-    public override void OnStart(PlayerController player)
-    {
-        base.OnStart(player);
-    }
 
-    private void Update()
+    protected override void OnUpdate()
     {
-        if (_player.isWallRunning)
+        if (isWallRunning)
         {
             WallRide();
         }
     }
 
-    private void OnCollisionStay(Collision collision)
+    protected override void OnCollisionStayEvent(Collision collision)
     {
         foreach (ContactPoint point in collision.contacts)
         {
             if (IsWall(point) && 
-                !_player.isWallRunning && 
-                _player.CanRideWall && 
+                !isWallRunning && 
                 Input.GetButton("Jump"))
             {
                 currentWall = collision.gameObject;
@@ -36,7 +35,7 @@ public class WallRun : PlayerExtension
             }
         }
     }
-    private void OnCollisionExit(Collision collision)
+    protected override void OnCollisionExitEvent(Collision collision)
     {
         if (collision.gameObject == currentWall)
         {
@@ -46,11 +45,12 @@ public class WallRun : PlayerExtension
     }
     private void StartWallRide(ContactPoint point)
     {
-         _player.isWallRunning = true;
+        isWallRunning = true;
         direction = GetWallParallelDirection(point.normal);
         wallNormal = point.normal;
-        //_player.camera.transform.Rotate(0,0,30);
-
+        _player.canMove = false;
+        _player.canApplyGravity = false;
+        _player.OnUpdate -= _player.JumpHandler;
         _player.animator.SetBool("isWallRiding", true);
         float side = Vector3.Dot(_player.transform.right, wallNormal);
         if (side < 0)
@@ -88,10 +88,13 @@ public class WallRun : PlayerExtension
     private void EndWallRide()
     {
         //_player.camera.transform.Rotate(0, 0, -30);
-        if (_player.isWallRunning)
+        if (isWallRunning)
         {
+            _player.canMove = true;
+            _player.canApplyGravity = true;
+            _player.OnUpdate += _player.JumpHandler;
             _player.animator.SetBool("isWallRiding", false);
-            _player.isWallRunning = false;
+            isWallRunning = false;
         }
     }
     private bool IsWall(ContactPoint point)
@@ -105,7 +108,5 @@ public class WallRun : PlayerExtension
         Vector3 projected = Vector3.ProjectOnPlane(forward, wallNormal);
         return projected.normalized;
     }
-
-    
 
 }
