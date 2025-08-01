@@ -6,16 +6,15 @@ public class Roll : PlayerExtension
     public KeyCode activateKey = KeyCode.Q;
     public float rollSpeed = 2f;
     public float rollDuration = 0.5f;
+    public float cooldownTime = 1f;
+    private float lastRollTime = 0f;
+    private bool isReadyToRoll => Time.time >= lastRollTime + cooldownTime;
     private Vector3 rollDirection;
-    private float rollAnimSpeed;
+    private float rollAnimSpeed => rollSpeed / _player.GetAnimationLength("roll");
     private bool isRolling = false;
-    private bool CanRoll
-    {
-        get
-        {
-            return _player.canMove && _player.isGrounded && _player.canApplyGravity;
-        }
-    }
+    private bool CanRoll=> _player.canMove && _player.isGrounded && _player.canApplyGravity && isReadyToRoll;
+        
+    
     protected override void OnUpdate()
     {
         if (isRolling)
@@ -31,7 +30,6 @@ public class Roll : PlayerExtension
                 {
                     _player.camera.transform.SetParent(_player.fpsCameraPivot);
                 }
-                rollAnimSpeed = rollSpeed / _player.GetAnimationLength("roll");
                 isRolling = true;
 
                 // Modify collider instead of controller properties
@@ -53,7 +51,7 @@ public class Roll : PlayerExtension
     void Stoproll()
     {
         // Modify collider back instead of controller
-        if(_player.cameraType == Player.CameraType.FirstPerson)
+        if (_player.cameraType == Player.CameraType.FirstPerson)
         {
             _player.camera.transform.SetParent(_player.transform);
         }
@@ -66,5 +64,6 @@ public class Roll : PlayerExtension
 
         isRolling = false;
         _player.animator.speed = 1;
+        lastRollTime = Time.time; // Reset the last roll time
     }
 }
