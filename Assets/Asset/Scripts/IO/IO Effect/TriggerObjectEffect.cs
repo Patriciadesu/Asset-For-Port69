@@ -18,4 +18,12 @@ public class TriggerObjectEffect : ObjectEffect
             obj.SetActive(true);
         }
     }
+    
+    public override void ApplyEffect(Collision playerCollision, Player player)
+    {
+        foreach (GameObject obj in objectToTrigger)
+        {
+            obj.SetActive(true);
+        }
+    }
 }

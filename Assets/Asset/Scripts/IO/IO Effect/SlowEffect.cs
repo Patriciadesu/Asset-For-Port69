@@ -11,7 +11,7 @@ public class SlowEffect : ObjectEffect
 
     public override void ApplyEffect(Collision playerCollision)
     {
-        PlayerController player = playerCollision.gameObject.GetComponent<PlayerController>();
+        Player player = playerCollision.gameObject.GetComponent<Player>();
         if (player != null)
         {
             if (activeCoroutine == null)
@@ -30,11 +30,35 @@ public class SlowEffect : ObjectEffect
         }
         else if (debugMode)
         {
-            Debug.LogWarning($"Slow effect on {gameObject.name} failed - No PlayerController found on {playerCollision.gameObject.name}!");
+            Debug.LogWarning($"Slow effect on {gameObject.name} failed - No Player found on {playerCollision.gameObject.name}!");
+        }
+    }
+    
+    public override void ApplyEffect(Collision playerCollision, Player player)
+    {
+        if (player != null)
+        {
+            if (activeCoroutine == null)
+            {
+                activeCoroutine = player.StartCoroutine(ApplySlowEffect(player, slowMultiplier, duration));
+                Debug.Log($"{gameObject.name} triggered slow effect on {player.gameObject.name} (multiplier: {slowMultiplier}x, duration: {duration}s)");
+            }
+            else
+            {
+                currentElapsedTime = 0f;
+                if (debugMode)
+                {
+                    Debug.Log($"{gameObject.name} slow effect timer reset for {player.gameObject.name} (remaining time refreshed to {duration}s)");
+                }
+            }
+        }
+        else if (debugMode)
+        {
+            Debug.LogWarning($"Slow effect on {gameObject.name} failed - Player is null!");
         }
     }
 
-    private System.Collections.IEnumerator ApplySlowEffect(PlayerController player, float multiplier, float duration)
+    private System.Collections.IEnumerator ApplySlowEffect(Player player, float multiplier, float duration)
     {
         float originalMultiplier = player.speedMultiplier;
         float newMultiplier = originalMultiplier * multiplier;

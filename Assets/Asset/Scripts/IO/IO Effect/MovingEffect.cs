@@ -62,7 +62,12 @@ public class MovingEffect : ObjectEffect
 
     public override void ApplyEffect(Collision playerCollision)
     {
-        
+        // Moving effect doesn't need player interaction, it moves continuously
+    }
+    
+    public override void ApplyEffect(Collision playerCollision, Player player)
+    {
+        // Moving effect doesn't need player interaction, it moves continuously
     }
 
     public void OnDrawGizmos()

@@ -6,12 +6,22 @@ public class JumpEffect : ObjectEffect
 
     public override void ApplyEffect(Collision playerCollision)
     {
-        PlayerController player = playerCollision.gameObject.GetComponent<PlayerController>();
+        Player player = playerCollision.gameObject.GetComponent<Player>();
         if (player != null /*&& player.isGrounded*/)
         {
             player.rigidbody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
 
             Debug.Log($"{gameObject.name} triggered jump effect");
+        }
+    }
+    
+    public override void ApplyEffect(Collision playerCollision, Player player)
+    {
+        if (player != null /*&& player.isGrounded*/)
+        {
+            player.rigidbody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+
+            Debug.Log($"{gameObject.name} triggered jump effect on {player.gameObject.name}");
         }
     }
 }

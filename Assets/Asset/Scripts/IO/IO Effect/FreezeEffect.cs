@@ -10,7 +10,7 @@ public class FreezeEffect : ObjectEffect
 
     public override void ApplyEffect(Collision playerCollision)
     {
-        PlayerController player = playerCollision.gameObject.GetComponent<PlayerController>();
+        Player player = playerCollision.gameObject.GetComponent<Player>();
         if (player != null)
         {
             if (activeCoroutine == null)
@@ -29,11 +29,35 @@ public class FreezeEffect : ObjectEffect
         }
         else if (debugMode)
         {
-            Debug.LogWarning($"Freeze effect on {gameObject.name} failed - No PlayerController found on {playerCollision.gameObject.name}!");
+            Debug.LogWarning($"Freeze effect on {gameObject.name} failed - No Player found on {playerCollision.gameObject.name}!");
+        }
+    }
+    
+    public override void ApplyEffect(Collision playerCollision, Player player)
+    {
+        if (player != null)
+        {
+            if (activeCoroutine == null)
+            {
+                activeCoroutine = player.StartCoroutine(ApplyFreezeEffect(player, freezeDuration));
+                Debug.Log($"{gameObject.name} triggered freeze effect on {player.gameObject.name} (duration: {freezeDuration}s)");
+            }
+            else
+            {
+                currentElapsedTime = 0f;
+                if (debugMode)
+                {
+                    Debug.Log($"{gameObject.name} freeze effect timer reset for {player.gameObject.name} (remaining time refreshed to {freezeDuration}s)");
+                }
+            }
+        }
+        else if (debugMode)
+        {
+            Debug.LogWarning($"Freeze effect on {gameObject.name} failed - Player is null!");
         }
     }
 
-    private System.Collections.IEnumerator ApplyFreezeEffect(PlayerController player, float duration)
+    private System.Collections.IEnumerator ApplyFreezeEffect(Player player, float duration)
     {
         float originalMultiplier = player.speedMultiplier;
         float newMultiplier = 0f;

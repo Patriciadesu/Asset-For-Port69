@@ -5,7 +5,7 @@ public class SpawnPointEffect : ObjectEffect
     [SerializeField] private float yOffset = 1f;
     public override void ApplyEffect(Collision playerCollision)
     {
-        PlayerController player = playerCollision.gameObject.GetComponent<PlayerController>();
+        Player player = playerCollision.gameObject.GetComponent<Player>();
         if (player != null)
         {
             Vector3 spawnPosition = transform.position;
@@ -14,6 +14,19 @@ public class SpawnPointEffect : ObjectEffect
 
             player.spawnPoint = spawnPosition;
             Debug.Log($"{gameObject.name} set spawn point at {spawnPosition}");
+        }
+    }
+    
+    public override void ApplyEffect(Collision playerCollision, Player player)
+    {
+        if (player != null)
+        {
+            Vector3 spawnPosition = transform.position;
+
+            spawnPosition.y += yOffset;
+
+            player.spawnPoint = spawnPosition;
+            Debug.Log($"{gameObject.name} set spawn point for {player.gameObject.name} at {spawnPosition}");
         }
     }
 }

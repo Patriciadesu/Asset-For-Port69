@@ -11,7 +11,7 @@ public class SpeedEffect : ObjectEffect
 
     public override void ApplyEffect(Collision playerCollision)
     {
-        PlayerController player = playerCollision.gameObject.GetComponent<PlayerController>();
+        Player player = playerCollision.gameObject.GetComponent<Player>();
         if (player != null)
         {
             if (activeCoroutine == null)
@@ -30,11 +30,35 @@ public class SpeedEffect : ObjectEffect
         }
         else if (debugMode)
         {
-            Debug.LogWarning($"Speed effect on {gameObject.name} failed - No PlayerController found on {playerCollision.gameObject.name}!");
+            Debug.LogWarning($"Speed effect on {gameObject.name} failed - No Player found on {playerCollision.gameObject.name}!");
+        }
+    }
+    
+    public override void ApplyEffect(Collision playerCollision, Player player)
+    {
+        if (player != null)
+        {
+            if (activeCoroutine == null)
+            {
+                activeCoroutine = player.StartCoroutine(ApplySpeedBoost(player, speedMultiplier, duration));
+                Debug.Log($"{gameObject.name} triggered speed effect on {player.gameObject.name} (multiplier: {speedMultiplier}x, duration: {duration}s)");
+            }
+            else
+            {
+                currentElapsedTime = 0f;
+                if (debugMode)
+                {
+                    Debug.Log($"{gameObject.name} speed effect timer reset for {player.gameObject.name} (remaining time refreshed to {duration}s)");
+                }
+            }
+        }
+        else if (debugMode)
+        {
+            Debug.LogWarning($"Speed effect on {gameObject.name} failed - Player is null!");
         }
     }
 
-    private System.Collections.IEnumerator ApplySpeedBoost(PlayerController player, float multiplier, float duration)
+    private System.Collections.IEnumerator ApplySpeedBoost(Player player, float multiplier, float duration)
     {
         float originalMultiplier = player.speedMultiplier;
         float newMultiplier = originalMultiplier * multiplier;

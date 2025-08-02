@@ -22,4 +22,13 @@ public class PlaySoundEffect : ObjectEffect
             audioSource.Play();
         }
     }
+    
+    public override void ApplyEffect(Collision playerCollision, Player player)
+    {
+        if (audioSource != null && clip != null && !audioSource.isPlaying)
+        {
+            audioSource.clip = clip;
+            audioSource.Play();
+        }
+    }
 }
