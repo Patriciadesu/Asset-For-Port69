@@ -813,7 +813,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 461f2a0ed283bb7478739af493a2efe6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activateKey: 32
+  activateKey: 102
   jetPackSpeed: 5
   jetPackFuel: 100
   fuelConsumptionRate: 10

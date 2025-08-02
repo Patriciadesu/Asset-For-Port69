@@ -89,6 +89,14 @@ public class Player : Singleton<Player>
     private PlayerExtension[] extensions;
 
     #endregion
+    
+    #region Player Stats
+    [Foldout("Player Stats", true), SerializeField, Range(0, 1000)] private float maxhealth = 100f;
+    [Foldout("Player Stats", true), SerializeField, Range(0, 1000)] private float maxstamina = 100f;
+    [HideInInspector] public float currenthealth;
+    [HideInInspector] public float currentstamina;
+    public float staminaconsumerate;
+    #endregion
 
     #region Unity Methods
     void Awake()
@@ -96,6 +104,8 @@ public class Player : Singleton<Player>
         rigidbody = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
         capsuleCollider = GetComponent<CapsuleCollider>();
+        currenthealth = maxhealth;
+        currentstamina = maxstamina;
     }
     void Start()
     {
