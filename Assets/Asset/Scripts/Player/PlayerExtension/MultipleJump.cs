@@ -6,7 +6,7 @@ public class MultipleJump : PlayerExtension
     public int maxJumps = 2;
     private int jumpCount;
 
-    protected override void OnUpdate()
+    protected void Update()
     {
         if (_player.isGrounded) {
             jumpCount = 0;

@@ -36,7 +36,7 @@ public class Turret : MonoBehaviour
     [SerializeField] private float bulletLifeTime = 2f;
     [SerializeField] private float bulletSpeed = 5f;
 
-    [HideInInspector] public PlayerController player;
+    [HideInInspector] public Player player;
     [HideInInspector] public float detectionAngle;
     private State currentState;
     private LineRenderer lineRenderer;  //  LineRenderer for visualizing detection area
@@ -58,7 +58,7 @@ public class Turret : MonoBehaviour
     private void Start()
     {
         gameObject.tag = "Enemy";
-        player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
+        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
         detectionAngle = maxDetectionAngle;
         SetState(new IdleState(this));
         initiateFront = front;

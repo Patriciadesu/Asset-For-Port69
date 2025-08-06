@@ -12,7 +12,7 @@ public class Crouch : PlayerExtension
             return _player.canMove && _player.isGrounded && _player.canApplyGravity;
         }
     }
-    protected override void OnUpdate()
+    protected void Update()
     {
         if (Input.GetKeyDown(activateKey) && CanCrouch)
         {

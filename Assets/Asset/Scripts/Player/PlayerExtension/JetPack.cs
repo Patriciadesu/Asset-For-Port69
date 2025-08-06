@@ -18,7 +18,7 @@ public class JetPack : PlayerExtension
         currentFuel = jetPackFuel;
     }
 
-    protected override void OnUpdate()
+    protected void Update()
     {
         // Start jetpack when key is held and conditions are met
         if (Input.GetKey(activateKey) && CanJetPack)

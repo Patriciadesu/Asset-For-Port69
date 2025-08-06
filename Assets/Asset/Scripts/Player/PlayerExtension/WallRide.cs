@@ -14,7 +14,7 @@ public class WallRun : PlayerExtension
     public bool isWallRunning;
 
 
-    protected override void OnUpdate()
+    protected void Update()
     {
         if (isWallRunning)
         {
@@ -22,7 +22,7 @@ public class WallRun : PlayerExtension
         }
     }
 
-    protected override void OnCollisionStayEvent(Collision collision)
+    protected  void OnCollisionStay(Collision collision)
     {
         foreach (ContactPoint point in collision.contacts)
         {
@@ -35,7 +35,7 @@ public class WallRun : PlayerExtension
             }
         }
     }
-    protected override void OnCollisionExitEvent(Collision collision)
+    protected  void OnCollisionExit(Collision collision)
     {
         if (collision.gameObject == currentWall)
         {

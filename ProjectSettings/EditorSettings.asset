@@ -46,3 +46,7 @@ EditorSettings:
   m_CacheServerDownloadBatchSize: 128
   m_EnableEnlightenBakedGI: 0
   m_ReferencedClipsExactNaming: 1
+  m_ScriptCompilationDuringPlay: 1
+  m_ScriptCompilationSettings:
+    m_EnableApiUpdater: 0
+

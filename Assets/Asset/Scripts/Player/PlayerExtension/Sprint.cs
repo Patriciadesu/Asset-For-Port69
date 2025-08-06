@@ -5,7 +5,7 @@ public class Sprint : PlayerExtension
     public KeyCode activateKey = KeyCode.LeftShift;
     public float sprintSpeed = 8f;
 
-    protected override void OnUpdate()
+    protected void Update()
     {
         if (Input.GetKeyDown(activateKey) && _player.canMove)
         {

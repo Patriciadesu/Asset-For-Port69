@@ -9,7 +9,7 @@ public class Dash : PlayerExtension
     private float lastDashTime = 0f;
     private bool isReadyToDash => Time.time >= lastDashTime + cooldownTime;
     private bool CanDash => _player.canMove && _player.isGrounded && _player.canApplyGravity && isReadyToDash;
-    protected override void OnUpdate()
+    protected void Update()
     {
         
 

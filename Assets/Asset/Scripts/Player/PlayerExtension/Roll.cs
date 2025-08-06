@@ -15,7 +15,7 @@ public class Roll : PlayerExtension
     private bool CanRoll=> _player.canMove && _player.isGrounded && _player.canApplyGravity && isReadyToRoll;
         
     
-    protected override void OnUpdate()
+    protected void Update()
     {
         if (isRolling)
         {
