@@ -91,11 +91,14 @@ public class Player : Singleton<Player>
     #endregion
     
     #region Player Stats
-    [Foldout("Player Stats", true), SerializeField, Range(0, 1000)] private float maxhealth = 100f;
-    [Foldout("Player Stats", true), SerializeField, Range(0, 1000)] private float maxstamina = 100f;
+    [Foldout("Player Stats", true), SerializeField, Range(0, 1000)] public float maxhealth = 100f;
+    [Foldout("Player Stats", true), SerializeField, Range(0, 1000)] public float maxstamina = 100f;
+    [Foldout("Player Stats", true), SerializeField, Range(0, 50)] public float staminaRegenRate = 20f; // New: Stamina regen per second
+    [Header("UI Settings")]
+    [Foldout("Player Stats", true)] public bool enableHealthBar = true;
+    [Foldout("Player Stats", true)] public bool enableStaminaBar = true;
     [HideInInspector] public float currenthealth;
     [HideInInspector] public float currentstamina;
-    public float staminaconsumerate;
     #endregion
 
     #region Unity Methods
@@ -132,6 +135,7 @@ public class Player : Singleton<Player>
             if (isGrounded)
             {
                 lastGroundedTime = Time.time;
+                RegenerateStamina(); // Regenerate stamina when grounded
             }
             if (cameraType == CameraType.FirstPerson)
             {
@@ -155,6 +159,24 @@ public class Player : Singleton<Player>
         if (Application.isPlaying)
         {
             OnFixedUpdate?.Invoke();
+        }
+    }
+    private void RegenerateStamina()
+    {
+        // Skip regeneration during sprint, roll, or dash
+        var sprintExt = GetComponent<Sprint>();
+        var rollExt = GetComponent<Roll>();
+        var dashExt = GetComponent<Dash>();
+        bool sprinting = sprintExt != null && sprintExt.isSprinting;
+        bool rolling = rollExt != null && rollExt.IsRolling;
+        bool dashing = dashExt != null && dashExt.IsDashing;
+        if (currentstamina < maxstamina && !sprinting && !rolling && !dashing)
+        {
+            currentstamina += staminaRegenRate * Time.deltaTime;
+            if (currentstamina > maxstamina)
+            {
+                currentstamina = maxstamina;
+            }
         }
     }
     void OnCollisionEnter(Collision collision)

@@ -23,8 +23,8 @@ public class PoolableFragment : MonoBehaviour
             bounceScript.fragmentRb = rb;
         }
         rb.mass = Random.Range(0.5f, 2f);
-        rb.drag = 0.1f;
-        rb.angularDrag = 0.05f;
+        rb.linearDamping = 0.1f;
+        rb.angularDamping = 0.05f;
     }
     private void OnEnable()
     {
