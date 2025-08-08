@@ -13,6 +13,7 @@ public class PlayerUIManager : MonoBehaviour
     public TextMeshProUGUI multipleJumpUI; // Shown when not grounded
     public GameObject crouchUI; // Shown when crouching
     public GameObject wallRunUI; // Shown when wall running
+    public GameObject grapplingHookUI; // Shown when grappling
 
     // Enable/Disable toggles for UI elements
     [Header("Enable/Disable UI Elements")]
@@ -25,6 +26,7 @@ public class PlayerUIManager : MonoBehaviour
     public bool enableMultipleJumpUI = true;
     public bool enableCrouchUI = true;
     public bool enableWallRunUI = true;
+    public bool enableGrapplingHookUI = true;
 
     private Player player;
 
@@ -44,6 +46,7 @@ public class PlayerUIManager : MonoBehaviour
         if(enableMultipleJumpUI) multipleJumpUI.gameObject.SetActive(false);
         if(enableCrouchUI) crouchUI.SetActive(false);
         if(enableWallRunUI) wallRunUI.SetActive(false);
+        if(enableGrapplingHookUI) grapplingHookUI.SetActive(false);
     }
 
     void Update()
@@ -110,5 +113,11 @@ public class PlayerUIManager : MonoBehaviour
     {
         if (!enableWallRunUI) return;
         wallRunUI.SetActive(isWallRunning);
+    }
+
+    public void UpdateGrapplingHook(bool isGrappling)
+    {
+        if (!enableGrapplingHookUI) return;
+        grapplingHookUI.SetActive(isGrappling);
     }
 }

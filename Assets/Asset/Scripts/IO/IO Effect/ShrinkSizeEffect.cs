@@ -35,8 +35,19 @@ public class ShrinkSizeEffect : ObjectEffect
             Vector3 currentScale = playerTransform.localScale;
             Vector3 targetScale = currentScale * sizeMultiplier;
             
+            // Store original collider values
+            CapsuleCollider capsuleCollider = player.capsuleCollider;
+            float originalHeight = capsuleCollider.height;
+            Vector3 originalCenter = capsuleCollider.center;
+            float originalRadius = capsuleCollider.radius;
+            
             // Apply immediate size change
             playerTransform.localScale = targetScale;
+            
+            // Adjust collider to match the new scale
+            capsuleCollider.height = originalHeight * sizeMultiplier;
+            capsuleCollider.center = originalCenter * sizeMultiplier;
+            capsuleCollider.radius = originalRadius * sizeMultiplier;
             
             // Update last activation time
             lastActivationTime = Time.time;
@@ -46,19 +57,31 @@ public class ShrinkSizeEffect : ObjectEffect
             // If not permanent, revert after duration
             if (!isPermanent && duration > 0)
             {
-                player.StartCoroutine(RevertSizeAfterDelay(playerTransform, currentScale, duration));
+                player.StartCoroutine(RevertSizeAfterDelay(playerTransform, currentScale, duration,
+                    originalHeight, originalCenter, originalRadius));
             }
         }
     }
     
-    private System.Collections.IEnumerator RevertSizeAfterDelay(Transform playerTransform, Vector3 originalScale, float delay)
+    private System.Collections.IEnumerator RevertSizeAfterDelay(Transform playerTransform, Vector3 originalScale, float delay,
+        float originalHeight, Vector3 originalCenter, float originalRadius)
     {
         yield return new WaitForSeconds(delay);
         
         if (playerTransform != null)
         {
             playerTransform.localScale = originalScale;
-            Debug.Log($"Player size reverted to normal after {delay} seconds");
+            
+            // Revert collider to original values
+            Player player = playerTransform.GetComponent<Player>();
+            if (player != null && player.capsuleCollider != null)
+            {
+                player.capsuleCollider.height = originalHeight;
+                player.capsuleCollider.center = originalCenter;
+                player.capsuleCollider.radius = originalRadius;
+            }
+            
+            Debug.Log($"Player size and collider reverted to normal after {delay} seconds");
         }
     }
 }
