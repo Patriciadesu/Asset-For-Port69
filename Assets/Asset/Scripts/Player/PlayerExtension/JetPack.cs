@@ -7,7 +7,7 @@ public class JetPack : PlayerExtension
     private PlayerUIManager uiManager;
 
     [Header("Properties")]
-    public KeyCode activateKey = KeyCode.Space;
+    public KeyCode activateKey = KeyCode.X;
     public float jetPackSpeed = 5f;
     public float jetPackFuel = 100f;
     public float fuelConsumptionRate = 20f;
