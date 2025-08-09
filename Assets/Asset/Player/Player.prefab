@@ -218,13 +218,14 @@ GameObject:
   m_Component:
   - component: {fileID: 2370893502080435849}
   - component: {fileID: 482485307216112438}
+  - component: {fileID: 422999800039834030}
   m_Layer: 0
   m_Name: Starter_Pants
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2370893502080435849
 Transform:
   m_ObjectHideFlags: 0
@@ -347,6 +348,20 @@ SkinnedMeshRenderer:
     m_Center: {x: 0.49471617, y: -0.02985686, z: -0.000000014901161}
     m_Extent: {x: 0.5068611, y: 0.16479233, z: 0.23511632}
   m_DirtyAABB: 0
+--- !u!114 &422999800039834030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 383815467907223885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94dad3eb9f608454c9abd05b9c87f641, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  oppositeToggleObjects:
+  - {fileID: 5825612907755630792}
 --- !u!1 &408782520100889353
 GameObject:
   m_ObjectHideFlags: 0
@@ -1480,7 +1495,7 @@ Transform:
   m_GameObject: {fileID: 2393404232985376398}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.8, y: 2.19, z: -5.54}
+  m_LocalPosition: {x: -0.004799986, y: 2.199, z: -5.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1519,7 +1534,7 @@ Camera:
     height: 1
   near clip plane: 0.01
   far clip plane: 1000
-  field of view: 60.000004
+  field of view: 63
   orthographic: 0
   orthographic size: 14.39
   m_Depth: 0
@@ -3486,13 +3501,14 @@ GameObject:
   m_Component:
   - component: {fileID: 673125072405341494}
   - component: {fileID: 541485430570121359}
+  - component: {fileID: 6010003093664767050}
   m_Layer: 0
   m_Name: Starter_Boots
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &673125072405341494
 Transform:
   m_ObjectHideFlags: 0
@@ -3615,6 +3631,20 @@ SkinnedMeshRenderer:
     m_Center: {x: 1.0193741, y: -0.0038369, z: 0.003105253}
     m_Extent: {x: 0.085498184, y: 0.15606338, z: 0.2192167}
   m_DirtyAABB: 0
+--- !u!114 &6010003093664767050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5522181876732463206}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94dad3eb9f608454c9abd05b9c87f641, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  oppositeToggleObjects:
+  - {fileID: 6905502975229346737}
 --- !u!1 &5599457367949224475
 GameObject:
   m_ObjectHideFlags: 0
@@ -5093,13 +5123,14 @@ GameObject:
   m_Component:
   - component: {fileID: 3107809718235350930}
   - component: {fileID: 6445449733771300953}
+  - component: {fileID: 6647504804859558129}
   m_Layer: 0
   m_Name: Starter_Chest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &3107809718235350930
 Transform:
   m_ObjectHideFlags: 0
@@ -5185,6 +5216,20 @@ SkinnedMeshRenderer:
     m_Center: {x: -0.26453483, y: -0.0643382, z: -0.00007355213}
     m_Extent: {x: 0.33124912, y: 0.27240586, z: 0.80939645}
   m_DirtyAABB: 0
+--- !u!114 &6647504804859558129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7392214268630395591}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94dad3eb9f608454c9abd05b9c87f641, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  oppositeToggleObjects:
+  - {fileID: 3136359320969174646}
 --- !u!1 &7486017550268202738
 GameObject:
   m_ObjectHideFlags: 0
@@ -5524,6 +5569,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9080317779987038143}
+  - component: {fileID: 6869520227927771709}
   m_Layer: 0
   m_Name: Armors
   m_TagString: Untagged
@@ -5548,6 +5594,19 @@ Transform:
   - {fileID: 8886305479176569863}
   m_Father: {fileID: 4650198011838732946}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6869520227927771709
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7949650263860095041}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94dad3eb9f608454c9abd05b9c87f641, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  oppositeToggleObjects: []
 --- !u!1 &7963315948391003130
 GameObject:
   m_ObjectHideFlags: 0
@@ -6108,10 +6167,10 @@ Rigidbody:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8701067600650517779}
-  serializedVersion: 5
+  serializedVersion: 4
   m_Mass: 1
-  m_LinearDamping: 4
-  m_AngularDamping: 0.05
+  m_Drag: 0
+  m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -6165,10 +6224,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mouseSensitivity: 2
   cameraType: 1
-  cameraFOV: 98.9
-  cameraSide: 0
+  cameraFOV: 63
+  cameraSide: 0.497
   cameraDistance: 5.54
-  yOffset: -0.4
+  yOffset: -0.391
+  camera: {fileID: 5991518683640287225}
+  fpsCameraPivot: {fileID: 8759067225569670240}
+  tpsCamera: {fileID: 844036609505767213}
+  tpsVirtualCamera: {fileID: 3258102064832517254}
+  tpsCameraPivot: {fileID: 6390838078909368975}
   speed: 5
   jumpForce: 10
   fallMultiplier: 3
@@ -6183,11 +6247,13 @@ MonoBehaviour:
   isGrounded: 1
   canApplyGravity: 1
   canMove: 1
-  camera: {fileID: 5991518683640287225}
-  fpsCameraPivot: {fileID: 8759067225569670240}
-  tpsCamera: {fileID: 844036609505767213}
-  tpsVirtualCamera: {fileID: 3258102064832517254}
-  tpsCameraPivot: {fileID: 6390838078909368975}
+  maxhealth: 100
+  maxstamina: 100
+  staminaRegenRate: 20
+  enableHealthBar: 1
+  enableStaminaBar: 1
+  currenthealth: 100
+  currentstamina: 100
 --- !u!1 &8737779754631215672
 GameObject:
   m_ObjectHideFlags: 0
@@ -6487,7 +6553,7 @@ Transform:
   m_GameObject: {fileID: 9005092544835479981}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.8, y: 2.19, z: -5.54}
+  m_LocalPosition: {x: -0.004799986, y: 2.199, z: -5.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6517,7 +6583,7 @@ MonoBehaviour:
     LookAtTarget: {fileID: 0}
     CustomLookAtTarget: 0
   Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 63
     OrthographicSize: 14.39
     NearClipPlane: 0.01
     FarClipPlane: 1000
@@ -6549,9 +6615,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Damping: {x: 0.1, y: 0.5, z: 0.3}
-  ShoulderOffset: {x: 0.8, y: -0.4, z: 0}
+  ShoulderOffset: {x: 0.8, y: -0.391, z: 0}
   VerticalArmLength: 0.77
-  CameraSide: 0
+  CameraSide: 0.497
   CameraDistance: 5.54
   AvoidObstacles:
     Enabled: 0

@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 538dd4be99c7e469eb07af0658f0a783, type: 3}
+  m_Name: Player_PlayerAnimatorOverride
+  m_EditorClassIdentifier: 
+  walk_front: {fileID: 0}
+  walk_back: {fileID: 0}
+  walk_left: {fileID: 0}
+  walk_right: {fileID: 0}
+  run_front: {fileID: 0}
+  run_back: {fileID: 0}
+  run_left: {fileID: 0}
+  run_right: {fileID: 0}
+  crouch_idle: {fileID: 0}
+  crouch_front: {fileID: 0}
+  crouch_back: {fileID: 0}
+  crouch_left: {fileID: 0}
+  crouch_right: {fileID: 0}
+  idle: {fileID: 0}
+  jump: {fileID: 0}
+  wallRideLeft: {fileID: 0}
+  wallRideRight: {fileID: 0}
+  dash: {fileID: 0}
+  jetpack: {fileID: 0}
+  roll: {fileID: 0}
