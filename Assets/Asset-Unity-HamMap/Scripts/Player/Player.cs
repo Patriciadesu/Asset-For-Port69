@@ -179,6 +179,15 @@ public class Player : Singleton<Player>
             }
         }
     }
+    public void TakeDamage(int amount)
+    {
+        currenthealth -= Mathf.Max(amount, 0);
+        if (currenthealth <= 0)
+        {
+            currenthealth = 0;
+            Respawn();
+        }
+    }
     void OnCollisionEnter(Collision collision)
     {
         if (Application.isPlaying)
@@ -404,6 +413,8 @@ public class Player : Singleton<Player>
             this.transform.position = spawnPoint;
         }
         else this.transform.position = lastCheckpoint;
+
+        currenthealth = maxhealth;
     }
     //Done
     public float GetAnimationLength(string animationName)
