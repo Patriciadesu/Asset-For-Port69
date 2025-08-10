@@ -87,6 +87,8 @@ public class DialogManager : Singleton<DialogManager>
             Player.Instance.canMove = false;
             Player.Instance.canApplyGravity = false;
         }
+        Player.Instance.animator.SetBool("isRunning", false);
+        Player.Instance.animator.SetBool("isRun", false);
         dialog = _dialog;
         currentDialog = 0;
         isDialogPlaying = true;

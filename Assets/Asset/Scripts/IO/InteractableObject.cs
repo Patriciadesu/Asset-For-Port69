@@ -127,7 +127,7 @@ public class InteractableObject : MonoBehaviour
                     {
                         var lodCollider = lodChild.gameObject.AddComponent<MeshCollider>();
                         lodCollider.sharedMesh = lodMeshFilter.sharedMesh;
-                        lodCollider.convex = false;
+                        lodCollider.convex = true;
                         lodCollider.isTrigger = false;
                         Debug.Log($"Added MeshCollider to LOD child: {lodChild.name}");
                         break;
@@ -144,7 +144,7 @@ public class InteractableObject : MonoBehaviour
                     {
                         MeshCollider meshCollider = child.gameObject.AddComponent<MeshCollider>();
                         meshCollider.sharedMesh = childMeshFilter.sharedMesh;
-                        meshCollider.convex = false;
+                        meshCollider.convex = true;
                         meshCollider.isTrigger = false;
                         Debug.Log($"Added MeshCollider to child: {child.name}");
                         hasCollider = true;

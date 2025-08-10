@@ -9,7 +9,7 @@ public class Crouch : PlayerExtension
     [Header("Properties")]
     public KeyCode activateKey = KeyCode.C;
     public float crouchSpeed = 2f;
-    public bool isCrouching = false;
+    private bool isCrouching = false;
     private bool CanCrouch => _player.canMove && _player.isGrounded && _player.canApplyGravity;
 
     public override void OnStart(Player player)

@@ -5,8 +5,13 @@ public class DialogTrigger : ObjectEffect
 {
     [TextArea(3, 10), SerializeField] private string[] dialog;
 
-    [Button("Trigger Dialog")]
-    
+    public void Start()
+    {
+        if (DialogManager.Instance == null)
+        {
+            Player.Instance.gameObject.AddComponent<DialogManager>();
+        }
+    }
     public override void ApplyEffect(Collision playerCollision)
     {
         Player player = playerCollision.gameObject.GetComponent<Player>();

@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+
 using UnityEngine;
 
 public class Roll : PlayerExtension
@@ -17,7 +17,7 @@ public class Roll : PlayerExtension
     private float lastRollTime = 0f;
     private bool isReadyToRoll => Time.time >= lastRollTime + cooldownTime;
     private Vector3 rollDirection;
-    private float rollAnimSpeed => rollSpeed / _player.GetAnimationLength("roll");
+    private float rollAnimSpeed => rollSpeed / _player.GetAnimationLength("Slide");
     private bool isRolling = false;
     public bool IsRolling => isRolling;
     private bool CanRoll => _player.canMove && _player.isGrounded && _player.canApplyGravity && isReadyToRoll && _player.currentstamina >= staminaCost;
@@ -62,7 +62,7 @@ public class Roll : PlayerExtension
         collider.center = new Vector3(collider.center.x, collider.center.y / 2, collider.center.z);
         rollDirection = _player.transform.forward;
         _player.animator.speed = rollAnimSpeed;
-        _player.animator.SetTrigger("roll");
+        _player.animator.SetTrigger("Slide");
         Invoke(nameof(StopRoll), rollDuration + 0.25f);
     }
 

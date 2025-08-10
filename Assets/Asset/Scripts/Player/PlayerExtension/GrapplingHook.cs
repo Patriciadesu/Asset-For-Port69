@@ -1,4 +1,6 @@
 using UnityEngine;
+using Unity.VisualScripting;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -46,22 +48,38 @@ public class GrapplingHook : PlayerExtension
     private Vector3 hookDirection;
     private float lastGrappleTime = -999f;
     private Camera playerCamera;
-    private LineRenderer lineRenderer;
+    public LineRenderer lineRenderer;
     
     // Properties
     private bool IsOnCooldown => Time.time - lastGrappleTime < cooldownTime;
     private bool CanGrapple => _player.canMove && !IsOnCooldown && (!useStamina || _player.currentstamina >= staminaCost);
     
+    public void OnDestroy()
+    {
+        // Cleanup on destroy
+        StopGrappling();
+        
+        if (lineRenderer != null)
+        {
+            DestroyImmediate(lineRenderer.gameObject);
+        }
+        
+        if (springJoint != null)
+        {
+            DestroyImmediate(springJoint);
+        }
+    }
+
     public override void OnStart(Player player)
     {
         base.OnStart(player);
-        
+
         playerCamera = _player.camera;
-        
+
         // Set hook origin to camera if not assigned
         if (hookOrigin == null)
             hookOrigin = playerCamera.transform;
-            
+
         // Create line renderer if not assigned
         if (hookLineRenderer == null)
         {
@@ -74,7 +92,7 @@ public class GrapplingHook : PlayerExtension
         {
             lineRenderer = hookLineRenderer;
         }
-        
+
         if (enableGrapplingUI)
             uiManager = Object.FindAnyObjectByType<PlayerUIManager>();
     }
@@ -314,11 +332,7 @@ public class GrapplingHook : PlayerExtension
         }
     }
     
-    // Cleanup when component is destroyed
-    private void OnDestroy()
-    {
-        StopGrappling();
-    }
+    
     
     // Visual debugging
     private void OnDrawGizmosSelected()

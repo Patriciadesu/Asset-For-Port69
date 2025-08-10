@@ -72,7 +72,16 @@ public class MovingEffect : ObjectEffect
 
     public void OnDrawGizmos()
     {
+        Vector3 center = Vector3.zero;
+        if (type == MovingType.FromCurrentPosition)
+        {
+            center =  transform.position + offsetPosition;
+        }
+        else 
+        {
+            center = destinatePosition;
+        }
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(targetPosition, 2);
+        Gizmos.DrawWireSphere(center, 2);
     }
 }

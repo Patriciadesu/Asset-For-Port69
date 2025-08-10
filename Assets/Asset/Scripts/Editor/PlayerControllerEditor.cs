@@ -89,6 +89,7 @@ public class PlayerControllerEditor : NaughtyInspector
             Component effect = interactable.GetComponent(effectType);
             if (effect != null)
             {
+                
                 DestroyImmediate(effect);
             }
         }
