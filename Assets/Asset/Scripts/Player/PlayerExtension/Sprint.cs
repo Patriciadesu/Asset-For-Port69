@@ -1,3 +1,4 @@
+using NaughtyAttributes;
 using UnityEngine;
 
 public class Sprint : PlayerExtension
@@ -10,8 +11,9 @@ public class Sprint : PlayerExtension
     public KeyCode activateKey = KeyCode.LeftShift;
     public float sprintSpeed = 8f;
     public bool useStamina = true; // Toggle stamina consumption during sprint
-    public float sprintCost = 10f; // Stamina consumed per second
-    public bool isSprinting = false;
+    [ShowIf("useStamina")]public float sprintCost = 10f; // Stamina consumed per second
+    private bool isSprinting = false;
+    public bool IsSprinting => isSprinting;
 
     
 

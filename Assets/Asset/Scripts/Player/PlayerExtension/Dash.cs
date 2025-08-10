@@ -1,3 +1,4 @@
+using NaughtyAttributes;
 using UnityEngine;
 
 public class Dash : PlayerExtension
@@ -11,7 +12,7 @@ public class Dash : PlayerExtension
     public float dashSpeed = 5f;
     public float cooldownTime = 1f;
     public bool useStamina = true; // Toggle stamina consumption during dash
-    public float staminaCost = 15f; // Stamina consumed per dash
+    [ShowIf("useStamina")]public float staminaCost = 15f; // Stamina consumed per dash
     private float lastDashTime = 0f;
     // Expose dashing state for stamina regen check
     private bool isDashing = false;

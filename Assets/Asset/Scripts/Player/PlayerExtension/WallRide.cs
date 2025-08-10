@@ -12,7 +12,7 @@ public class WallRun : PlayerExtension
     private GameObject currentWall;
     private Vector3 direction;
     private Vector3 wallNormal;
-    public bool isWallRunning;
+    private bool isWallRunning;
 
     public override void OnStart(Player player)
     {

@@ -167,7 +167,7 @@ public class Player : Singleton<Player>
         var sprintExt = GetComponent<Sprint>();
         var rollExt = GetComponent<Roll>();
         var dashExt = GetComponent<Dash>();
-        bool sprinting = sprintExt != null && sprintExt.isSprinting;
+        bool sprinting = sprintExt != null && sprintExt.IsSprinting;
         bool rolling = rollExt != null && rollExt.IsRolling;
         bool dashing = dashExt != null && dashExt.IsDashing;
         if (currentstamina < maxstamina && !sprinting && !rolling && !dashing)

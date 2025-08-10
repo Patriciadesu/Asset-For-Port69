@@ -1,4 +1,5 @@
 
+using NaughtyAttributes;
 using UnityEngine;
 
 public class Roll : PlayerExtension
@@ -13,7 +14,7 @@ public class Roll : PlayerExtension
     public float rollDuration = 0.5f;
     public float cooldownTime = 1f;
     public bool useStamina = true; // Toggle stamina consumption during roll
-    public float staminaCost = 15f;
+    [ShowIf("useStamina")]public float staminaCost = 15f;
     private float lastRollTime = 0f;
     private bool isReadyToRoll => Time.time >= lastRollTime + cooldownTime;
     private Vector3 rollDirection;
