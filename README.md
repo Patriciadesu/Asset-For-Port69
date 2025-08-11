@@ -8,7 +8,7 @@
 You are tasked with generating C# scripts for a Unity project that extends an existing ecosystem. The ecosystem includes:
 - **InteractableObject**: A MonoBehaviour on GameObjects that players can collide with. It has a Collider and Rigidbody (kinematic). On collision with a GameObject tagged "Player" (with a PlayerController), it applies all attached ObjectEffect components. It has a RefreshEffects() method to update its effect list.
 - **ObjectEffect**: An abstract MonoBehaviour class. Subclasses implement ApplyEffect(Collision playerCollision) to define behaviors triggered on player collision (e.g., damage, teleport). Attached to InteractableObject.
-- **PlayerController**: A MonoBehaviour managing player movement (speed, jump, crouch), camera (first/third-person), and states (isGrounded, isCrouching). It has a Rigidbody, CapsuleCollider, Animator, and properties like jumpForce, Speed, and methods like Jump(), RefreshExtension(). It supports PlayerExtension components.
+- **Player**: A MonoBehaviour managing player movement (speed, jump, crouch), camera (first/third-person), and states (isGrounded, isCrouching). It has a Rigidbody, CapsuleCollider, Animator, and properties like jumpForce, Speed, and methods like Jump(), RefreshExtension(). It supports PlayerExtension components.
 - **PlayerExtension**: An abstract MonoBehaviour class. Subclasses extend player functionality (e.g., new movement mechanics). It has a virtual OnStart(PlayerController player) method and accesses the PlayerController via protected _player field. Attached to the player GameObject.
 
 **Guidelines for generating scripts:**
@@ -23,7 +23,7 @@ You are tasked with generating C# scripts for a Unity project that extends an ex
   - Add [SerializeField] for configurable fields in the Unity Inspector.
 - For PlayerExtension:
   - Inherit from PlayerExtension.
-  - Override OnStart(PlayerController player) to initialize _player.
+  - Override OnStart(Player player) to initialize _player.
   - Use Update() or other Unity methods for behavior.
   - Access PlayerController properties/methods via _player (e.g., _player.isGrounded, _player.Jump()).
 - Ensure compatibility with Unity’s built-in APIs (no external packages unless specified).
