@@ -149,7 +149,7 @@ public class PlayerAnimation : MonoBehaviour
                                         state.state.motion = playerAnimator.roll;
                                         break;
                                 }
-                                Debug.Log($"State '{state.state.name}' motion set to '{state.state.motion.name}'");
+                                //Debug.Log($"State '{state.state.name}' motion set to '{state.state.motion.name}'");
                             }
                             EditorUtility.SetDirty(controller);
                         }
@@ -217,7 +217,7 @@ public class PlayerAnimation : MonoBehaviour
                                         state.state.motion = defaultAnimation.roll;
                                         break;
                                 }
-                                Debug.Log($"State '{state.state.name}' motion set to '{state.state.motion.name}'");
+                                //Debug.Log($"State '{state.state.name}' motion set to '{state.state.motion.name}'");
                             }
                             EditorUtility.SetDirty(controller);
                         }

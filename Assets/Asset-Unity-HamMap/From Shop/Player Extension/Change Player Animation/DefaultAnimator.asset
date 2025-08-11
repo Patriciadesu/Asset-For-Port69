@@ -29,6 +29,5 @@ MonoBehaviour:
   jump: {fileID: 7275300753899294233, guid: ab54d1b34370dbe4d896efebb96535ef, type: 3}
   wallRideLeft: {fileID: -203655887218126122, guid: f974bdebbe1797f40968279157a79f9f, type: 3}
   wallRideRight: {fileID: -203655887218126122, guid: aac95cbad4205d24ba941ef9f3444e04, type: 3}
-  dash: {fileID: 0}
-  jetpack: {fileID: 0}
+  dash: {fileID: -5793807499516084442, guid: 5fad9ecdaa1678b408a01f37c5ca69e8, type: 3}
   roll: {fileID: -5793807499516084442, guid: 5fad9ecdaa1678b408a01f37c5ca69e8, type: 3}
