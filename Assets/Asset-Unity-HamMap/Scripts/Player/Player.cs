@@ -182,6 +182,7 @@ public class Player : Singleton<Player>
     public void TakeDamage(int amount)
     {
         currenthealth -= Mathf.Max(amount, 0);
+        Debug.Log("Player took damage: " + amount + ", Current Health: " + currenthealth);
         if (currenthealth <= 0)
         {
             currenthealth = 0;

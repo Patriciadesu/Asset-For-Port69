@@ -7,6 +7,7 @@ public class ChaseState : EnemyState
     public override void OnEnter()
     {
         ctx.agent.isStopped = false;
+        ctx.SetChasingAnim(true);
     }
 
     public override void Tick()
@@ -26,12 +27,14 @@ public class ChaseState : EnemyState
             return;
         }
 
-        // ถ้าหลุดไกลกว่าระยะเห็นเล็กน้อยก็เลิกไล่
         if (dist > ctx.sightRange * 1.2f)
         {
             fsm.SetState(ctx.HasPatrol ? ctx.Patrol : ctx.Idle);
         }
     }
 
-    public override void OnExit() { }
+    public override void OnExit()
+    {
+        ctx.SetChasingAnim(false);
+    }
 }
