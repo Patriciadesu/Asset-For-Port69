@@ -32,6 +32,9 @@ public class Dash : PlayerExtension
 
     protected void Update()
     {
+
+        Player.Instance.canGenerateStamina = IsDashing;
+
         if (enableDashUI && uiManager != null)
             uiManager.UpdateDashCooldown(Time.time - lastDashTime, cooldownTime);
             

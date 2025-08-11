@@ -33,6 +33,9 @@ public class Roll : PlayerExtension
     
     protected void Update()
     {
+        
+        Player.Instance.canGenerateStamina = IsRolling;
+    
         if (enableRollUI && uiManager != null)
             uiManager.UpdateRollCooldown(Time.time - lastRollTime, cooldownTime);
             

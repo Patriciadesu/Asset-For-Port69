@@ -26,6 +26,7 @@ public class Sprint : PlayerExtension
 
     protected void Update()
     {
+        Player.Instance.canGenerateStamina = isSprinting;
         bool canSprint = _player.canMove && _player.currentstamina > 0;
         if (Input.GetKey(activateKey) && canSprint && !isSprinting)
         {

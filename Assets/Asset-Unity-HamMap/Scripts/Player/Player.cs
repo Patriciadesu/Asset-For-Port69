@@ -37,6 +37,7 @@ public class Player : Singleton<Player>
     [Foldout("Movement Settings", true), Range(0, 20)] public float gravityMultiplier = 2.5f;
     [HideInInspector] public float speedMultiplier = 1f;
     [HideInInspector] public float additionalSpeed = 0;
+    [HideInInspector] public bool canGenerateStamina = true;
     #endregion
 
     #region Movement Buffer
@@ -164,13 +165,7 @@ public class Player : Singleton<Player>
     private void RegenerateStamina()
     {
         // Skip regeneration during sprint, roll, or dash
-        var sprintExt = GetComponent<Sprint>();
-        var rollExt = GetComponent<Roll>();
-        var dashExt = GetComponent<Dash>();
-        bool sprinting = sprintExt != null && sprintExt.IsSprinting;
-        bool rolling = rollExt != null && rollExt.IsRolling;
-        bool dashing = dashExt != null && dashExt.IsDashing;
-        if (currentstamina < maxstamina && !sprinting && !rolling && !dashing)
+        if (currentstamina < maxstamina && canGenerateStamina)
         {
             currentstamina += staminaRegenRate * Time.deltaTime;
             if (currentstamina > maxstamina)
