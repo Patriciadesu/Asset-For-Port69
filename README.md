@@ -6,32 +6,52 @@
 อย่าพึ่งตกใจล่ะ เดี๋ยวพี่สอนวิธึใช้
 ```
 You are tasked with generating C# scripts for a Unity project that extends an existing ecosystem. The ecosystem includes:
-- **InteractableObject**: A MonoBehaviour on GameObjects that players can collide with. It has a Collider and Rigidbody (kinematic). On collision with a GameObject tagged "Player" (with a PlayerController), it applies all attached ObjectEffect components. It has a RefreshEffects() method to update its effect list.
-- **ObjectEffect**: An abstract MonoBehaviour class. Subclasses implement ApplyEffect(Collision playerCollision) to define behaviors triggered on player collision (e.g., damage, teleport). Attached to InteractableObject.
-- **Player**: A MonoBehaviour managing player movement (speed, jump, crouch), camera (first/third-person), and states (isGrounded, isCrouching). It has a Rigidbody, CapsuleCollider, Animator, and properties like jumpForce, Speed, and methods like Jump(), RefreshExtension(). It supports PlayerExtension components.
-- **PlayerExtension**: An abstract MonoBehaviour class. Subclasses extend player functionality (e.g., new movement mechanics). It has a virtual OnStart(PlayerController player) method and accesses the PlayerController via protected _player field. Attached to the player GameObject.
-
-**Guidelines for generating scripts:**
-- Create a single C# script that is either an ObjectEffect (for effects on InteractableObject) or PlayerExtension (for player actions).
-- Use "EFFECT" in the request to mean a new ObjectEffect subclass, and "PLAYER ACTION" to mean a new PlayerExtension subclass.
-- Include necessary using statements (e.g., UnityEngine).
-- Name the class descriptively based on the feature (e.g., SoundEffect, MultiJumpExtension).
-- For ObjectEffect:
-  - Inherit from ObjectEffect.
-  - Implement ApplyEffect(Collision playerCollision).
-  - Access PlayerController via playerCollision.gameObject.GetComponent<PlayerController>().
-  - Add [SerializeField] for configurable fields in the Unity Inspector.
-- For PlayerExtension:
-  - Inherit from PlayerExtension.
-  - Override OnStart(Player player) to initialize _player.
-  - Use Update() or other Unity methods for behavior.
-  - Access PlayerController properties/methods via _player (e.g., _player.isGrounded, _player.Jump()).
-- Ensure compatibility with Unity’s built-in APIs (no external packages unless specified).
-- Do not modify InteractableObject or PlayerController scripts.
-- Add Debug.Log statements for testing (e.g., to confirm effect/action triggers).
-- Make the script ready to attach to a GameObject (InteractableObject for effects, player for extensions).
-- Include [SerializeField] for any configurable values to allow tweaking in the Unity Inspector.
-- Ensure the script is concise and focused on the requested feature.
+* InteractableObject (InteractableObject.cs):
+   * MonoBehaviour attached to GameObjects players can collide with.
+   * Requires a Collider and Rigidbody (kinematic by default, unless usePhysic is true).
+   * On collision with a GameObject containing a Player component or tagged "Player", it runs all attached ObjectEffect components.
+   * Provides RefreshEffects() to update the effect list when effects are added/removed at runtime.
+   * Ensures a collider and rigidbody exist at startup.
+* ObjectEffect (abstract class inside InteractableObject.cs):
+   * Attached to InteractableObject GameObjects.
+   * Subclasses implement ApplyEffect(Collision playerCollision) to define collision-triggered behaviors.
+   * Optional overload ApplyEffect(Collision playerCollision, Player player) for direct player access.
+   * Common uses include damage, healing, teleportation, applying buffs, etc.
+* Player (Player.cs):
+   * Manages movement (walking, jumping, gravity, camera rotation), stamina, health, respawn, and animation.
+   * Has a Rigidbody, Animator, and CapsuleCollider.
+   * Handles first-person and third-person cameras, stamina regeneration, and movement constraints.
+   * Supports extensions through PlayerExtension components.
+   * Calls OnStart(Player) on each attached PlayerExtension during runtime initialization.
+   * Provides properties like _player.isGrounded, _player.Speed, _player.jumpForce, and methods like _player.Jump(), _player.TakeDamage(int), _player.Respawn().
+* PlayerExtension (PlayerExtension.cs):
+   * Abstract MonoBehaviour attached to the player GameObject.
+   * Subclasses extend player functionality with new mechanics (dash, wall run, double jump, etc.).
+   * Override OnStart(Player player) to store _player.
+   * Use _player to interact with movement, stats, and abilities.
+Guidelines for Generating Scripts
+* Script Category
+   * EFFECT = New ObjectEffect subclass (attach to InteractableObject).
+   * PLAYER ACTION = New PlayerExtension subclass (attach to Player).
+* ObjectEffect Rules
+   * Inherit from ObjectEffect.
+   * Implement ApplyEffect(Collision playerCollision) (and optionally ApplyEffect(Collision playerCollision, Player player)).
+   * Access the player via playerCollision.gameObject.GetComponent<Player>() if needed.
+   * Use [SerializeField] for configurable fields (damage amount, teleport location, heal value, etc.).
+   * Do not modify InteractableObject.cs.
+* PlayerExtension Rules
+   * Inherit from PlayerExtension.
+   * Override OnStart(Player player) to initialize _player.
+   * Use Update() or FixedUpdate() for behavior.
+   * Access player state and methods via _player (movement, jump, stats, animations).
+   * Do not modify Player.cs.
+* General Requirements
+   * Include using UnityEngine; and any other required namespaces.
+   * Name the class descriptively (e.g., DamageEffect, HealEffect, DoubleJumpExtension).
+   * Add Debug.Log() messages for testing triggers.
+   * Make scripts ready to attach to GameObjects without extra setup.
+   * Keep code concise and focused on the requested feature.
+   * Ensure compatibility with Unity’s built-in APIs (no external packages unless specified).
 ```
 ก็อป Text ก้อนนี้ไปแปะให้ ChatGPT ก่อนเรยย เป็นการอธิบายระบบพี่ให้มัน
 จากนั้นอย่าพึ่งส่งนะ พิมต่อตามนี้เลย
