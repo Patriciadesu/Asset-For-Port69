@@ -47,6 +47,3 @@ Please make EFFECT that play sound when player step on object
 - **PLAYER ACTION** : ใช้เวลาเจน Action หรือ Skill ใหม่ให้ Player
 ### Recap
 - **Interactable Object** : จะทำงาน Effect เมื่อ Player แตะโดน
-
-# Last But Not Least
-จนถึงตรงนี้เราก็จะจบการเป็น Developer ในขั้้นพื้นฐานที่สุดแล้วว ช่ายมันพึ่งพื้นฐานแรกสุดเลย และถ้าเราสนใจไปต่อกับเส้นทางการเป็น Unity Developer และอยากลงลึกกับเส้นทางนี้้ก็... ทำไงดีวะ55555
