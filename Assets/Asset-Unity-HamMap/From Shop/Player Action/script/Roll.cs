@@ -2,7 +2,7 @@
 using NaughtyAttributes;
 using UnityEngine;
 
-public class Roll : PlayerExtension
+public class Roll : PlayerExtension, IUseStamina
 {
     [Header("UI")]
     public bool enableRollUI = true;
@@ -13,14 +13,21 @@ public class Roll : PlayerExtension
     public float rollSpeed = 2f;
     public float rollDuration = 0.5f;
     public float cooldownTime = 1f;
+
+
+
     public bool useStamina = true; // Toggle stamina consumption during roll
     [ShowIf("useStamina")]public float staminaCost = 15f;
+    public bool isUsingStamina => useStamina && isRolling;
+    public bool canDrainStamina => _player.currentstamina >= staminaCost && useStamina;
+
+
+
     private float lastRollTime = 0f;
     private bool isReadyToRoll => Time.time >= lastRollTime + cooldownTime;
     private Vector3 rollDirection;
     private float rollAnimSpeed => rollSpeed / _player.GetAnimationLength("Slide");
     private bool isRolling = false;
-    public bool IsRolling => isRolling;
     private bool CanRoll => _player.canMove && _player.isGrounded && _player.canApplyGravity && isReadyToRoll && _player.currentstamina >= staminaCost;
 
     public override void OnStart(Player player)
@@ -33,8 +40,6 @@ public class Roll : PlayerExtension
     
     protected void Update()
     {
-        
-        Player.Instance.canGenerateStamina = IsRolling;
     
         if (enableRollUI && uiManager != null)
             uiManager.UpdateRollCooldown(Time.time - lastRollTime, cooldownTime);
@@ -50,12 +55,20 @@ public class Roll : PlayerExtension
         }
     }
 
+    public void DrainStamina(float amount)
+    {
+        if (canDrainStamina)
+        {
+            _player.currentstamina = Mathf.Max(_player.currentstamina - amount, 0f);
+        }
+    }
+
     private void StartRoll()
     {
         isRolling = true;
-        if (useStamina)
+        if (canDrainStamina)
         {
-            _player.currentstamina -= staminaCost; // Consume stamina
+            DrainStamina(staminaCost);
         }
         if (_player.cameraType == Player.CameraType.FirstPerson)
         {
@@ -87,5 +100,10 @@ public class Roll : PlayerExtension
         isRolling = false;
         _player.animator.speed = 1;
         lastRollTime = Time.time; // Reset the last roll time
+    }
+
+    void IUseStamina.DrainStamina(float amount)
+    {
+        throw new System.NotImplementedException();
     }
 }

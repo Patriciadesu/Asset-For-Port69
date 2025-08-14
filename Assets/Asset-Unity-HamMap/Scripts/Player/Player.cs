@@ -1,6 +1,8 @@
 using UnityEngine;
 using NaughtyAttributes;
 using Unity.Cinemachine;
+using System.Collections.Generic;
+
 
 [ExecuteAlways]
 public class Player : Singleton<Player>
@@ -37,7 +39,9 @@ public class Player : Singleton<Player>
     [Foldout("Movement Settings", true), Range(0, 20)] public float gravityMultiplier = 2.5f;
     [HideInInspector] public float speedMultiplier = 1f;
     [HideInInspector] public float additionalSpeed = 0;
-    [HideInInspector] public bool canGenerateStamina = true;
+    [HideInInspector] public List<IUseStamina> staminaComponentStates = new List<IUseStamina>();
+    public bool canGenerateStamina => staminaComponentStates.TrueForAll(x => x.isUsingStamina);
+    
     #endregion
 
     #region Movement Buffer
@@ -63,7 +67,8 @@ public class Player : Singleton<Player>
     [HideInInspector] public Vector3 spawnPoint;
 
     public bool isGrounded = true;
-    public bool canApplyGravity = true;
+    [HideInInspector] public List<ICancleGravity> cancleGravityComponents = new List<ICancleGravity>();
+    public bool canApplyGravity => cancleGravityComponents.TrueForAll(x => x.canApplyGravity);
     [HideInInspector] public bool canMove = true;
 
     #region Player Delegates
@@ -121,6 +126,9 @@ public class Player : Singleton<Player>
             SetSpawnPoint(transform.position);
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+
+            staminaComponentStates.Clear();
+            staminaComponentStates.AddRange(GetComponents<IUseStamina>());
 
             foreach (var extension in extensions)
             {
@@ -328,6 +336,7 @@ public class Player : Singleton<Player>
 
     void ApplyGravity()
     {
+        Debug.Log("Applying Gravity");
         float _fallMultiplier = canApplyGravity ? 1 : fallMultiplier;
         if (rigidbody.linearVelocity.y <= 0)
         {

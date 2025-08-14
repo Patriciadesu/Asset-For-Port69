@@ -15,17 +15,9 @@ public class VanishEffect : ObjectEffect
         objectCollider = GetComponent<Collider>();
     }
 
-    public override void ApplyEffect(Collision playerCollision)
-    {
-        Player player = playerCollision.gameObject.GetComponent<Player>();
-        if (player != null && !isVanishing)
-        {
-            StartCoroutine(VanishRoutine(player));
-            Debug.Log($"{gameObject.name} triggered vanish effect on player");
-        }
-    }
+
     
-    public override void ApplyEffect(Collision playerCollision, Player player)
+    public override void ApplyEffect(Player player)
     {
         if (player != null && !isVanishing)
         {

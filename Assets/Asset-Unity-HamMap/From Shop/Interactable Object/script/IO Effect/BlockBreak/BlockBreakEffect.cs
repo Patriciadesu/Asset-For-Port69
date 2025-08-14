@@ -89,22 +89,6 @@ public class BlockBreakEffect : ObjectEffect
         fragment.SetActive(false);
         return fragment;
     }
-    public override void ApplyEffect(Collision playerCollision)
-    {
-        if (playerCollision.contacts == null || playerCollision.contacts.Length == 0)
-        {
-            Debug.LogWarning("No collision contacts found!");
-            return;
-        }
-        Player player = playerCollision.gameObject.GetComponent<Player>();
-        if (player != null && !hasBeenDestroyed)
-        {
-            Vector3 hitPoint = playerCollision.contacts[0].point;
-            Vector3 hitNormal = playerCollision.contacts[0].normal;
-            Debug.Log($"BlockBreakEffect triggered by {player.gameObject.name} at point: {hitPoint}");
-            BreakBlock(hitPoint, hitNormal);
-        }
-    }
     public override void ApplyEffect(Collision playerCollision, Player player)
     {
         if (playerCollision.contacts == null || playerCollision.contacts.Length == 0)

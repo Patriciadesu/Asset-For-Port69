@@ -1,7 +1,7 @@
 using NaughtyAttributes;
 using UnityEngine;
 
-public class Sprint : PlayerExtension
+public class Sprint : PlayerExtension, IUseStamina
 {
     [Header("UI")]
     public bool enableSprintUI = true;
@@ -11,11 +11,13 @@ public class Sprint : PlayerExtension
     public KeyCode activateKey = KeyCode.LeftShift;
     public float sprintSpeed = 8f;
     public bool useStamina = true; // Toggle stamina consumption during sprint
-    [ShowIf("useStamina")]public float sprintCost = 10f; // Stamina consumed per second
+    [ShowIf("useStamina")] public float sprintCost = 10f; // Stamina consumed per second
+    public bool isUsingStamina => useStamina && isSprinting;
+    public bool canDrainStamina => _player.currentstamina >= sprintCost && useStamina;
     private bool isSprinting = false;
     public bool IsSprinting => isSprinting;
 
-    
+
 
     public override void OnStart(Player player)
     {
@@ -26,7 +28,6 @@ public class Sprint : PlayerExtension
 
     protected void Update()
     {
-        Player.Instance.canGenerateStamina = isSprinting;
         bool canSprint = _player.canMove && _player.currentstamina > 0;
         if (Input.GetKey(activateKey) && canSprint && !isSprinting)
         {
@@ -39,11 +40,11 @@ public class Sprint : PlayerExtension
 
         if (isSprinting)
         {
-            if (useStamina)
+            if (canDrainStamina)
             {
-                _player.currentstamina -= sprintCost * Time.deltaTime;
+                DrainStamina(sprintCost * Time.deltaTime);
             }
-            if (_player.currentstamina <= 0)
+            else if (useStamina) // If stamina can't be drained, stop sprinting
             {
                 StopSprint();
             }
@@ -67,6 +68,13 @@ public class Sprint : PlayerExtension
             isSprinting = false;
             _player.additionalSpeed -= sprintSpeed;
             _player.animator.SetBool("isRunning", false);
+        }
+    }
+    public void DrainStamina(float amount)
+    {
+        if (canDrainStamina)
+        {
+            _player.currentstamina = Mathf.Max(_player.currentstamina - amount, 0f);
         }
     }
 }

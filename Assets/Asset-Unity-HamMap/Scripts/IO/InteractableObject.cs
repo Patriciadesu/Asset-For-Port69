@@ -3,14 +3,18 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class InteractableObject : MonoBehaviour
 {
-    [SerializeField] bool usePhysic = true; // Changed to true by default for better collision detection
+    [SerializeField] bool usePhysic = true;
+    [SerializeField] bool useGravity = true;
+    [SerializeField] bool isTrigger = false;
     private ObjectEffect[] effects;
     void Start()
     {
         GetComponent<Rigidbody>().isKinematic = !usePhysic;
+        GetComponent<Rigidbody>().useGravity = useGravity;
         effects = GetComponents<ObjectEffect>();
         EnsureColliderExists();
         EnsureRigidbodyExists();
+        EnsureIsTrigger();
     }
     void OnCollisionEnter(Collision collision)
     {
@@ -43,7 +47,41 @@ public class InteractableObject : MonoBehaviour
             Debug.Log($"Collision detected with: {collision.gameObject.name} (Tag: {collision.gameObject.tag})");
         }
     }
-    
+    public void OnTriggerEnter(Collider other)
+    {
+        // First try to get Player directly from the colliding object
+        Player player = other.gameObject.GetComponent<Player>();
+        
+        if (player != null)
+        {
+            Debug.Log($"Player with Player Hit: {other.gameObject.name}");
+            foreach (ObjectEffect effect in effects)
+            {
+                effect.ApplyEffect(player);
+                effect.ApplyEffect(other, player);
+            }
+        }
+        else if (other.gameObject.CompareTag("Player"))
+        {
+            // If it has Player tag but no Player, search in hierarchy
+            player = FindPlayerInHierarchy(other.gameObject);
+            
+            if (player != null)
+            {
+                Debug.Log($"Player found in hierarchy: {player.gameObject.name}");
+                foreach (ObjectEffect effect in effects)
+                {
+                    effect.ApplyEffect(player);
+                    effect.ApplyEffect(other, player);
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"GameObject with 'Player' tag hit {gameObject.name} but has no Player component anywhere in hierarchy!");
+            }
+        }
+    }
+
     private Player FindPlayerInHierarchy(GameObject obj)
     {
         // Search in parent hierarchy
@@ -52,14 +90,14 @@ public class InteractableObject : MonoBehaviour
         {
             return parentPlayer;
         }
-        
+
         // Search in children hierarchy
         Player childPlayer = obj.GetComponentInChildren<Player>();
         if (childPlayer != null)
         {
             return childPlayer;
         }
-        
+
         // Search in siblings
         if (obj.transform.parent != null)
         {
@@ -69,7 +107,7 @@ public class InteractableObject : MonoBehaviour
                 return siblingPlayer;
             }
         }
-        
+
         return null;
     }
     protected virtual void HandlePlayerCollision(Collision playerCollision)
@@ -86,11 +124,8 @@ public class InteractableObject : MonoBehaviour
         {
             if (player != null)
             {
+                effect.ApplyEffect(player);
                 effect.ApplyEffect(playerCollision, player);
-            }
-            else
-            {
-                effect.ApplyEffect(playerCollision);
             }
         }
     }
@@ -99,6 +134,7 @@ public class InteractableObject : MonoBehaviour
         Debug.Log($"Handling player collision with {effects.Length} effects for player: {player.gameObject.name}");
         foreach (ObjectEffect effect in effects)
         {
+            effect.ApplyEffect(player);
             effect.ApplyEffect(collision, player);
         }
     }
@@ -113,7 +149,7 @@ public class InteractableObject : MonoBehaviour
                 var meshCollider = gameObject.AddComponent<MeshCollider>();
                 meshCollider.sharedMesh = meshFilter.sharedMesh;
                 meshCollider.convex = false;
-                meshCollider.isTrigger = false;
+                meshCollider.isTrigger = isTrigger;
                 Debug.Log($"Added MeshCollider to {gameObject.name}");
             }
             else if (TryGetComponent<LODGroup>(out LODGroup lodGroup))
@@ -128,7 +164,7 @@ public class InteractableObject : MonoBehaviour
                         var lodCollider = lodChild.gameObject.AddComponent<MeshCollider>();
                         lodCollider.sharedMesh = lodMeshFilter.sharedMesh;
                         lodCollider.convex = true;
-                        lodCollider.isTrigger = false;
+                        lodCollider.isTrigger = isTrigger;
                         Debug.Log($"Added MeshCollider to LOD child: {lodChild.name}");
                         break;
                     }
@@ -145,7 +181,7 @@ public class InteractableObject : MonoBehaviour
                         MeshCollider meshCollider = child.gameObject.AddComponent<MeshCollider>();
                         meshCollider.sharedMesh = childMeshFilter.sharedMesh;
                         meshCollider.convex = true;
-                        meshCollider.isTrigger = false;
+                        meshCollider.isTrigger = isTrigger;
                         Debug.Log($"Added MeshCollider to child: {child.name}");
                         hasCollider = true;
                     }
@@ -156,6 +192,24 @@ public class InteractableObject : MonoBehaviour
         if (!hasCollider)
         {
             Debug.LogError("No Collider Can Be Added Please Add It Manually.");
+        }
+    }
+    private void EnsureIsTrigger()
+    {
+        Collider collider = GetComponent<Collider>();
+        if (collider != null)
+        {
+            collider.isTrigger = isTrigger;
+            Debug.Log($"Set {gameObject.name} collider as trigger.");
+        }
+        foreach (Transform child in transform)
+        {
+            Collider childCollider = child.GetComponent<Collider>();
+            if (childCollider != null)
+            {
+                childCollider.isTrigger = isTrigger;
+                Debug.Log($"Set {child.name} collider as trigger.");
+            }
         }
     }
     private void EnsureRigidbodyExists()
@@ -172,12 +226,7 @@ public class InteractableObject : MonoBehaviour
 }
 public abstract class ObjectEffect : MonoBehaviour
 {
-    public abstract void ApplyEffect(Collision playerCollision);
-    
-    // Overloaded method to accept Player for better effect handling
-    public virtual void ApplyEffect(Collision playerCollision, Player player)
-    {
-        // Default implementation calls the original method for backward compatibility
-        ApplyEffect(playerCollision);
-    }
+    public virtual void ApplyEffect(Player player) { }
+    public virtual void ApplyEffect(Collision playerCollision, Player player) { }
+    public virtual void ApplyEffect(Collider playerCollider, Player player) { }
 }

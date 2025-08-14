@@ -8,32 +8,7 @@ public class FreezeEffect : ObjectEffect
     private Coroutine activeCoroutine;
     private float currentElapsedTime = -1f;
 
-    public override void ApplyEffect(Collision playerCollision)
-    {
-        Player player = playerCollision.gameObject.GetComponent<Player>();
-        if (player != null)
-        {
-            if (activeCoroutine == null)
-            {
-                activeCoroutine = player.StartCoroutine(ApplyFreezeEffect(player, freezeDuration));
-                Debug.Log($"{gameObject.name} triggered freeze effect (duration: {freezeDuration}s)");
-            }
-            else
-            {
-                currentElapsedTime = 0f;
-                if (debugMode)
-                {
-                    Debug.Log($"{gameObject.name} freeze effect timer reset (remaining time refreshed to {freezeDuration}s)");
-                }
-            }
-        }
-        else if (debugMode)
-        {
-            Debug.LogWarning($"Freeze effect on {gameObject.name} failed - No Player found on {playerCollision.gameObject.name}!");
-        }
-    }
-    
-    public override void ApplyEffect(Collision playerCollision, Player player)
+    public override void ApplyEffect(Player player)
     {
         if (player != null)
         {

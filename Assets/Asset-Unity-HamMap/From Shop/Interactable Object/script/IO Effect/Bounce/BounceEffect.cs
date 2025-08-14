@@ -8,16 +8,8 @@ public class BounceEffect : ObjectEffect
     [SerializeField] private bool useRandomDirection = false;
     [SerializeField] private float randomBounceStrength = 5f;
     
-    public override void ApplyEffect(Collision playerCollision)
-    {
-        Player player = playerCollision.gameObject.GetComponent<Player>();
-        if (player != null)
-        {
-            ApplyEffect(playerCollision, player);
-        }
-    }
     
-    public override void ApplyEffect(Collision playerCollision, Player player)
+    public override void ApplyEffect( Player player)
     {
         if (player != null)
         {

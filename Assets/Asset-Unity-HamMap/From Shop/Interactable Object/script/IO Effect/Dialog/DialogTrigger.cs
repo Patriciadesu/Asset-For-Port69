@@ -12,9 +12,8 @@ public class DialogTrigger : ObjectEffect
             Player.Instance.gameObject.AddComponent<DialogManager>();
         }
     }
-    public override void ApplyEffect(Collision playerCollision)
+    public override void ApplyEffect(Player player)
     {
-        Player player = playerCollision.gameObject.GetComponent<Player>();
         if (player != null)
         {
             TriggerDialog();

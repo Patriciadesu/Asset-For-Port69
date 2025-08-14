@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class DialogManager : Singleton<DialogManager>
+public class DialogManager : Singleton<DialogManager> , ICancleGravity
 {
     enum ContinueInput
     {
@@ -24,6 +24,7 @@ public class DialogManager : Singleton<DialogManager>
     [Foldout("UI Setting"), SerializeField] TMP_Text dialogText;
     private string[] dialog;
     private int currentDialog;
+    public bool canApplyGravity { get; set; } = true;
 
     #region Dialog State
     private bool isDialogPlaying;
@@ -85,7 +86,7 @@ public class DialogManager : Singleton<DialogManager>
         if (freezePlayerWhileDialog)
         {
             Player.Instance.canMove = false;
-            Player.Instance.canApplyGravity = false;
+            canApplyGravity = false;
         }
         Player.Instance.animator.SetBool("isRunning", false);
         Player.Instance.animator.SetBool("isRun", false);
@@ -106,7 +107,7 @@ public class DialogManager : Singleton<DialogManager>
         if (freezePlayerWhileDialog)
         {
             Player.Instance.canMove = true;
-            Player.Instance.canApplyGravity = true;
+            canApplyGravity = true;
         }
         if(ContinueInput.ClickButton == continueWith)
         {

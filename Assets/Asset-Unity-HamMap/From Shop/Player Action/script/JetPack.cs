@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class JetPack : PlayerExtension
+public class JetPack : PlayerExtension,ICancleGravity
 {
     [Header("UI")]
     public bool enableJetpackUI = true;
@@ -16,6 +16,7 @@ public class JetPack : PlayerExtension
     private float currentFuel;
     private bool hasUsedJetpack = false; // Track if jetpack has been used
     private bool CanJetPack => _player.canMove && currentFuel > 0;
+    public bool canApplyGravity { get; set; } = true;
 
     public override void OnStart(Player player)
     {
@@ -61,7 +62,7 @@ public class JetPack : PlayerExtension
         hasUsedJetpack = true; // Mark that jetpack has been used
         _player.animator.SetTrigger("jetpack");
         _player.OnUpdate -= _player.JumpHandler;
-        _player.canApplyGravity = false;
+        canApplyGravity = false; // Disable gravity while jetpacking
     }
 
     private void JetPackMove()
@@ -84,7 +85,7 @@ public class JetPack : PlayerExtension
     {
         isJetPacking = false;
         _player.OnUpdate += _player.JumpHandler;
-        _player.canApplyGravity = true;
+        canApplyGravity = true;
     }
 
     // private void RegenerateFuel()

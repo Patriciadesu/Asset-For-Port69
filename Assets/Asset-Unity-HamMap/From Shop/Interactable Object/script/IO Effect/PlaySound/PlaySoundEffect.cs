@@ -13,17 +13,8 @@ public class PlaySoundEffect : ObjectEffect
             audioSource = gameObject.AddComponent<AudioSource>();
         }
     }
-
-    public override void ApplyEffect(Collision playerCollision)
-    {
-        if (audioSource != null && clip != null && !audioSource.isPlaying)
-        {
-            audioSource.clip = clip;
-            audioSource.Play();
-        }
-    }
     
-    public override void ApplyEffect(Collision playerCollision, Player player)
+    public override void ApplyEffect( Player player)
     {
         if (audioSource != null && clip != null && !audioSource.isPlaying)
         {

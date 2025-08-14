@@ -11,15 +11,8 @@ public class TriggerObjectEffect : ObjectEffect
             go.SetActive(false);
         }
     }
-    public override void ApplyEffect(Collision playerCollision)
-    {
-        foreach (GameObject obj in objectToTrigger)
-        {
-            obj.SetActive(true);
-        }
-    }
     
-    public override void ApplyEffect(Collision playerCollision, Player player)
+    public override void ApplyEffect(Player player)
     {
         foreach (GameObject obj in objectToTrigger)
         {

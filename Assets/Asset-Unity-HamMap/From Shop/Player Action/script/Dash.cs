@@ -1,18 +1,17 @@
+using System.Security.Cryptography;
 using NaughtyAttributes;
 using UnityEngine;
 
-public class Dash : PlayerExtension
+public class Dash : PlayerExtension, IUseStamina
 {
     [Header("UI")]
     public bool enableDashUI = true;
-    private PlayerUIManager uiManager;
 
     [Header("Properties")]
     public KeyCode activateKey = KeyCode.R;
     public float dashSpeed = 5f;
     public float cooldownTime = 1f;
-    public bool useStamina = true; // Toggle stamina consumption during dash
-    [ShowIf("useStamina")]public float staminaCost = 15f; // Stamina consumed per dash
+    
     private float lastDashTime = 0f;
     // Expose dashing state for stamina regen check
     private bool isDashing = false;
@@ -20,23 +19,29 @@ public class Dash : PlayerExtension
     private bool isReadyToDash => Time.time >= lastDashTime + cooldownTime;
     private bool CanDash => _player.canMove && _player.isGrounded && _player.canApplyGravity && isReadyToDash && _player.currentstamina >= staminaCost;
     private float dashAnimSpeed => dashSpeed / _player.GetAnimationLength("dash");
-    
 
+
+    public bool useStamina;
+    [ShowIf("useStamina")]public float staminaCost = 10f;
+    public bool isUsingStamina => useStamina && isDashing;
+    public bool canDrainStamina => _player.currentstamina >= staminaCost && useStamina;
+
+
+    public void DrainStamina(float amount)
+    {
+        if (canDrainStamina)
+        {
+            _player.currentstamina = Mathf.Max(_player.currentstamina - amount, 0f);
+        }
+    }
     public override void OnStart(Player player)
     {
         base.OnStart(player);
         lastDashTime = -cooldownTime; // Set initial time to allow immediate use
-        if (enableDashUI)
-            uiManager = Object.FindAnyObjectByType<PlayerUIManager>();
     }
 
     protected void Update()
     {
-
-        Player.Instance.canGenerateStamina = IsDashing;
-
-        if (enableDashUI && uiManager != null)
-            uiManager.UpdateDashCooldown(Time.time - lastDashTime, cooldownTime);
             
         if (Input.GetKeyDown(activateKey) && CanDash)
         {
@@ -49,9 +54,9 @@ public class Dash : PlayerExtension
         // Begin dashing state
         isDashing = true;
         _player.canMove = false;
-        if (useStamina)
+        if (canDrainStamina)
         {
-            _player.currentstamina -= staminaCost;
+            DrainStamina(staminaCost);
         }
         float inputX = Input.GetAxis("Horizontal");
         float inputZ = Input.GetAxis("Vertical");

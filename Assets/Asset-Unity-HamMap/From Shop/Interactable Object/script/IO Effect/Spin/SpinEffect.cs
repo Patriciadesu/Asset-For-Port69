@@ -20,15 +20,6 @@ public class SpinEffect : ObjectEffect
         };
     }
 
-    public override void ApplyEffect(Collision playerCollision)
-    {
-        // Spin effect doesn't need player interaction, it spins continuously
-    }
-    
-    public override void ApplyEffect(Collision playerCollision, Player player)
-    {
-        // Spin effect doesn't need player interaction, it spins continuously
-    }
 
     private void Update()
     {

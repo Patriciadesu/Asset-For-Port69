@@ -11,16 +11,8 @@ public class CameraShakeEffect : ObjectEffect
     [SerializeField] private float cooldownTime = 1f;
     private float lastActivationTime = -999f;
     
-    public override void ApplyEffect(Collision playerCollision)
-    {
-        Player player = playerCollision.gameObject.GetComponent<Player>();
-        if (player != null)
-        {
-            ApplyEffect(playerCollision, player);
-        }
-    }
     
-    public override void ApplyEffect(Collision playerCollision, Player player)
+    public override void ApplyEffect(Player player)
     {
         // Check cooldown
         if (Time.time - lastActivationTime < cooldownTime)
