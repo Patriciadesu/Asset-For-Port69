@@ -1,36 +1,43 @@
 using UnityEngine;
-using UnityEngine.Events;
+using System.Collections.Generic;
 
 public class Boss : MonoBehaviour
 {
-    public float Health = 100f;
-    public BossState CurrentState;
+    public BossStateGraph stateGraph;
+
     private void Start()
     {
-        CurrentState = new BossIdleState(this);
-    }
-    public void Update()
-    {
-        switch (CurrentState.Stage)
+        if (stateGraph != null)
         {
-            case StateStage.Enter:
-                CurrentState.Enter();
-                CurrentState.Stage = StateStage.Update;
-                break;
-            case StateStage.Update:
-                CurrentState.Update();
-                break;
-            case StateStage.Exit:
-                CurrentState.Exit();
-                // Transition to next state logic can be added here
-                break;
+            stateGraph.Awake();
+            stateGraph.StartState();
         }
     }
-    public void FixedUpdate()
+    
+    private void Update()
     {
-        if(CurrentState.Stage == StateStage.Update)
+        if (stateGraph != null && stateGraph.currentState != null)
         {
-            CurrentState.FixedUpdate();
+            switch (stateGraph.currentState.state.stage)
+            {
+                case StateStage.Enter:
+                    stateGraph.currentState.state.Enter();
+                    break;
+                case StateStage.Update:
+                    stateGraph.currentState.state.Update();
+                    break;
+                case StateStage.Exit:
+                    stateGraph.currentState.state.Exit();
+                    break;
+            }
         }
     }
+    private void FixedUpdate()
+    {
+        if (stateGraph != null && stateGraph.currentState != null && stateGraph.currentState.state.stage == StateStage.Update)
+        {
+            stateGraph.currentState.state.FixedUpdate();
+        }
+    }
+    // Add methods to handle boss behavior based on the state graph
 }
