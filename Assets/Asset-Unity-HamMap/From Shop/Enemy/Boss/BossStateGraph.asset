@@ -14,5 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stateNodes:
   - {fileID: 11400000, guid: 7c89b1bfaff0875439289cd59bbaa0a2, type: 2}
-  - {fileID: 11400000, guid: 7c89b1bfaff0875439289cd59bbaa0a2, type: 2}
-  currentState: {fileID: 0}
+  transitionNodes:
+  - {fileID: 11400000, guid: 7f804584e7c385d47952e034a8f47bdb, type: 2}
+  - {fileID: 11400000, guid: e762f08c3e3907c408788ee51349d57c, type: 2}
+  currentState: {fileID: 11400000, guid: 7c89b1bfaff0875439289cd59bbaa0a2, type: 2}

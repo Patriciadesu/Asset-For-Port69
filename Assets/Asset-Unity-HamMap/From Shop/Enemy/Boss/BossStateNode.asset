@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: BossStateNode
   m_EditorClassIdentifier: 
   stateName: Idle
-  transitions: []
   isInitialState: 1
   onStateChange:
     m_PersistentCalls:
       m_Calls: []
+  transitions:
+  - {fileID: 11400000, guid: e762f08c3e3907c408788ee51349d57c, type: 2}
+  - {fileID: 11400000, guid: 7f804584e7c385d47952e034a8f47bdb, type: 2}
