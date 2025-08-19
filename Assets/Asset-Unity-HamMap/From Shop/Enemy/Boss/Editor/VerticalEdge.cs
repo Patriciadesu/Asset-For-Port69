@@ -10,18 +10,16 @@ public class VerticalEdge : Edge
 {
     public VerticalEdge()
     {
-        // Selectable & deletable
         capabilities |= Capabilities.Selectable | Capabilities.Deletable;
         pickingMode = PickingMode.Position;
 
-        // Right-click → Delete this edge
         this.AddManipulator(new ContextualMenuManipulator(evt =>
         {
             evt.menu.AppendAction("Delete", _ =>
             {
                 var gv = this.GetFirstAncestorOfType<GraphView>();
                 if (gv == null) return;
-                gv.RemoveElement(this); // triggers elementsToRemove in GraphViewChange
+                gv.RemoveElement(this);
             });
         }));
     }
@@ -30,27 +28,26 @@ public class VerticalEdge : Edge
     {
         if (edgeControl == null) return false;
 
-        // Global positions of port centers
         Vector2 fromWorld = output != null ? output.GetGlobalCenter() : Vector2.zero;
-        Vector2 toWorld = input != null ? input.GetGlobalCenter() : Vector2.zero;
+        Vector2 toWorld   = input  != null ? input.GetGlobalCenter()  : Vector2.zero;
 
-        // Convert to edgeControl local space (so pan/zoom doesn't break the wire)
         Vector2 from = edgeControl.WorldToLocal(fromWorld);
-        Vector2 to = edgeControl.WorldToLocal(toWorld);
+        Vector2 to   = edgeControl.WorldToLocal(toWorld);
 
         edgeControl.outputOrientation = Orientation.Vertical;
-        edgeControl.inputOrientation = Orientation.Vertical;
+        edgeControl.inputOrientation  = Orientation.Vertical;
         edgeControl.from = from;
-        edgeControl.to = to;
+        edgeControl.to   = to;
 
+        // VFX-like vertical polyline feel (if your API supports controlPoints)
         float midY = (from.y + to.y) * 0.5f;
-
-        // If your GraphView exposes controlPoints (Unity 6): assign polyline for VFX-like vertical look
-        // If your local API doesn't have controlPoints, comment the next line and rely on default beziers.
+#if UNITY_6000_0_OR_NEWER
         edgeControl.outputOrientation = Orientation.Vertical;
         edgeControl.inputOrientation = Orientation.Vertical;
         edgeControl.from = from; edgeControl.to = to;
+#endif
         edgeControl.MarkDirtyRepaint();
         return true;
     }
 }
+

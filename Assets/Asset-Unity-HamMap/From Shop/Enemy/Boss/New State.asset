@@ -10,24 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 24a4e1e8d60a72a4cbeccd371e6db72e, type: 3}
-  m_Name: BossStateNode
+  m_Name: New State
   m_EditorClassIdentifier: 
-  stateName: Idle
-  isInitialState: 1
+  stateName: New State
+  isInitialState: 0
   state:
-    rid: 5678062105800736844
+    rid: 5678062056246345806
   transitions:
-  - {fileID: 11400000, guid: 7f804584e7c385d47952e034a8f47bdb, type: 2}
+  - {fileID: 11400000, guid: e762f08c3e3907c408788ee51349d57c, type: 2}
   onStateChange:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: -451, y: -533}
+  position: {x: 16, y: -203}
   references:
     version: 2
     RefIds:
-    - rid: 5678062105800736844
+    - rid: 5678062056246345806
       type: {class: BossAttackState, ns: , asm: Assembly-CSharp}
       data:
         stateName: BossAttackState
-        timelinePlayable: {fileID: 0}
-        damage: 3.6
+        timelinePlayable: {fileID: 11400000, guid: eabe16fbd8f0e8b4887424142c3d2529, type: 2}
+        damage: 4.47

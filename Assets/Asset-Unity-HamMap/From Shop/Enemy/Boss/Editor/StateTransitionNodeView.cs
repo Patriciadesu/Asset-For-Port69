@@ -14,10 +14,21 @@ public class StateTransitionNodeView : Node
     public Port output;
     public StateTransition transitionData;
 
-    // NEW: SerializedObject reference + a container for condition fields UI
     private SerializedObject soTransition;
-    private VisualElement conditionFieldsRoot;
     private Label conditionInfoLabel;
+    private VisualElement conditionFieldsRoot;
+    private PopupField<string> conditionTypePopup;
+
+    private static List<Type> _cachedConditionTypes;
+    private static List<Type> GetAllConditionTypes()
+    {
+        if (_cachedConditionTypes != null) return _cachedConditionTypes;
+        _cachedConditionTypes = UnityEditor.TypeCache.GetTypesDerivedFrom<Condition>()
+            .Where(t => !t.IsAbstract && t.IsClass && t.GetConstructor(Type.EmptyTypes) != null)
+            .OrderBy(t => t.Name)
+            .ToList();
+        return _cachedConditionTypes;
+    }
 
     public StateTransitionNodeView(StateTransition transition, IEdgeConnectorListener edgeListener = null)
     {
@@ -26,7 +37,6 @@ public class StateTransitionNodeView : Node
         style.width = 260;
         style.backgroundColor = new Color(0.18f, 0.2f, 0.3f);
 
-        // ---- Ports ----
         input = InstantiatePort(Orientation.Vertical, Direction.Input, Port.Capacity.Multi, typeof(bool));
         input.portName = "";
         titleContainer.Add(input);
@@ -41,59 +51,56 @@ public class StateTransitionNodeView : Node
             output.AddManipulator(new EdgeConnector<Edge>(edgeListener));
         }
 
-        // ---- SerializedObject for binding ----
         soTransition = new SerializedObject(transitionData);
 
-        // ---- Condition Type dropdown ----
-        var conditionTypes = GetAllConditionTypes();
-        var displayNames = conditionTypes.Select(TypeDisplayName).ToList();
-
+        // Dropdown
+        var types = GetAllConditionTypes();
+        var names = types.Select(t => t.Name).ToList();
         int currentIndex = -1;
         if (transitionData.condition != null)
         {
-            var currentType = transitionData.condition.GetType();
-            currentIndex = conditionTypes.FindIndex(t => t == currentType);
+            var ct = transitionData.condition.GetType();
+            currentIndex = types.FindIndex(t => t == ct);
         }
-        if (currentIndex < 0 && conditionTypes.Count > 0) currentIndex = 0;
+        if (currentIndex < 0 && types.Count > 0) currentIndex = 0;
 
-        var popup = new PopupField<string>("Condition Type", displayNames,
-            Mathf.Clamp(currentIndex, -1, displayNames.Count - 1));
-
-        popup.RegisterValueChangedCallback(evt =>
+        conditionTypePopup = new PopupField<string>("Condition Type", names,
+            Mathf.Clamp(currentIndex, -1, names.Count - 1));
+        conditionTypePopup.RegisterValueChangedCallback(evt =>
         {
-            int newIndex = displayNames.IndexOf(evt.newValue);
-            if (newIndex < 0 || newIndex >= conditionTypes.Count) return;
+            int newIndex = names.IndexOf(evt.newValue);
+            if (newIndex < 0 || newIndex >= types.Count) return;
 
-            var newType = conditionTypes[newIndex];
+            var newType = types[newIndex];
             var newInstance = Activator.CreateInstance(newType) as Condition;
-            if (newInstance == null)
-            {
-                Debug.LogError($"Failed to instantiate Condition type: {newType.FullName}. Ensure a public parameterless ctor.");
-                return;
-            }
+            if (newInstance == null) return;
 
             Undo.RecordObject(transitionData, "Change Condition Type");
             transitionData.condition = newInstance;
             EditorUtility.SetDirty(transitionData);
 
-            // Refresh SerializedObject and rebuild fields panel + info label
             soTransition.Update();
+            UpdateConditionInfoLabel();
             RebuildConditionFields();
         });
+        mainContainer.Add(conditionTypePopup);
 
-        mainContainer.Add(popup);
+        // Info
+        conditionInfoLabel = new Label();
+        conditionInfoLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
+        mainContainer.Add(conditionInfoLabel);
+        UpdateConditionInfoLabel();
 
-
-        // ---- Fields root (where we render the Condition's fields) ----
+        // Fields root
         conditionFieldsRoot = new VisualElement();
         conditionFieldsRoot.style.marginTop = 4;
         conditionFieldsRoot.style.marginBottom = 4;
         mainContainer.Add(conditionFieldsRoot);
 
-        // If condition is null, initialize with first available type
-        if (transitionData.condition == null && conditionTypes.Count > 0)
+        // Default instance if none
+        if (transitionData.condition == null && types.Count > 0)
         {
-            var t0 = conditionTypes[currentIndex];
+            var t0 = types[currentIndex];
             var inst = Activator.CreateInstance(t0) as Condition;
             if (inst != null)
             {
@@ -104,15 +111,23 @@ public class StateTransitionNodeView : Node
             }
         }
 
-        // Build the fields panel for current condition (if any)
         RebuildConditionFields();
 
-        // Usual finishing touches
         RefreshExpandedState();
         RefreshPorts();
-        SetPosition(new Rect(UnityEngine.Random.Range(200, 650), UnityEngine.Random.Range(80, 450), 260, 180));
+        SetPosition(new Rect(UnityEngine.Random.Range(200, 650), UnityEngine.Random.Range(80, 450), 260, 160));
+        SetPosition(new Rect(transitionData.position, new Vector2(260, 160)));
 
-        // Context menu (Disconnect/Delete) — keep your existing items
+        this.RegisterCallback<GeometryChangedEvent>(_ =>
+        {
+            var rect = GetPosition();
+            if (transitionData.position != rect.position)
+            {
+                Undo.RecordObject(transitionData, "Move Transition Node");
+                transitionData.position = rect.position;
+                EditorUtility.SetDirty(transitionData);
+            }
+        });
         this.AddManipulator(new ContextualMenuManipulator(evt =>
         {
             var gv = this.GetFirstAncestorOfType<GraphView>() as StateMachineGraphView;
@@ -122,23 +137,29 @@ public class StateTransitionNodeView : Node
         }));
     }
 
-    // ---------- Helpers ----------
+    public void RefreshNodeFromData()
+    {
+        if (soTransition == null) soTransition = new SerializedObject(transitionData);
+        else soTransition.Update();
 
+        UpdateConditionInfoLabel();
+        RebuildConditionFields();
+
+        RefreshExpandedState();
+        RefreshPorts();
+    }
+
+    private void UpdateConditionInfoLabel()
+    {
+        if (conditionInfoLabel == null) return;
+        conditionInfoLabel.text = transitionData.condition != null
+            ? $"Selected: {transitionData.condition.GetType().Name}"
+            : "Selected: None";
+    }
 
     private void RebuildConditionFields()
     {
         conditionFieldsRoot.Clear();
-
-        // Get the managed reference property for condition
-        if (soTransition == null) soTransition = new SerializedObject(transitionData);
-        soTransition.Update();
-
-        var condProp = soTransition.FindProperty("condition");
-        if (condProp == null)
-        {
-            conditionFieldsRoot.Add(new Label("No condition property found."));
-            return;
-        }
 
         if (transitionData.condition == null)
         {
@@ -146,19 +167,16 @@ public class StateTransitionNodeView : Node
             return;
         }
 
-        // Option A (simple): draw the entire managed reference as one PropertyField
-        // This may show Unity's built-in managed reference type selector; if you prefer only fields,
-        // comment this and use Option B below.
-        // var pf = new PropertyField(condProp, "Parameters");
-        // pf.Bind(soTransition);
-        // conditionFieldsRoot.Add(pf);
-        // return;
+        var condProp = soTransition.FindProperty("condition");
+        if (condProp == null)
+        {
+            conditionFieldsRoot.Add(new Label("No 'condition' property found."));
+            return;
+        }
 
-        // Option B (custom): draw only the condition's child fields (skip managedReference metadata)
+        // Draw all serialized fields of the current condition instance
         var iterator = condProp.Copy();
         var end = iterator.GetEndProperty();
-
-        // Move to first child
         bool enterChildren = true;
         int startDepth = -1;
 
@@ -167,88 +185,21 @@ public class StateTransitionNodeView : Node
             if (SerializedProperty.EqualContents(iterator, end))
                 break;
 
-            // First child encountered: record its depth so we limit to direct descendants
             if (startDepth < 0) startDepth = iterator.depth;
-
-            // Stop if we moved out of the condition subtree or too deep
             if (iterator.depth < startDepth) break;
             if (!iterator.propertyPath.StartsWith(condProp.propertyPath))
                 break;
 
-            // Skip Unity's managed reference metadata
-            if (iterator.name.StartsWith("managedReference"))
-            {
-                enterChildren = true;
-                continue;
-            }
+            if (iterator.name.StartsWith("managedReference")) { enterChildren = true; continue; }
 
-            // Create a field for this property
-            var childCopy = iterator.Copy(); // IMPORTANT: copy before iterator moves
+            var childCopy = iterator.Copy();
             var field = new PropertyField(childCopy);
             field.Bind(soTransition);
             conditionFieldsRoot.Add(field);
 
-            // For child properties, do not enter children (PropertyField will handle its subtree)
             enterChildren = false;
         }
 
-        // Apply on change
         soTransition.ApplyModifiedProperties();
     }
-
-    private static List<Type> GetAllConditionTypes()
-    {
-#if UNITY_EDITOR
-        // Fast path in the editor
-        var list = new List<Type>();
-        foreach (var t in UnityEditor.TypeCache.GetTypesDerivedFrom<Condition>())
-        {
-            if (!t.IsAbstract && t.IsClass && HasPublicParameterlessCtor(t))
-                list.Add(t);
-        }
-        return list.OrderBy(t => t.Name).ToList();
-#else
-        // Fallback reflection
-        return AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(a => a.GetTypes())
-            .Where(t => typeof(Condition).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract && HasPublicParameterlessCtor(t))
-            .OrderBy(t => t.Name)
-            .ToList();
-#endif
-    }
-
-    private static bool HasPublicParameterlessCtor(Type t)
-        => t.GetConstructor(Type.EmptyTypes) != null;
-
-    private static string TypeDisplayName(Type t) => t.Name;
-    public void RefreshNodeFromData()
-{
-    if (transitionData == null) return;
-
-    // Ensure SerializedObject exists & is current
-    if (soTransition == null) soTransition = new SerializedObject(transitionData);
-    else soTransition.Update();
-
-    // Update header/title text if you want to reflect something dynamic
-    title = "Transition";
-
-    
-
-    // Rebuild the fields panel for the currently selected Condition
-    RebuildConditionFields();
-
-    // If you keep a reference to the dropdown, keep it in sync too (optional)
-    // if (conditionTypePopup != null)
-    // {
-    //     var types = GetAllConditionTypes();
-    //     var currentType = transitionData.condition != null ? transitionData.condition.GetType() : null;
-    //     var idx = currentType != null ? types.FindIndex(t => t == currentType) : -1;
-    //     var name = (idx >= 0) ? TypeDisplayName(types[idx]) : "None";
-    //     conditionTypePopup.SetValueWithoutNotify(name);
-    // }
-
-    RefreshExpandedState();
-    RefreshPorts();
-}
-
 }

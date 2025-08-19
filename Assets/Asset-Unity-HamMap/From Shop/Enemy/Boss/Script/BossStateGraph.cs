@@ -1,7 +1,4 @@
 using UnityEngine;
-using System.Collections.Generic;
-using System.Linq;
-using Unity.VisualScripting;
 
 [CreateAssetMenu(fileName = "BossStateGraph", menuName = "BossGraph/Boss State Graph")]
 public class BossStateGraph : ScriptableObject
@@ -12,8 +9,20 @@ public class BossStateGraph : ScriptableObject
 
     public void Awake()
     {
-        currentState = stateNodes.Any(node => node.isInitialState) ? stateNodes.First(node => node.isInitialState) : null;
+        currentState = null;
+        if (stateNodes == null) return;
+
+        for (int i = 0; i < stateNodes.Length; i++)
+        {
+            var n = stateNodes[i];
+            if (n != null && n.isInitialState)
+            {
+                currentState = n;
+                break;
+            }
+        }
     }
+
     public void StartState()
     {
         if (currentState != null)
@@ -23,18 +32,23 @@ public class BossStateGraph : ScriptableObject
             currentState.onStateChange.AddListener(ChangeState);
         }
     }
+
     public void ChangeState(BossStateNode nextState)
     {
         if (currentState != null)
         {
             currentState.state.stage = StateStage.Exit;
+            currentState.StopTrackingConditions();
+            currentState.onStateChange.RemoveListener(ChangeState);
         }
 
         currentState = nextState;
+
         if (currentState != null)
         {
-            StartState();
+            currentState.state.stage = StateStage.Enter;
+            currentState.StartTrackingConditions();
+            currentState.onStateChange.AddListener(ChangeState);
         }
     }
-
 }

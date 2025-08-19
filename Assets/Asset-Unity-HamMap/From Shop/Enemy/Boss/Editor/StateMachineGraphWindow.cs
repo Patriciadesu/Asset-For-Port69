@@ -1,8 +1,11 @@
-using System.IO;
-using System.Linq;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -10,7 +13,7 @@ public class StateMachineGraphWindow : EditorWindow
 {
     private BossStateGraph selectedGraph;
     private StateMachineGraphView graphView;
-    private UnityEditor.UIElements.Toolbar toolbar; // If inaccessible, replace with VisualElement (see comment below)
+    private UnityEditor.UIElements.Toolbar toolbar;
 
     [MenuItem("Window/State Machine Graph")]
     public static void OpenWindow()
@@ -24,7 +27,6 @@ public class StateMachineGraphWindow : EditorWindow
     {
         ConstructGraphView();
         ConstructToolbar();
-
         Selection.selectionChanged += OnSelectionChange;
         OnSelectionChange();
     }
@@ -43,15 +45,12 @@ public class StateMachineGraphWindow : EditorWindow
             requestNewTransition: CreateNewTransitionAsset
         )
         { name = "State Machine Graph" };
-
         graphView.StretchToParentSize();
         rootVisualElement.Add(graphView);
     }
 
     private void ConstructToolbar()
     {
-        // If this type is inaccessible in your install, replace next line with:
-        // var toolbar = new VisualElement { style = { flexDirection = FlexDirection.Row } };
         toolbar = new UnityEditor.UIElements.Toolbar();
 
         var btnNewState = new UnityEditor.UIElements.ToolbarButton(() =>
@@ -59,17 +58,15 @@ public class StateMachineGraphWindow : EditorWindow
             if (!EnsureGraphSelected()) return;
             var created = CreateNewStateNodeAsset("New State");
             if (created != null) graphView.AddOrUpdateStateNodeView(created);
-        })
-        { text = "+ State" };
+        }) { text = "+ State" };
 
         var btnNewTransition = new UnityEditor.UIElements.ToolbarButton(() =>
         {
             if (!EnsureGraphSelected()) return;
-            BossStateNode attachTo = graphView.GetCurrentSelectedStateNode();
+            var attachTo = graphView.GetCurrentSelectedStateNode();
             var created = CreateNewTransitionAsset("New Transition", attachTo);
             if (created != null) graphView.AddOrUpdateTransitionNodeView(created);
-        })
-        { text = "+ Transition" };
+        }) { text = "+ Transition" };
 
         toolbar.Add(btnNewState);
         toolbar.Add(btnNewTransition);
@@ -103,12 +100,11 @@ public class StateMachineGraphWindow : EditorWindow
         Repaint();
     }
 
-    // -------- Asset Create Helpers --------
     private string GetGraphFolderPath()
     {
         if (selectedGraph == null) return "Assets";
         var graphPath = AssetDatabase.GetAssetPath(selectedGraph);
-        return string.IsNullOrEmpty(graphPath) ? "Assets" : Path.GetDirectoryName(graphPath).Replace("\\", "/");
+        return string.IsNullOrEmpty(graphPath) ? "Assets" : System.IO.Path.GetDirectoryName(graphPath).Replace("\\", "/");
     }
 
     private BossStateNode CreateNewStateNodeAsset(string baseName)
@@ -123,7 +119,7 @@ public class StateMachineGraphWindow : EditorWindow
         AssetDatabase.CreateAsset(asset, path);
         AssetDatabase.SaveAssets();
 
-        var list = new List<BossStateNode>(selectedGraph.stateNodes ?? new BossStateNode[0]);
+        var list = new List<BossStateNode>(selectedGraph.stateNodes ?? Array.Empty<BossStateNode>());
         Undo.RecordObject(selectedGraph, "Add State Node");
         list.Add(asset);
         selectedGraph.stateNodes = list.ToArray();
@@ -134,37 +130,36 @@ public class StateMachineGraphWindow : EditorWindow
     }
 
     private StateTransition CreateNewTransitionAsset(string baseName, BossStateNode attachToState = null)
-{
-    if (selectedGraph == null) return null;
-
-    var folder = GetGraphFolderPath();
-    var asset = ScriptableObject.CreateInstance<StateTransition>();
-    string path = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{baseName}.asset");
-    AssetDatabase.CreateAsset(asset, path);
-    AssetDatabase.SaveAssets();
-
-    // NEW: add to graph.transitionNodes list
     {
+        if (selectedGraph == null) return null;
+
+        var folder = GetGraphFolderPath();
+        var asset = ScriptableObject.CreateInstance<StateTransition>();
+        string path = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{baseName}.asset");
+        path = path.EndsWith("}") ? path.Substring(0, path.Length - 1) : path; // guard odd GenerateUniqueAssetPath bug
+        AssetDatabase.CreateAsset(asset, path);
+        AssetDatabase.SaveAssets();
+
+        // add to graph-level list
         Undo.RecordObject(selectedGraph, "Add Transition Node");
-        var tlist = new List<StateTransition>(selectedGraph.transitionNodes ?? new StateTransition[0]);
+        var tlist = new List<StateTransition>(selectedGraph.transitionNodes ?? Array.Empty<StateTransition>());
         tlist.Add(asset);
         selectedGraph.transitionNodes = tlist.ToArray();
         EditorUtility.SetDirty(selectedGraph);
         AssetDatabase.SaveAssets();
-    }
 
-    // Optional: also attach to currently selected state (as before)
-    if (attachToState != null)
-    {
-        Undo.RecordObject(attachToState, "Attach Transition");
-        var list = new List<StateTransition>(attachToState.transitions ?? new StateTransition[0]);
-        list.Add(asset);
-        attachToState.transitions = list.ToArray();
-        EditorUtility.SetDirty(attachToState);
-        AssetDatabase.SaveAssets();
-    }
+        // optional attach to a state
+        if (attachToState != null)
+        {
+            Undo.RecordObject(attachToState, "Attach Transition");
+            var list = new List<StateTransition>(attachToState.transitions ?? Array.Empty<StateTransition>());
+            list.Add(asset);
+            attachToState.transitions = list.ToArray();
+            EditorUtility.SetDirty(attachToState);
+            AssetDatabase.SaveAssets();
+        }
 
-    return asset;
+        return asset;
+    }
 }
 
-}
