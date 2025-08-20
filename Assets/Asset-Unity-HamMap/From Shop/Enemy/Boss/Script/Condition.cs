@@ -68,7 +68,22 @@ public class PlayerInAttackRangeCondition : Condition
 
      
 }
+public class PlayerOutAttackRangeCondition : Condition
+{
+    public override void StartTrackCondition()
+    {
+        if (boss == null) return;
+        boss.onPlayerOutOfAttackRange.AddListener( Raise);
+    }
 
+    public override void StopTrackCondition()
+    {
+        if (boss == null) return;
+        boss.onPlayerOutOfAttackRange.RemoveListener( Raise);
+    }
+
+     
+}
 public class HealthBelowCondition : Condition
 {
     [Tooltip("Trigger condition when health <= this value.")]
@@ -129,6 +144,23 @@ public class OnStateChangedCondition : Condition
     {
         if (boss == null) return;
         boss.onStateChanged.RemoveListener( Raise);
+    }
+
+     
+}
+
+public class OnAttackEndCondition : Condition
+{
+    public override void StartTrackCondition()
+    {
+        if (boss == null) return;
+        boss.onAttackEnd.AddListener( Raise);
+    }
+
+    public override void StopTrackCondition()
+    {
+        if (boss == null) return;
+        boss.onAttackEnd.RemoveListener( Raise);
     }
 
      

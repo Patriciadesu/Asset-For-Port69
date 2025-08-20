@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c5dac99691f39164e8aed76983c7dfc4, type: 3}
-  m_Name: New Transition 6
+  m_Name: New Transition 9
   m_EditorClassIdentifier: 
   condition:
-    rid: 5678062129724784727
+    rid: 5678062129724784725
   nextStates:
-  - {fileID: 11400000, guid: 7c89b1bfaff0875439289cd59bbaa0a2, type: 2}
+  - {fileID: 11400000, guid: 36363b38e8e12eb46880ce713f4a9f5b, type: 2}
   onConditionMet:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: -685, y: -139}
+  position: {x: -1364, y: -48}
   references:
     version: 2
     RefIds:
-    - rid: 5678062129724784727
-      type: {class: PlayerOutOfSightCondition, ns: , asm: Assembly-CSharp}
+    - rid: 5678062129724784725
+      type: {class: PlayerInAttackRangeCondition, ns: , asm: Assembly-CSharp}
       data:
         onConditionMet:
           m_PersistentCalls:

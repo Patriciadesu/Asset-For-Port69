@@ -41,7 +41,7 @@ public class Player : Singleton<Player>
     [HideInInspector] public float speedMultiplier = 1f;
     [HideInInspector] public float additionalSpeed = 0;
     [HideInInspector] public List<IUseStamina> staminaComponentStates = new List<IUseStamina>();
-    public bool canGenerateStamina => staminaComponentStates.TrueForAll(x => x.isUsingStamina);
+    public bool canGenerateStamina => staminaComponentStates.TrueForAll(x => !x.isUsingStamina);
     public bool canHit;
     
     #endregion
@@ -184,7 +184,7 @@ public class Player : Singleton<Player>
             }
         }
     }
-    public void TakeDamage(int amount)
+    public void TakeDamage(float amount)
     {
         if (canHit)
         {

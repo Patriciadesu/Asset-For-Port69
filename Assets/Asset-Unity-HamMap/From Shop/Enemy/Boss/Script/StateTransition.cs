@@ -6,7 +6,8 @@ public class StateTransition : ScriptableObject
 {
     [SerializeReference] public Condition condition;   // polymorphic class (not SO)
     public BossStateNode[] nextStates;
-    public UnityEvent<BossStateNode> onConditionMet;
+    public bool allowStateInterruption = true; // if false, the transition will not be triggered if the current state is not in the Exit stage
+    [HideInInspector] public UnityEvent<BossStateNode> onConditionMet;
     [HideInInspector]public Vector2 position;
     private Boss _bossBound;
 
@@ -23,6 +24,13 @@ public class StateTransition : ScriptableObject
 
         int i = Random.Range(0, arr.Length);
         var next = arr[i];
+        if (!allowStateInterruption)
+        {
+            if (!_bossBound.stateGraph.currentState.state.IsFinished)
+            {
+                return;
+            }
+        }
         if (next != null) onConditionMet?.Invoke(next);
     }
 

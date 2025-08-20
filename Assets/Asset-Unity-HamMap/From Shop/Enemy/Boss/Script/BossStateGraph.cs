@@ -37,7 +37,7 @@ public class BossStateGraph : ScriptableObject
     {
         if (currentState != null)
         {
-            currentState.state.stage = StateStage.Exit;
+            //currentState.state.stage = StateStage.Exit;
             currentState.StopTrackingConditions();
             currentState.onStateChange.RemoveListener(ChangeState);
         }

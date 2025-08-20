@@ -10,25 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 24a4e1e8d60a72a4cbeccd371e6db72e, type: 3}
-  m_Name: BossStateNode
+  m_Name: New State 1
   m_EditorClassIdentifier: 
-  stateName: Patrol
-  isInitialState: 1
+  stateName: New State
+  isInitialState: 0
   state:
-    rid: 5678062129724784714
+    rid: 5678062129724784723
   transitions:
-  - {fileID: 11400000, guid: b16cbf8e7096a3f4ca90e1221b34c9ef, type: 2}
+  - {fileID: 11400000, guid: 173cf3114e533b04892e70b521d4e2f7, type: 2}
+  - {fileID: 11400000, guid: 7f804584e7c385d47952e034a8f47bdb, type: 2}
   onStateChange:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: -1122, y: -811}
+  position: {x: -1122, y: -275}
   references:
     version: 2
     RefIds:
-    - rid: 5678062129724784714
-      type: {class: BossPatrolState, ns: , asm: Assembly-CSharp}
+    - rid: 5678062129724784723
+      type: {class: BossChaseState, ns: , asm: Assembly-CSharp}
       data:
-        stateName: BossPatrolState
-        moveSpeed: 3.26
-        arriveThreshold: 0
+        stateName: BossChaseState
+        moveSpeed: 3.24
         useNavMeshIfAvailable: 1

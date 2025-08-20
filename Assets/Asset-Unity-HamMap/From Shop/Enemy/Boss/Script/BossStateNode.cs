@@ -11,7 +11,7 @@ public class BossStateNode : ScriptableObject
 
     public StateTransition[] transitions;
     public UnityEvent<BossStateNode> onStateChange = new UnityEvent<BossStateNode>();
-    [HideInInspector]public Vector2 position;
+    [HideInInspector] public Vector2 position;
     private Boss _cachedBoss;
 
     public void StartTrackingConditions()
@@ -27,8 +27,8 @@ public class BossStateNode : ScriptableObject
             if (t == null) continue;
 
             t.Bind(_cachedBoss);
-            t.onConditionMet.RemoveListener(onStateChange.Invoke);
-            t.onConditionMet.AddListener(onStateChange.Invoke);
+            t.onConditionMet.RemoveListener(HandleConditionMet);
+            t.onConditionMet.AddListener(HandleConditionMet);
             t.StartTrackCondition();
         }
 
@@ -46,8 +46,19 @@ public class BossStateNode : ScriptableObject
             var t = transitions[i];
             if (t == null) continue;
 
-            t.onConditionMet.RemoveListener(onStateChange.Invoke);
+            t.onConditionMet.RemoveListener(HandleConditionMet);
             t.StopTrackCondition();
         }
+    }
+    private void HandleConditionMet(BossStateNode next)
+    {
+        // The current state performs cleanup and requests the graph change:
+        if (state != null && next != null)
+        {
+            state.Exit(next);
+        }
+
+        // (Optional) still broadcast for editor/tools/UI that rely on this event
+        // onStateChange.Invoke(next);
     }
 }
