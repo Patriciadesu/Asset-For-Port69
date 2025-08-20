@@ -1,7 +1,8 @@
-using UnityEngine;
 using NaughtyAttributes;
-using Unity.Cinemachine;
 using System.Collections.Generic;
+using Unity.Cinemachine;
+using UnityEngine;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 
 [ExecuteAlways]
@@ -41,6 +42,7 @@ public class Player : Singleton<Player>
     [HideInInspector] public float additionalSpeed = 0;
     [HideInInspector] public List<IUseStamina> staminaComponentStates = new List<IUseStamina>();
     public bool canGenerateStamina => staminaComponentStates.TrueForAll(x => x.isUsingStamina);
+    public bool canHit;
     
     #endregion
 
@@ -184,12 +186,20 @@ public class Player : Singleton<Player>
     }
     public void TakeDamage(int amount)
     {
-        currenthealth -= Mathf.Max(amount, 0);
-        Debug.Log("Player took damage: " + amount + ", Current Health: " + currenthealth);
-        if (currenthealth <= 0)
+        if (canHit)
         {
-            currenthealth = 0;
-            Respawn();
+            currenthealth -= Mathf.Max(amount, 0);
+            animator.SetTrigger("GetHit");
+            Debug.Log("Player took damage: " + amount + ", Current Health: " + currenthealth);
+            if (currenthealth <= 0)
+            {
+                currenthealth = 0;
+                Respawn();
+            }
+        }else
+        {
+           canHit = true;
+           animator.SetBool("isBlocking", false);
         }
     }
     void OnCollisionEnter(Collision collision)
