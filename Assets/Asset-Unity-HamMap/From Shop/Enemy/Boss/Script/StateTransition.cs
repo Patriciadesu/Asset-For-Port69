@@ -6,7 +6,7 @@ public class StateTransition : ScriptableObject
 {
     [SerializeReference] public Condition condition;   // polymorphic class (not SO)
     public BossStateNode[] nextStates;
-    public bool allowStateInterruption = true; // if false, the transition will not be triggered if the current state is not in the Exit stage
+    public bool allowStateInterruption => condition.allowStateInterruption;
     [HideInInspector] public UnityEvent<BossStateNode> onConditionMet;
     [HideInInspector]public Vector2 position;
     private Boss _bossBound;

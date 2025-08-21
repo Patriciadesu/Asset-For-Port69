@@ -8,9 +8,9 @@ using UnityEngine.Timeline;
 [System.Serializable]
 public class Condition
 {
-    public UnityEvent onConditionMet = new UnityEvent();
+    [HideInInspector]public UnityEvent onConditionMet = new UnityEvent();
     protected Boss boss;
-
+    public bool allowStateInterruption = true; // if false, the condition will not be triggered if the current state is not in the Exit stage
     public virtual void Bind(Boss bossRef) { boss = bossRef; }
     public virtual void StartTrackCondition() { }
     public virtual void StopTrackCondition()  { }
@@ -149,7 +149,7 @@ public class OnStateChangedCondition : Condition
      
 }
 
-public class OnAttackEndCondition : Condition
+public class OnStateEndCondition : Condition
 {
     public override void StartTrackCondition()
     {

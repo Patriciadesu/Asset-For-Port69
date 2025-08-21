@@ -4,6 +4,7 @@ using NaughtyAttributes;
 using UnityEngine;
 using UnityEngine.Events;
 
+[RequireComponent(typeof(Animator))]
 public class Boss : MonoBehaviour
 {
     public BossStateGraph stateGraph;
@@ -23,16 +24,14 @@ public class Boss : MonoBehaviour
     [HideInInspector] public UnityEvent onPlayerOutOfAttackRange;
     [HideInInspector] public UnityEvent onAttackEnd;
 
-    [SerializeField] private float _maxHealth = 100f;
-    [SerializeField] private float _health = 1f;
-    [SerializeField] private float _attackRange = 5f;
-    [SerializeField] private float _sightRange = 10f;
-    [SerializeField] private float _speed = 2f;
+    public float maxHealth = 100f;
+    public float health = 1f;
+    public float attackRange = 5f;
+    public float sightRange = 10f;
+    public float speed = 2f;
+    public float attackAnimationSpeedMultiplier = 1f;
 
-    // --- Added: player reference for distance checks (no triggers involved) ---
-    [Header("Target (optional)")]
-    [Tooltip("Assign player transform here. If left empty, the boss will find GameObject tagged 'Player'.")]
-    [SerializeField] private Transform _player;
+    private Transform _player;
 
     private float _stateTime;
     private BossStateNode _lastStateNode;
@@ -43,7 +42,10 @@ public class Boss : MonoBehaviour
 
     private const string PlayerTag = "Player";
     private float _reacquireTimer;
-
+    [HideInInspector] public Vector3 initialPosition;
+    [HideInInspector] public Quaternion initialRotation;
+    private Vector3[] childrenInitialPositions;
+    private Quaternion[] childrenInitialRotations;
     private void Awake()
     {
         onStateChanged ??= new UnityEvent();
@@ -54,6 +56,8 @@ public class Boss : MonoBehaviour
         onPlayerInAttackRange ??= new UnityEvent();
         onPlayerOutOfAttackRange ??= new UnityEvent();
         onAttackEnd ??= new UnityEvent();
+        health = maxHealth;
+
 
         // Ensure compound trigger events from child weapon colliders reach this Boss
         var rb = GetComponent<Rigidbody>();
@@ -79,6 +83,7 @@ public class Boss : MonoBehaviour
 
     private void Start()
     {
+        SetInitialTransform();
         _player = Player.Instance.transform;
         if (stateGraph != null)
         {
@@ -101,7 +106,7 @@ public class Boss : MonoBehaviour
                 _lastStateNode.onStateChange.AddListener(OnGraphRequestedStateChange);
         }
 
-        onHealthChanged.Invoke(_health);
+        onHealthChanged.Invoke(health);
     }
 
     private void OnDisable()
@@ -137,13 +142,14 @@ public class Boss : MonoBehaviour
                 case StateStage.Update: cs.state.Update(); break;
                     //case StateStage.Exit: cs.state.Exit(); break;
             }
-            _stateTime += Time.deltaTime;
-            onStateTimeChanged.Invoke(_stateTime);
+
         }
     }
 
     private void FixedUpdate()
     {
+        _stateTime += Time.deltaTime;
+        onStateTimeChanged.Invoke(_stateTime);
         var g = stateGraph;
         if (g != null && g.currentState != null && g.currentState.state.stage == StateStage.Update)
         {
@@ -171,8 +177,8 @@ public class Boss : MonoBehaviour
         Vector3 to = _player.position - transform.position;
         float d2 = to.sqrMagnitude;
 
-        float sight2 = _sightRange * _sightRange;
-        float atk2 = _attackRange * _attackRange;
+        float sight2 = sightRange * sightRange;
+        float atk2 = attackRange * attackRange;
 
         SetSight(d2 <= sight2);
         SetAttackRange(d2 <= atk2);
@@ -202,7 +208,7 @@ public class Boss : MonoBehaviour
 
     private void SetSight(bool value)
     {
-        if (_isPlayerInSight == value) return;
+        //if (_isPlayerInSight == value) return;
         _isPlayerInSight = value;
         if (value) onPlayerInSight.Invoke();
         else onPlayerOutOfSight.Invoke();
@@ -210,7 +216,7 @@ public class Boss : MonoBehaviour
 
     private void SetAttackRange(bool value)
     {
-        if (_isPlayerInAttackRange == value) return;
+        //if (_isPlayerInAttackRange == value) return;
         _isPlayerInAttackRange = value;
         if (value) onPlayerInAttackRange.Invoke();
         else onPlayerOutOfAttackRange.Invoke();
@@ -225,7 +231,7 @@ public class Boss : MonoBehaviour
            : 0f;
 
     // Signals to drive conditions from gameplay
-    public void SetHealth(float newHealth) { _health = Mathf.Clamp(newHealth, 0f, _maxHealth); onHealthChanged.Invoke(_health); }
+    public void SetHealth(float newHealth) { health = Mathf.Clamp(newHealth, 0f, maxHealth); onHealthChanged.Invoke(health); }
     public void PlayerInSight() { SetSight(true); }
     public void PlayerOutOfSight() { SetSight(false); }
     public void PlayerInAttackRange() { SetAttackRange(true); }
@@ -233,8 +239,39 @@ public class Boss : MonoBehaviour
     public void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, _sightRange);
+        Gizmos.DrawWireSphere(transform.position, sightRange);
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, _attackRange);
+        Gizmos.DrawWireSphere(transform.position, attackRange);
+    }
+    public void SetInitialTransform()
+    {
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
+
+        // Store initial positions and rotations of all children
+        int childCount = transform.childCount;
+        childrenInitialPositions = new Vector3[childCount];
+        childrenInitialRotations = new Quaternion[childCount];
+
+        for (int i = 0; i < childCount; i++)
+        {
+            Transform child = transform.GetChild(i);
+            childrenInitialPositions[i] = child.position;
+            childrenInitialRotations[i] = child.rotation;
+        }
+    }
+    public void ResetTransform()
+    {
+        transform.position = initialPosition;
+        transform.rotation = initialRotation;
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Transform child = transform.GetChild(i);
+            if (i < childrenInitialPositions.Length)
+            {
+                child.position = childrenInitialPositions[i];
+                child.rotation = childrenInitialRotations[i];
+            }
+        }
     }
 }

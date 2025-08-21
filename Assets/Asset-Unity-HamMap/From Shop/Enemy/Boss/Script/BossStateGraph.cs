@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "BossStateGraph", menuName = "BossGraph/Boss State Graph")]
@@ -9,7 +10,7 @@ public class BossStateGraph : ScriptableObject
 
     public void Awake()
     {
-        currentState = null;
+        currentState = stateNodes.FirstOrDefault(n => n != null && n.isInitialState);
         if (stateNodes == null) return;
 
         for (int i = 0; i < stateNodes.Length; i++)
@@ -25,6 +26,7 @@ public class BossStateGraph : ScriptableObject
 
     public void StartState()
     {
+        currentState = stateNodes.FirstOrDefault(n => n != null && n.isInitialState);
         if (currentState != null)
         {
             currentState.state.stage = StateStage.Enter;

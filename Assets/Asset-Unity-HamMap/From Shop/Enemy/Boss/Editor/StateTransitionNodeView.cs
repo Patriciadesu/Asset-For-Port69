@@ -80,7 +80,6 @@ public class StateTransitionNodeView : Node
             EditorUtility.SetDirty(transitionData);
 
             soTransition.Update();
-            UpdateConditionInfoLabel();
             RebuildConditionFields();
         });
         mainContainer.Add(conditionTypePopup);
@@ -89,7 +88,6 @@ public class StateTransitionNodeView : Node
         conditionInfoLabel = new Label();
         conditionInfoLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
         mainContainer.Add(conditionInfoLabel);
-        UpdateConditionInfoLabel();
 
         // Fields root
         conditionFieldsRoot = new VisualElement();
@@ -142,20 +140,13 @@ public class StateTransitionNodeView : Node
         if (soTransition == null) soTransition = new SerializedObject(transitionData);
         else soTransition.Update();
 
-        UpdateConditionInfoLabel();
         RebuildConditionFields();
 
         RefreshExpandedState();
         RefreshPorts();
     }
 
-    private void UpdateConditionInfoLabel()
-    {
-        if (conditionInfoLabel == null) return;
-        conditionInfoLabel.text = transitionData.condition != null
-            ? $"Selected: {transitionData.condition.GetType().Name}"
-            : "Selected: None";
-    }
+
 
     private void RebuildConditionFields()
     {

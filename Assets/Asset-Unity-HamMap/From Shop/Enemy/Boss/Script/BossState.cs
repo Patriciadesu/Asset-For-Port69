@@ -6,6 +6,7 @@ using Unity.VisualScripting;
 using UnityEngine.AI;
 using System;
 
+public enum StateStage { Enter, Update, Exit }
 
 [System.Serializable]
 public abstract class BossState
@@ -57,6 +58,11 @@ public abstract class BossState
         }
     }
 }
+
+//-------------------------//
+//  Boss Movement States  //
+//-------------------------//
+#region Boss Movement States
 [System.Serializable]
 public class BossIdleState : BossState
 {
@@ -64,76 +70,6 @@ public class BossIdleState : BossState
     public override void Enter()
     {
         if (animator != null) animator.SetTrigger("Idle");
-    }
-}
-
-public enum StateStage { Enter, Update, Exit }
-
-[System.Serializable]
-public class BossAttackState : BossState
-{
-    public TimelineAsset timelinePlayable;
-    public float damage;
-    private PlayableDirector director;
-
-    public BossAttackState(Boss bossInstance) : base("Attack", bossInstance) { }
-
-    public override void Enter()
-    {
-        base.Enter();
-
-        // Enable weapon colliders for this attack window
-        if (boss.attackCollider != null)
-            Array.ForEach(boss.attackCollider, c => { if (c != null) c.enabled = true; });
-
-        // Ensure we have a director
-        director = boss.GetComponent<PlayableDirector>();
-        if (director == null) director = boss.gameObject.AddComponent<PlayableDirector>();
-
-        // Play timeline (if any) and listen for end
-        if (timelinePlayable != null)
-        {
-            director.playableAsset = timelinePlayable;
-            director.time = 0;
-            director.Play();
-        }
-        else
-        {
-            // If no timeline, end after one frame by switching to Exit
-            stage = StateStage.Exit;
-        }
-    }
-
-    public override void Update()
-    {
-        base.Update();
-        if (director.time >= director.duration)
-        {
-            OnAttackEnd();
-        }
-        // Attack specifics usually driven by animation/timeline events.
-    }
-
-    public override void Exit()
-    {
-        // Disable weapon colliders when leaving attack
-        if (boss.attackCollider != null)
-            Array.ForEach(boss.attackCollider, c => { if (c != null) c.enabled = false; });
-
-        if (director != null)
-        {
-            if (director.state == PlayState.Playing) director.Stop();
-            director.playableAsset = null;
-        }
-
-        base.Exit();
-    }
-
-    private void OnAttackEnd()
-    {
-        isFinished = true;
-        boss.onAttackEnd.Invoke();
-        stage = StateStage.Exit;
     }
 }
 [System.Serializable]
@@ -254,7 +190,6 @@ public class BossPatrolState : BossState
         }
     }
 }
-
 [System.Serializable]
 public class BossChaseState : BossState
 {
@@ -338,5 +273,310 @@ public class BossChaseState : BossState
         }
         base.Exit();
     }
-    
+
+}
+#endregion
+
+
+//-------------------------//
+//    Boss Combat States   //
+//-------------------------//
+[System.Serializable]
+public class BossAttackState : BossState
+{
+    public TimelineAsset timelinePlayable;
+    public float damage;
+
+    private PlayableDirector director;
+    private bool subscribed;
+    private bool endedOnce;
+
+    // Safety fallback if timeline has 0 duration or director misbehaves
+    private const double MinDurationEpsilon = 1e-3;
+    private float safetyTimer;
+    private const float SafetyTimeout = 0.25f; // seconds, end quickly when no valid timeline
+
+    public BossAttackState(Boss bossInstance) : base("Attack", bossInstance) { }
+
+    public override void Enter()
+    {
+        base.Enter();
+
+        endedOnce = false;
+        safetyTimer = 0f;
+
+        // 1) Toggle attack colliders ON
+        if (boss.attackCollider != null)
+            Array.ForEach(boss.attackCollider, c => { if (c) c.enabled = true; });
+
+        // 2) Ensure we have a director
+        director = boss.GetComponent<PlayableDirector>();
+        if (director == null) director = boss.gameObject.AddComponent<PlayableDirector>();
+
+        // 3) Prepare & play timeline (if any)
+        if (timelinePlayable != null)
+        {
+            // Always rebuild to avoid stale graphs on re-entry
+            director.time = 0;
+            director.extrapolationMode = DirectorWrapMode.None; // end cleanly, don’t loop
+            director.playOnAwake = false;
+            director.playableAsset = null; // clear old asset to avoid stale state
+            director.playableAsset = timelinePlayable;
+
+            // Unsubscribe old (defensive) then subscribe
+            if (subscribed)
+            {
+                director.stopped -= OnDirectorStopped;
+                subscribed = false;
+            }
+            director.stopped += OnDirectorStopped;
+            subscribed = true;
+
+            // Rebuild graph to get correct duration immediately
+            director.RebuildGraph();
+            director.Evaluate(); // evaluate bindings and initial state
+            director.playableGraph.GetRootPlayable(0).SetSpeed(boss.attackAnimationSpeedMultiplier);
+            director.Play();
+
+            // If somehow duration is invalid/zero, we’ll end via safety timer below
+        }
+        else
+        {
+            // No timeline → exit shortly (single frame might be too abrupt in some loops)
+            stage = StateStage.Update; // allow one update
+            safetyTimer = 0f;
+        }
+    }
+
+    public override void Update()
+    {
+        base.Update();
+
+        // If we have a valid director + graph, check for completion ourselves too
+        if (director != null && director.playableGraph.IsValid())
+        {
+            // Handle zero/near-zero duration timelines via safety timer
+            var duration = director.duration;
+            if (duration <= MinDurationEpsilon)
+            {
+                safetyTimer += Time.deltaTime;
+                if (safetyTimer >= SafetyTimeout)
+                {
+                    OnAttackEnd();
+                    return;
+                }
+            }
+            else
+            {
+                // Normal case: if time >= duration, end (covers cases where stopped event is missed)
+                if (director.state != PlayState.Playing || director.time + MinDurationEpsilon >= duration)
+                {
+                    OnAttackEnd();
+                    return;
+                }
+            }
+        }
+        else
+        {
+            // No director / invalid graph / no timeline → end via safety timer
+            safetyTimer += Time.deltaTime;
+            if (safetyTimer >= SafetyTimeout)
+            {
+                OnAttackEnd();
+                return;
+            }
+        }
+    }
+
+    public override void Exit()
+    {
+        // Toggle attack colliders OFF (idempotent)
+        if (boss.attackCollider != null)
+            Array.ForEach(boss.attackCollider, c => { if (c) c.enabled = false; });
+
+        // Stop & clean director safely
+        if (director != null)
+        {
+            if (director.state == PlayState.Playing) director.Stop();
+
+            if (subscribed)
+            {
+                director.stopped -= OnDirectorStopped;
+                subscribed = false;
+            }
+
+            // Clear playable asset so re-entry can set fresh graph
+            director.playableAsset = null;
+        }
+
+        base.Exit();
+    }
+
+    private void OnDirectorStopped(PlayableDirector _)
+    {
+        // Unity can invoke .stopped multiple times in some edge cases—guard this.
+        OnAttackEnd();
+    }
+
+    private void OnAttackEnd()
+    {
+        if (endedOnce) return; // ensure single exit path
+        endedOnce = true;
+
+        isFinished = true;
+        // If boss has a UnityEvent, guard null & no listeners scenarios
+        if (boss.onAttackEnd != null)
+            boss.onAttackEnd.Invoke();
+
+        stage = StateStage.Exit;
+    }
+}
+[System.Serializable]
+public class BossTeleportState : BossState
+{
+    public enum TeleportPosition
+    {
+        OnTopOfPlayer,
+        RandomAroundPlayer,
+        BehindPlayer,
+        RandomAroundBoss,
+        BackToInitialPosition
+    }
+    public TeleportPosition teleportPosition = TeleportPosition.OnTopOfPlayer;
+
+    public BossTeleportState(string name, Boss bossInstance) : base("Teleport", bossInstance)
+    {
+
+    }
+
+    public override void Enter()
+    {
+        base.Enter();
+        if (animator != null) animator.SetTrigger("Teleport");
+
+        Vector3 targetPosition = Vector3.zero;
+        switch (teleportPosition)
+        {
+            case TeleportPosition.OnTopOfPlayer:
+                targetPosition = Player.Instance.transform.position + Vector3.up * boss.transform.position.y; // Teleport directly above player
+                break;
+            case TeleportPosition.RandomAroundPlayer:
+                targetPosition = Player.Instance.transform.position + UnityEngine.Random.insideUnitSphere * 5f;
+                targetPosition.y = 0; // Keep on ground
+                break;
+            case TeleportPosition.BehindPlayer:
+                var playerDir = (Player.Instance.transform.position - boss.transform.position).normalized;
+                targetPosition = Player.Instance.transform.position - playerDir * 3f + Vector3.up * 2f;
+                break;
+            case TeleportPosition.RandomAroundBoss:
+                targetPosition = boss.transform.position + UnityEngine.Random.insideUnitSphere * 5f;
+                targetPosition.y = 0; // Keep on ground
+                break;
+            case TeleportPosition.BackToInitialPosition:
+                boss.ResetTransform();
+                targetPosition = boss.initialPosition;
+                break;
+        }
+
+        boss.transform.position = targetPosition;
+        isFinished = true; // Mark as finished immediately
+        boss.onAttackEnd.Invoke(); // Trigger any attack end logic immediately after teleport
+    }
+
+}
+[System.Serializable]
+public class BossPhaseChangeState : BossState
+{
+    public float newMaxHealth = 1f;
+    public float newAnimationSpeedMultiplier = 1f;
+    public float newSpeed = 2f;
+    public TimelineAsset changePhaseTimeline;
+
+    private PlayableDirector director;
+    private bool subscribed;
+
+    public BossPhaseChangeState(Boss bossInstance) : base("Phase Change", bossInstance) { }
+
+    public override void Enter()
+    {
+        base.Enter();
+        // Ensure we have a director
+        director = boss.GetComponent<PlayableDirector>();
+        if (director == null) director = boss.gameObject.AddComponent<PlayableDirector>();
+
+        // Prepare & play timeline (if any)
+        if (changePhaseTimeline != null)
+        {
+            director.time = 0;
+            director.extrapolationMode = DirectorWrapMode.None; // end cleanly, don’t loop
+            director.playOnAwake = false;
+            director.playableAsset = null; // clear old asset to avoid stale state
+            director.playableAsset = changePhaseTimeline;
+
+            // Unsubscribe old (defensive) then subscribe
+            if (subscribed)
+            {
+                director.stopped -= OnDirectorStopped;
+                subscribed = false;
+            }
+            director.stopped += OnDirectorStopped;
+            subscribed = true;
+
+            // Rebuild graph to get correct duration immediately
+            director.RebuildGraph();
+            director.Evaluate(); // evaluate bindings and initial state
+            director.Play();
+        }
+        else
+        {
+            // No timeline → exit shortly (single frame might be too abrupt in some loops)
+            stage = StateStage.Update; // allow one update
+        }
+    }
+
+    public override void Update()
+    {
+        base.Update();
+
+        // If we have a valid director + graph, check for completion ourselves too
+        if (director != null && director.playableGraph.IsValid())
+        {
+            if (director.state != PlayState.Playing ||
+                director.time >= director.duration - 1e-3) // near-end epsilon
+            {
+                OnPhaseChangeEnd();
+                return;
+            }
+        }
+    }
+
+    public override void Exit()
+    {
+        if (director != null)
+        {
+            if (director.state == PlayState.Playing) director.Stop();
+
+            if (subscribed)
+            {
+                subscribed = false;
+            }
+        }
+    }
+    private void OnDirectorStopped(PlayableDirector _)
+    {
+        OnPhaseChangeEnd();
+    }
+    private void OnPhaseChangeEnd()
+    {
+        boss.health = newMaxHealth;
+        boss.attackAnimationSpeedMultiplier = newAnimationSpeedMultiplier;
+        boss.speed = newSpeed;
+        
+        isFinished = true;
+        // If boss has a UnityEvent, guard null & no listeners scenarios
+        if (boss.onAttackEnd != null)
+            boss.onAttackEnd.Invoke();
+
+        stage = StateStage.Exit;
+    }
 }
