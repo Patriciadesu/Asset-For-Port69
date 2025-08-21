@@ -1485,7 +1485,7 @@ Transform:
   m_GameObject: {fileID: 2092288763679601761}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.008726535, w: 0.9999619}
-  m_LocalPosition: {x: 0, y: 1.766, z: 0.18999958}
+  m_LocalPosition: {x: 0, y: 1.766, z: 0.19000006}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3202,12 +3202,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4888581227069661607}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.766, z: 0.19}
+  m_LocalRotation: {x: -0.5, y: 0.50000006, z: 0.5, w: 0.50000006}
+  m_LocalPosition: {x: -0.12743603, y: 0.27259484, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1359799449778664167}
+  m_Father: {fileID: 2200139499527380167}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4912019213607456038
 GameObject:
@@ -4083,7 +4083,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6738396246637264964}
-  - {fileID: 3325574968896947418}
   - {fileID: 1389920808648358954}
   - {fileID: 5627062494781127554}
   - {fileID: 4285302504513984810}
@@ -4193,13 +4192,13 @@ MonoBehaviour:
   gravityMultiplier: 2.5
   speedMultiplier: 1
   additionalSpeed: 0
+  canHit: 0
   rigidbody: {fileID: 3021642040412494781}
   animator: {fileID: 8222397751238312266}
   capsuleCollider: {fileID: 361009230347338624}
   lastCheckpoint: {x: 0, y: 0, z: 0}
   spawnPoint: {x: 0, y: 0, z: 0}
   isGrounded: 1
-  canApplyGravity: 1
   canMove: 1
   maxhealth: 100
   maxstamina: 100
@@ -5631,6 +5630,7 @@ Transform:
   - {fileID: 7208580926244913886}
   - {fileID: 8661203992513470127}
   - {fileID: 3480499745183548094}
+  - {fileID: 3325574968896947418}
   m_Father: {fileID: 4326234657771520416}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7479134700416687749
