@@ -1,4 +1,5 @@
 using NaughtyAttributes;
+using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
 
 
@@ -14,7 +15,7 @@ public class Combat : PlayerExtension, IUseStamina
     private float lastPunchTime = 0f;
     private bool isPunch = false;
     private bool isHolding = false;
-    private float keyDownTime = 0f;
+    private float keyDownTime = 0f; 
 
     private bool isReadyToPunch => Time.time >= lastPunchTime + cooldownTime;
     private bool CanPunch => isReadyToPunch && _player.currentstamina >= staminaCost;
@@ -33,6 +34,15 @@ public class Combat : PlayerExtension, IUseStamina
     }
     void Update()
     {
+        if (Input.GetKey(activateKey))
+        {
+            PrepareCombat();
+        }
+        else
+        {
+            FinishedPrepareCombat();
+        }
+
         if (Input.GetKeyDown(activateKey) && CanPunch)
         {
             keyDownTime = Time.time;
@@ -42,6 +52,7 @@ public class Combat : PlayerExtension, IUseStamina
         // ตอนปล่อยปุ่ม
         if (Input.GetKeyUp(activateKey) && isHolding)
         {
+            PrepareCombat();
             heldTime = Time.time - keyDownTime;
 
             if (heldTime < holdThreshold)
@@ -58,29 +69,50 @@ public class Combat : PlayerExtension, IUseStamina
     }
     void Melee1Hand()
     {
-        isPunch = true;
-        if (canDrainStamina)
+        if (!isPunch)
         {
-            DrainStamina(staminaCost);
+            isPunch = true;
+            if (canDrainStamina)
+            {
+                DrainStamina(staminaCost);
+            }
+            _player.animator.SetTrigger("MeleeAttack1hand");
+            Invoke(nameof(FinishedPunch), 0.2f);
         }
-        _player.animator.SetTrigger("MeleeAttack1hand");
-        Invoke(nameof(FinishedPunch), 0.2f);
+        
     }
     void Melee2Hand()
     {
-        isPunch = true;
-
-        if (canDrainStamina)
+        if (!isPunch)
         {
-            DrainStamina(staminaCost * staminaCostMultiplyer);
+            isPunch = true;
+
+            if (canDrainStamina)
+            {
+                DrainStamina(staminaCost * staminaCostMultiplyer);
+            }
+            _player.animator.SetTrigger("MeleeAttack2hand");
+            Invoke(nameof(FinishedPunch), 0.5f);
         }
-        _player.animator.SetTrigger("MeleeAttack2hand");
-        Invoke(nameof(FinishedPunch), 0.5f);
+            
+    }
+    void PrepareCombat()
+    {
+       _player.animator.SetBool("PrepareCombat",true);
+
+    }
+    void FinishedPrepareCombat()
+    {
+       _player.animator.SetBool("PrepareCombat", false);
     }
     void FinishedPunch()
     {
-        isPunch = false;
-        lastPunchTime = Time.time;
-        _player.animator.speed = 1f;
+        if (isPunch)
+        {
+            isPunch = false;
+            lastPunchTime = Time.time;
+            _player.animator.speed = 1f;
+        }
+        
     }
 }
