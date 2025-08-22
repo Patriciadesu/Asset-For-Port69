@@ -3,6 +3,7 @@ using System.Linq;
 using NaughtyAttributes;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Playables;
 
 [RequireComponent(typeof(Animator))]
 public class Boss : MonoBehaviour
@@ -85,6 +86,10 @@ public class Boss : MonoBehaviour
     {
         SetInitialTransform();
         _player = Player.Instance.transform;
+        if (TryGetComponent<PlayableDirector>(out PlayableDirector director))
+        {
+            director.playableAsset = null;
+        }
         if (stateGraph != null)
         {
             if (stateGraph.transitionNodes != null)

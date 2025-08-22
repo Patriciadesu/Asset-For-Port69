@@ -4,7 +4,6 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
-using System.Reflection;
 using NaughtyAttributes.Editor;
 using NaughtyAttributes;
 using UnityEngine.UIElements;
@@ -16,7 +15,7 @@ public class PlayerControllerEditor : NaughtyInspector
     private bool showPlayerAction = true;
     private Dictionary<string, bool> extensionToggles = new Dictionary<string, bool>();
     private List<Type> extensionTypes = new List<Type>();
-    private void OnEnable()
+    protected override void OnEnable()
     {
         base.OnEnable();
         extensionTypes.Clear();

@@ -5,44 +5,62 @@ using System.Collections;
 public class ItemData : ScriptableObject
 {
     public Sprite itemimage; // Image of the item
-    [ShowIf("type",itemType.Heal)] public int healAmount; // Amount of health the item restores
-    [ShowIf("type", itemType.addStamina)] public int AddstaminaAmount; // Amount of stamina the item restores
-    [ShowIf("type", itemType.PlayerTakedam)] public int Damageamount;
-    [ShowIf("type", itemType.addspeed)] public int speedaddamount;
-    [ShowIf("type", itemType.addspeed)] public float usetime;
-    public enum itemType { Heal, addStamina , PlayerTakedam ,addspeed}
-    public itemType type; // Type of the item
-    public void UseItem()
-    {
-        switch (type)
-        {
-            case itemType.Heal:
-                Player.Instance.currenthealth += healAmount; // Restore health
-                break;
-            case itemType.addStamina:
-                Player.Instance.currentstamina += AddstaminaAmount; // Restore stamina
-                break;
-            case itemType.PlayerTakedam:
-                Player.Instance.TakeDamage(Damageamount); // Example for an unknown type, just for demonstration
-                break;
-            case itemType.addspeed:
-                Player.Instance.StartCoroutine(addspeed()); // Start the coroutine to add speed
-                break;
-
-
-        }
-
-    }
-    public IEnumerator addspeed() { 
-        Player.Instance.additionalSpeed = speedaddamount; // Add speed
-        yield return new WaitForSeconds(usetime); // Wait for 5 seconds
-        Player.Instance.additionalSpeed = 0; // Remove speed after 5 seconds
-
-    }
+    [SerializeReference]
+    public ItemType type;
     
-
-
-
-
 }
+
+[System.Serializable]
+public class ItemType
+{
+    public virtual IEnumerator OnUse()
+    {
+        yield return null;
+    }
+}
+public class Heal : ItemType
+{
+    public float healAmount;
+    public override IEnumerator OnUse()
+    {
+        base.OnUse();
+        Player.Instance.currenthealth += healAmount;
+        yield return null;
+    }
+}
+public class Stamina : ItemType
+{
+    public int addStaminaAmount;
+    public override IEnumerator OnUse()
+    {
+        base.OnUse();
+        Player.Instance.currentstamina += addStaminaAmount;
+        yield return null;
+    }
+}
+public class DoDamageToPlayer : ItemType
+{
+    public int damageAmount;
+    public override IEnumerator OnUse()
+    {
+        base.OnUse();
+        Player.Instance.TakeDamage(damageAmount);
+        yield return null;
+    }
+}
+public class SpeedBoost : ItemType
+{
+    public int speedAmount;
+    public float useTime;
+
+    public override IEnumerator OnUse()
+    {
+        base.OnUse();
+        Player.Instance.additionalSpeed = speedAmount;
+        yield return new WaitForSeconds(useTime);
+        Player.Instance.additionalSpeed = 0;
+    }
+}
+
+
 

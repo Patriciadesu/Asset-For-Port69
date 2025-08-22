@@ -17,12 +17,11 @@ MonoBehaviour:
   state:
     rid: 5678062170086572148
   transitions:
-  - {fileID: 11400000, guid: 887ef2b2ed4fc4446857360046bc729b, type: 2}
   - {fileID: 11400000, guid: cfa86849baedee245b236583bc3ef79a, type: 2}
   onStateChange:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: 0, y: 392}
+  position: {x: 148, y: 406}
   references:
     version: 2
     RefIds:

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: New State 6
   m_EditorClassIdentifier: 
   stateName: Idle
-  isInitialState: 0
+  isInitialState: 1
   state:
     rid: 5678062170086572147
   transitions:
