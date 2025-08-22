@@ -4,9 +4,8 @@ using UnityEngine;
 
 public class BowShot : PlayerExtension
 {
-    [Header("Properties")]
+    [Header("Input")]
     public KeyCode activateKey = KeyCode.Mouse0;
-    public float DrawTime = 3f;
     float pauseTime = 0.4f;
 
     bool canShot = false;
@@ -14,10 +13,12 @@ public class BowShot : PlayerExtension
     private bool isPaused = false;  // ถูกหยุดค้างแล้วหรือยัง
     private float clipLength = 0f;    // ความยาวคลิป (วินาที)
 
-    [Header("Arrow Properties")]
+    [Header("Arrow")]
     public GameObject projectilePrefab;
     public Transform spawnPoint;
+    public float DrawTime = 3f;
     public float speed = 10f;
+    public float damage;
 
     public bool hasDestroyTime = true;
     [ShowIf("hasDestroyTime")] public float DestroyTime = 2f;
@@ -139,5 +140,9 @@ public class BowShot : PlayerExtension
         {
             rb.linearVelocity = spawnPoint.forward * speed;
         }
+
+        Arrow arrow = projectile.GetComponent<Arrow>();
+        if (arrow == null) arrow = projectile.AddComponent<Arrow>();
+        arrow.SetUp(damage);
     }
 }

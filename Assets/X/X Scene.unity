@@ -284,6 +284,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   activateKey: 323
   projectilePrefab: {fileID: 6335258832587969620, guid: ba268c89bbd21df4b9cf87a1606693f9, type: 3}
+  damage: 0
   spawnPoint: {fileID: 1305243505}
   timeToFire: 0.8
   speed: 12
@@ -291,6 +292,26 @@ MonoBehaviour:
   destroyTime: 2
   useStamina: 0
   staminaCost: 2
+--- !u!114 &578355502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 578355474}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e26494014f09f3499888f8517c626e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  activateKey: 323
+  projectilePrefab: {fileID: 6335258832587969620, guid: ba268c89bbd21df4b9cf87a1606693f9, type: 3}
+  spawnPoint: {fileID: 1305243505}
+  DrawTime: 3
+  speed: 10
+  damage: 0
+  hasDestroyTime: 1
+  DestroyTime: 2
 --- !u!1001 &713009062
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -399,6 +420,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6147652721812047367, guid: ebc7295ac5ea5f843a6863c6d40fda9f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 578355501}
+    - targetCorrespondingSourceObject: {fileID: 6147652721812047367, guid: ebc7295ac5ea5f843a6863c6d40fda9f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 578355502}
   m_SourcePrefab: {fileID: 100100000, guid: ebc7295ac5ea5f843a6863c6d40fda9f, type: 3}
 --- !u!1 &1018315937
 GameObject:
