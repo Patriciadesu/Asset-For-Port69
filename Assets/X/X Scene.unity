@@ -234,24 +234,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e7d606cc1939cd4392d578f305cf0b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &578355481
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 578355474}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f7659bd0785204438e7ada4667f1dae, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  activateKey: 103
-  cooldownTime: 1
-  heldTime: 0
-  useStamina: 0
-  staminaCost: 2
-  staminaCostMultiplyer: 0
 --- !u!114 &578355482
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -270,7 +252,7 @@ MonoBehaviour:
   isBlocking: 0
   useStamina: 0
   staminaCost: 5
---- !u!114 &578355483
+--- !u!114 &578355500
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -279,15 +261,36 @@ MonoBehaviour:
   m_GameObject: {fileID: 578355474}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0e26494014f09f3499888f8517c626e1, type: 3}
+  m_Script: {fileID: 11500000, guid: 9f7659bd0785204438e7ada4667f1dae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  activateKey: 103
+  cooldownTime: 1
+  heldTime: 0
+  useStamina: 0
+  staminaCost: 2
+  staminaCostMultiplyer: 0
+--- !u!114 &578355501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 578355474}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6025264cca855a145aaee95dda86fa07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   activateKey: 323
-  DrawTime: 0.5
   projectilePrefab: {fileID: 6335258832587969620, guid: ba268c89bbd21df4b9cf87a1606693f9, type: 3}
   spawnPoint: {fileID: 1305243505}
-  speed: 10
-  DestroyTime: 2
+  timeToFire: 0.8
+  speed: 12
+  hasDestroyTime: 1
+  destroyTime: 2
+  useStamina: 0
+  staminaCost: 2
 --- !u!1001 &713009062
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -392,10 +395,10 @@ PrefabInstance:
       addedObject: {fileID: 578355482}
     - targetCorrespondingSourceObject: {fileID: 6147652721812047367, guid: ebc7295ac5ea5f843a6863c6d40fda9f, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 578355481}
+      addedObject: {fileID: 578355500}
     - targetCorrespondingSourceObject: {fileID: 6147652721812047367, guid: ebc7295ac5ea5f843a6863c6d40fda9f, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 578355483}
+      addedObject: {fileID: 578355501}
   m_SourcePrefab: {fileID: 100100000, guid: ebc7295ac5ea5f843a6863c6d40fda9f, type: 3}
 --- !u!1 &1018315937
 GameObject:
@@ -606,13 +609,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1305243504}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.0061705927, y: -0.7070799, z: -0.0061705927, w: 0.7070799}
+  m_LocalRotation: {x: -0.008726465, y: 0, z: 0, w: 0.999962}
   m_LocalPosition: {x: 0.00020942617, y: 0.011998018, z: 0.849}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 393371858}
-  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+  m_LocalEulerAnglesHint: {x: -1, y: 0, z: 0}
 --- !u!1 &1694619211
 GameObject:
   m_ObjectHideFlags: 0

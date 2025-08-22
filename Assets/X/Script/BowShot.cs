@@ -1,7 +1,6 @@
+using NaughtyAttributes;
 using System.Security.Cryptography.X509Certificates;
-using Unity.VisualScripting;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class BowShot : PlayerExtension
 {
@@ -19,24 +18,38 @@ public class BowShot : PlayerExtension
     public GameObject projectilePrefab;
     public Transform spawnPoint;
     public float speed = 10f;
-    public float DestroyTime = 2f;
 
-    void Start()
+    public bool hasDestroyTime = true;
+    [ShowIf("hasDestroyTime")] public float DestroyTime = 2f;
+
+    public override void OnStart(Player player)
     {
-        // หาความยาวคลิปจาก RuntimeAnimatorController
-        var clips = _player.animator.runtimeAnimatorController.animationClips;
-        foreach (var c in clips)
+        base.OnStart(player);
+        CacheClipLength(); // อ่านความยาวคลิปตอนนี้ (ปลอดภัยกว่า Start/Awake)
+    }
+    void CacheClipLength()
+    {
+        if (_player == null)
         {
-            if (c.name == "BowShot")
+            Debug.LogError("[BowShot] _player ยังเป็น null; ตรวจว่า Player เรียก OnStart ให้หรือยัง");
+            return;
+        }
+        var anim = _player.animator;
+        if (!anim) { Debug.LogError("[BowShot] ไม่พบ Animator บน Player"); return; }
+        var controller = anim.runtimeAnimatorController;
+        if (!controller) { Debug.LogError("[BowShot] Animator ไม่มี RuntimeAnimatorController"); return; }
+
+        clipLength = 0f;
+        foreach (var c in controller.animationClips)
+        {
+            if (c && c.name == "BowShot")
             {
                 clipLength = c.length;
                 break;
             }
         }
         if (clipLength <= 0f)
-        {
-            Debug.LogWarning($"[BowShot] ไม่พบคลิปชื่อ {"BowShot"} ใน Animator หรือความยาวเป็น 0");
-        }
+            Debug.LogWarning($"[BowShot] ไม่พบคลิปชื่อ {"BowShot"} หรือความยาวเป็น 0");
     }
     void Update()
     {
@@ -52,26 +65,30 @@ public class BowShot : PlayerExtension
         {
             ShotBow();
         }
+
         if (Input.GetKeyUp(activateKey) && !canShot)
         {
-            _player.animator.Play("Idle", 0, 0f);
+            _player.animator.speed = 1f;
+            _player.animator.Play("Idle", 0 ,0 );
         }
     }
 
     private void DrawBow()
     {
         if (!canShot)
-        isHolding = true;
-        isPaused = false;
+        {
+            isHolding = true;
+            isPaused = false;
 
-        // คำนวณ speed ให้ถึง pauseTime ใช้เวลาตาม DrawTime
-        float p = Mathf.Clamp01(pauseTime);
-        float L = Mathf.Max(clipLength, 0.0001f);
-        float T = Mathf.Max(DrawTime, 0.0001f);
-        float speedForDraw = (p * L) / T;       // สูตรสำคัญ
-        _player.animator.speed = Mathf.Max(speedForDraw, 0.001f);
+            // คำนวณ speed ให้ถึง pauseTime ใช้เวลาตาม DrawTime
+            float p = Mathf.Clamp01(pauseTime);
+            float L = Mathf.Max(clipLength, 0.0001f);
+            float T = Mathf.Max(DrawTime, 0.0001f);
+            float speedForDraw = (p * L) / T;       // สูตรสำคัญ
+            _player.animator.speed = Mathf.Max(speedForDraw, 0.001f);
 
-        _player.animator.Play("BowShot", 0, 0f);
+            _player.animator.Play("BowShot", 0, 0f);
+        }
         
     }
 
@@ -112,12 +129,15 @@ public class BowShot : PlayerExtension
     {
         // สร้าง projectile ที่ตำแหน่ง spawnPoint
         GameObject projectile = Instantiate(projectilePrefab, spawnPoint.position, spawnPoint.rotation);
-        Destroy(projectile, DestroyTime );
+        if (hasDestroyTime)
+        {
+            Destroy(projectile, DestroyTime);
+        }
         // ให้มันพุ่งไปข้างหน้า
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            rb.linearVelocity = spawnPoint.right * speed;
+            rb.linearVelocity = spawnPoint.forward * speed;
         }
     }
 }

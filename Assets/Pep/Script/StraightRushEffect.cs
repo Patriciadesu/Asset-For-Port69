@@ -38,10 +38,10 @@ public class StraightRushEffect : ObjectEffect
         {
             if (lockDirection && playerRb != null)
             {
-                Vector3 currentVel = playerRb.velocity;
+                Vector3 currentVel = playerRb.linearVelocity;
                 Vector3 forwardVel = Vector3.Project(currentVel, rushDirection);
                 Vector3 newVel = new Vector3(forwardVel.x, currentVel.y, forwardVel.z);
-                playerRb.velocity = newVel;
+                playerRb.linearVelocity = newVel;
             }
             elapsed += Time.deltaTime;
             yield return null;
