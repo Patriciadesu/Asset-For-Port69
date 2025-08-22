@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 4987986190242854676}
   - component: {fileID: 5182721025031285119}
   - component: {fileID: 2329195370261821392}
+  - component: {fileID: -8996227273674065629}
   m_Layer: 0
   m_Name: Enemy Bullet
   m_TagString: Untagged
@@ -151,6 +152,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   usePhysic: 0
+  useGravity: 1
+  isTrigger: 0
 --- !u!114 &2329195370261821392
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -163,3 +166,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56e241fc77d8c7d498b8942ec0237909, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &-8996227273674065629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4698775660879849544}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd3022509112b6c4cbd2231b8f1cb936, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  on: {fileID: 0}
+  off: {fileID: 0}

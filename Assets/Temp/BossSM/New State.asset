@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24a4e1e8d60a72a4cbeccd371e6db72e, type: 3}
+  m_Name: New State
+  m_EditorClassIdentifier: 
+  stateName: Idle
+  isInitialState: 1
+  state:
+    rid: 5678062170086572124
+  transitions:
+  - {fileID: 11400000, guid: d7b69ca29d076da43b7658a85aa2ad4d, type: 2}
+  - {fileID: 11400000, guid: 9f608384a2ed4f34385805940e69ead0, type: 2}
+  onStateChange:
+    m_PersistentCalls:
+      m_Calls: []
+  position: {x: -134, y: -356}
+  references:
+    version: 2
+    RefIds:
+    - rid: 5678062170086572124
+      type: {class: BossIdleState, ns: , asm: Assembly-CSharp}
+      data:
+        stateName: BossIdleState
