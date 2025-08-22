@@ -10,8 +10,8 @@ public class Roll : PlayerExtension, IUseStamina
     
     [Header("Properties")]
     public KeyCode activateKey = KeyCode.Q;
-    public float rollSpeed = 2f;
-    public float rollDuration = 0.5f;
+    public float rollSpeed = 1f;
+    public float rollDuration = 0.15f;
     public float cooldownTime = 1f;
 
 
@@ -66,6 +66,7 @@ public class Roll : PlayerExtension, IUseStamina
     private void StartRoll()
     {
         isRolling = true;
+        _player.canRotateCamera = false;
         if (canDrainStamina)
         {
             DrainStamina(staminaCost);
@@ -96,7 +97,7 @@ public class Roll : PlayerExtension, IUseStamina
             collider.height *= 2;
             collider.center = new Vector3(collider.center.x, collider.center.y * 2, collider.center.z);
         }
-
+        _player.canRotateCamera = true;
         isRolling = false;
         _player.animator.speed = 1;
         lastRollTime = Time.time; // Reset the last roll time

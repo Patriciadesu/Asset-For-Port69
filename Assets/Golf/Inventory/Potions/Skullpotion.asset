@@ -13,8 +13,13 @@ MonoBehaviour:
   m_Name: Skullpotion
   m_EditorClassIdentifier: 
   itemimage: {fileID: -686540758, guid: bd86a5f1cfc151242a1f21343b95e91a, type: 3}
-  healthAmount: 0
-  AddstaminaAmount: 0
-  Damageamount: 10
-  speedaddamount: 0
-  type: 2
+  type:
+    rid: 5678062170086572161
+  references:
+    version: 2
+    RefIds:
+    - rid: 5678062170086572161
+      type: {class: SpeedBoost, ns: , asm: Assembly-CSharp}
+      data:
+        speedAmount: 0
+        useTime: 0

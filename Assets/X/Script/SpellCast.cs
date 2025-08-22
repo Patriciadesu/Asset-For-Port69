@@ -7,8 +7,8 @@ public class SpellCast : PlayerExtension
     [Header("Input")]
     public KeyCode activateKey = KeyCode.Mouse0;
 
-    string stateName = "SpellCast"; // ª×èÍ State/Clip ã¹ Animator
-    float firePointNormalized = 0.65f; // ¨Ø´ã¹¤ÅÔ»·Õè¨ÐÂÔ§ (0..1)
+    string stateName = "SpellCast"; // ï¿½ï¿½ï¿½ï¿½ State/Clip ï¿½ Animator
+    float firePointNormalized = 0.65f; // ï¿½Ø´ã¹¤ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½Ô§ (0..1)
     int layer = 0;
 
     [Header("Spell")]
@@ -21,10 +21,10 @@ public class SpellCast : PlayerExtension
     public bool hasDestroyTime = true;
     [ShowIf("hasDestroyTime")] public float destroyTime = 2f;
 
-    // ÀÒÂã¹
+    // ï¿½ï¿½ï¿½ï¿½
     float clipLength = 0f;
-    bool isHolding = false; // ¡ÓÅÑ§¡´¤éÒ§ÍÂÙèäËÁ
-    bool hasFired = false; // ÂÔ§ä»áÅéÇËÃ×ÍÂÑ§ã¹ÃÍº¹Õé
+    bool isHolding = false; // ï¿½ï¿½ï¿½Ñ§ï¿½ï¿½ï¿½ï¿½Ò§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    bool hasFired = false; // ï¿½Ô§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ§ï¿½ï¿½Íºï¿½ï¿½ï¿½
 
     public bool useStamina;
     [ShowIf("useStamina")] public float staminaCost = 2f;
@@ -37,27 +37,27 @@ public class SpellCast : PlayerExtension
             _player.currentstamina = Mathf.Max(_player.currentstamina - amount, 0f);
         }
     }
-    // á¹Ð¹ÓãËé Player àÃÕÂ¡ OnStart àÁ×èÍ Player ¾ÃéÍÁ (_player ¶Ù¡à«çµá¹èæ)
+    // ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½ Player ï¿½ï¿½ï¿½Â¡ OnStart ï¿½ï¿½ï¿½ï¿½ï¿½ Player ï¿½ï¿½ï¿½ï¿½ï¿½ (_player ï¿½Ù¡ï¿½ï¿½ï¿½ï¿½ï¿½)
     public override void OnStart(Player player)
     {
         base.OnStart(player);
-        CacheClipLength(); // ÍèÒ¹¤ÇÒÁÂÒÇ¤ÅÔ»µÍ¹¹Õé (»ÅÍ´ÀÑÂ¡ÇèÒ Start/Awake)
+        CacheClipLength(); // ï¿½ï¿½Ò¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¤ï¿½Ô»ï¿½Í¹ï¿½ï¿½ï¿½ (ï¿½ï¿½Í´ï¿½ï¿½Â¡ï¿½ï¿½ï¿½ Start/Awake)
     }
 
     void Update()
     {
-        // àÃÔèÁ¡´ -> àÃÔèÁÃèÒÂ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ -> ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (Input.GetKeyDown(activateKey))
             BeginCast();
 
-        // ÃÐËÇèÒ§¡´¤éÒ§ -> µÃÇ¨ÇèÒ¶Ö§¨Ø´ÂÔ§ËÃ×ÍÂÑ§
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ò§ï¿½ï¿½ï¿½ï¿½Ò§ -> ï¿½ï¿½Ç¨ï¿½ï¿½Ò¶Ö§ï¿½Ø´ï¿½Ô§ï¿½ï¿½ï¿½ï¿½ï¿½Ñ§
         TickUntilFirePoint();
 
-        // »ÅèÍÂ¡èÍ¹¶Ö§¨Ø´ÂÔ§ -> Â¡àÅÔ¡
+        // ï¿½ï¿½ï¿½ï¿½Â¡ï¿½Í¹ï¿½Ö§ï¿½Ø´ï¿½Ô§ -> Â¡ï¿½ï¿½Ô¡
         if (Input.GetKeyUp(activateKey) && !hasFired)
         {
             CancelCast();
-            // ¶éÒ»ÅèÍÂËÅÑ§ÂÔ§áÅéÇ ¨Ð»ÅèÍÂãËéáÍ¹ÔàÁªÑ¹ä»µèÍËÃ×Í¨ÐµÑ´¡ÅÑº Idle ¡çä´é:
+            // ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ§ï¿½Ô§ï¿½ï¿½ï¿½ï¿½ ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¹ï¿½ï¿½ï¿½ï¿½Ñ¹ä»µï¿½ï¿½ï¿½ï¿½ï¿½Í¨ÐµÑ´ï¿½ï¿½Ñº Idle ï¿½ï¿½ï¿½ï¿½:
             // else _player.animator.CrossFadeInFixedTime("Idle", 0.05f);
         }
     }
@@ -66,13 +66,13 @@ public class SpellCast : PlayerExtension
     {
         if (_player == null)
         {
-            Debug.LogError("[SpellCast] _player ÂÑ§à»ç¹ null; µÃÇ¨ÇèÒ Player àÃÕÂ¡ OnStart ãËéËÃ×ÍÂÑ§");
+            Debug.LogError("[SpellCast] _player ï¿½Ñ§ï¿½ï¿½ null; ï¿½ï¿½Ç¨ï¿½ï¿½ï¿½ Player ï¿½ï¿½ï¿½Â¡ OnStart ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ§");
             return;
         }
         var anim = _player.animator;
-        if (!anim) { Debug.LogError("[SpellCast] äÁè¾º Animator º¹ Player"); return; }
+        if (!anim) { Debug.LogError("[SpellCast] ï¿½ï¿½è¾º Animator ï¿½ï¿½ Player"); return; }
         var controller = anim.runtimeAnimatorController;
-        if (!controller) { Debug.LogError("[SpellCast] Animator äÁèÁÕ RuntimeAnimatorController"); return; }
+        if (!controller) { Debug.LogError("[SpellCast] Animator ï¿½ï¿½ï¿½ï¿½ï¿½ RuntimeAnimatorController"); return; }
 
         clipLength = 0f;
         foreach (var c in controller.animationClips)
@@ -84,26 +84,26 @@ public class SpellCast : PlayerExtension
             }
         }
         if (clipLength <= 0f)
-            Debug.LogWarning($"[SpellCast] äÁè¾º¤ÅÔ»ª×èÍ {stateName} ËÃ×Í¤ÇÒÁÂÒÇà»ç¹ 0");
+            Debug.LogWarning($"[SpellCast] ï¿½ï¿½è¾ºï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ {stateName} ï¿½ï¿½ï¿½Í¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 0");
     }
 
     void BeginCast()
     {
         if (!hasFired)
         {
-            // ÃÕà«çµÊ¶Ò¹ÐÃÍºãËÁè
+            // ï¿½ï¿½ï¿½ï¿½Ê¶Ò¹ï¿½ï¿½Íºï¿½ï¿½ï¿½ï¿½
             isHolding = true;
             hasFired = false;
 
-            // ãËé¶Ö§ firePointNormalized ÀÒÂã¹ timeToFirePoint
+            // ï¿½ï¿½ï¿½Ö§ firePointNormalized ï¿½ï¿½ï¿½ï¿½ timeToFirePoint
             float p = Mathf.Clamp01(firePointNormalized);
             float L = (clipLength > 0f) ? clipLength : 1f;
             float T = Mathf.Max(timeToFire, 0.0001f);
-            float speedToFire = (p * L) / T; // speed = ÃÐÂÐ·Ò§ã¹¤ÅÔ» / àÇÅÒ
+            float speedToFire = (p * L) / T; // speed = ï¿½ï¿½ï¿½Ð·Ò§ã¹¤ï¿½Ô» / ï¿½ï¿½ï¿½ï¿½
 
             var anim = _player.animator;
             anim.speed = Mathf.Max(speedToFire, 0.001f);
-            anim.Play(stateName, layer, 0f); // àÃÔèÁ¨Ò¡µé¹·Ø¡¤ÃÑé§
+            anim.Play(stateName, layer, 0f); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¡ï¿½é¹·Ø¡ï¿½ï¿½ï¿½ï¿½
         }
         
     }
@@ -115,10 +115,10 @@ public class SpellCast : PlayerExtension
             var info = _player.animator.GetCurrentAnimatorStateInfo(layer);
             if (!info.IsName(stateName)) return;
 
-            // ¶éÒ¤ÅÔ» Loop, normalizedTime ¨Ð > 1; ãªé % 1 ãËéÍÂÙèÃÍº»Ñ¨¨ØºÑ¹
+            // ï¿½ï¿½Ò¤ï¿½Ô» Loop, normalizedTime ï¿½ï¿½ > 1; ï¿½ï¿½ % 1 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íºï¿½Ñ¨ï¿½ØºÑ¹
             float t = info.normalizedTime % 1f;
 
-            // ãªé >= äÁèãªé == áÅÐ¡Ñ¹ËÅØ´à¿ÃÁ
+            // ï¿½ï¿½ >= ï¿½ï¿½ï¿½ï¿½ï¿½ == ï¿½ï¿½Ð¡Ñ¹ï¿½ï¿½Ø´ï¿½ï¿½ï¿½
             if (t >= firePointNormalized - 0.001f)
             {
                 hasFired = true;
@@ -135,27 +135,38 @@ public class SpellCast : PlayerExtension
             hasFired = false;
             isHolding = false;
 
-            if (canDrainStamina)
-            {
-                DrainStamina(staminaCost);
-            }
+            if (canDrainStamina) DrainStamina(staminaCost);
 
-            if (!projectilePrefab || !spawnPoint)
+            if (spawnPoint == null)
             {
-                Debug.LogWarning("[SpellCast] projectilePrefab ËÃ×Í spawnPoint ÂÑ§äÁè¶Ù¡à«çµ");
-                return;
+                spawnPoint = Player.Instance.camera.transform;
             }
+            
+            GameObject projectile = null;
+            if (!projectilePrefab)
+            {
+                Quaternion rotation = (_player.cameraType == Player.CameraType.FirstPerson)? _player.camera.transform.rotation : _player.tpsVirtualCamera.transform.rotation;
+                projectile = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                projectile.transform.position = spawnPoint.position;
+                projectile.transform.rotation = Quaternion.identity;
+                projectile.gameObject.transform.localScale = new Vector3(.5f, .5f, .5f);
+                projectile.AddComponent<Rigidbody>();
+            }
+            else
+            {
+                projectile = Instantiate(projectilePrefab, spawnPoint.position, Quaternion.identity);
+            }
+            
 
-            GameObject projectile = Instantiate(projectilePrefab, spawnPoint.position, Quaternion.identity);
             if (hasDestroyTime && destroyTime > 0f) Destroy(projectile, destroyTime);
 
             Rigidbody rb = projectile.GetComponent<Rigidbody>();
             if (rb != null)
             {
-                rb.useGravity = false;                 //  »Ô´áÃ§â¹éÁ¶èÇ§à©¾ÒÐÅÙ¡¹Õé
-                rb.linearDamping = 0f;                          // ãËé¤§¤ÇÒÁàÃçÇ (äÁèË¹èÇ§ÍÒ¡ÒÈ)
-                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic; // ¡Ñ¹·ÐÅØ
-                rb.linearVelocity = spawnPoint.forward * speed; // ¾Øè§ä»¢éÒ§Ë¹éÒ (3D ¹ÔÂÁãªé forward)
+                rb.useGravity = false;                 //  ï¿½Ô´ï¿½Ã§ï¿½ï¿½ï¿½ï¿½ï¿½Ç§à©¾ï¿½ï¿½ï¿½Ù¡ï¿½ï¿½ï¿½
+                rb.linearDamping = 0f;                          // ï¿½ï¿½é¤§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½Ë¹ï¿½Ç§ï¿½Ò¡ï¿½ï¿½)
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic; // ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½
+                rb.linearVelocity = spawnPoint.forward * speed; // ï¿½ï¿½ï¿½ä»¢ï¿½Ò§Ë¹ï¿½ï¿½ (3D ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ forward)
             }
         }
     }
@@ -165,7 +176,7 @@ public class SpellCast : PlayerExtension
         isHolding = false;
         hasFired = false;
         var anim = _player.animator;
-        anim.speed = 1f; // à¼×èÍà¤Â»ÃÑº
-        anim.CrossFadeInFixedTime("Idle", 0.05f); // µÑ´¡ÅÑº Idle ¹ØèÁ æ
+        anim.speed = 1f; // ï¿½ï¿½ï¿½ï¿½ï¿½Â»ï¿½Ñº
+        anim.CrossFadeInFixedTime("Idle", 0.05f); // ï¿½Ñ´ï¿½ï¿½Ñº Idle ï¿½ï¿½ï¿½ï¿½ ï¿½
     }
 }

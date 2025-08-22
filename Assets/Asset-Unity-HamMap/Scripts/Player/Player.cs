@@ -72,6 +72,7 @@ public class Player : Singleton<Player>
     [HideInInspector] public List<ICancleGravity> cancleGravityComponents = new List<ICancleGravity>();
     public bool canApplyGravity => cancleGravityComponents.TrueForAll(x => x.canApplyGravity);
     [HideInInspector] public bool canMove = true;
+    [HideInInspector] public bool canRotateCamera = true;
 
     #region Player Delegates
     public delegate void FixedUpdateDelegate();
@@ -151,6 +152,10 @@ public class Player : Singleton<Player>
             if (cameraType == CameraType.FirstPerson)
             {
                 camera.transform.position = fpsCameraPivot.transform.position;
+            }
+            if (!canRotateCamera)
+            {
+                
             }
         }
         else
@@ -398,6 +403,7 @@ public class Player : Singleton<Player>
 
     void HandleMouseLook()
     {
+        if (!canRotateCamera) return;
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
