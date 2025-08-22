@@ -236,7 +236,12 @@ public class Boss : MonoBehaviour
            : 0f;
 
     // Signals to drive conditions from gameplay
-    public void SetHealth(float newHealth) { health = Mathf.Clamp(newHealth, 0f, maxHealth); onHealthChanged.Invoke(health); }
+    public void TakeDamage(float damage)
+    {
+        float newHealth = health - damage;
+        health = Mathf.Clamp(newHealth, 0f, maxHealth);
+        onHealthChanged.Invoke(health);
+    }
     public void PlayerInSight() { SetSight(true); }
     public void PlayerOutOfSight() { SetSight(false); }
     public void PlayerInAttackRange() { SetAttackRange(true); }

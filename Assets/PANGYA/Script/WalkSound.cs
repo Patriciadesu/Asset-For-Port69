@@ -34,7 +34,7 @@ public class WalkSound : PlayerExtension
 
         bool isMoving = Mathf.Abs(moveX) > 0.1f || Mathf.Abs(moveY) > 0.1f;
 
-        if (!isMoving) return;
+        if (isMoving) return;
 
         float speed = _player.Speed;
         float interval = stepInterval;

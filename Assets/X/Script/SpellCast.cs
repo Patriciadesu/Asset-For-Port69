@@ -13,6 +13,7 @@ public class SpellCast : PlayerExtension
 
     [Header("Spell")]
     public GameObject projectilePrefab;
+    public float damage;
     public Transform spawnPoint;
     public float timeToFire = 0.8f;
     public float speed = 12f;
@@ -141,11 +142,11 @@ public class SpellCast : PlayerExtension
             {
                 spawnPoint = Player.Instance.camera.transform;
             }
-            
+
             GameObject projectile = null;
             if (!projectilePrefab)
             {
-                Quaternion rotation = (_player.cameraType == Player.CameraType.FirstPerson)? _player.camera.transform.rotation : _player.tpsVirtualCamera.transform.rotation;
+                Quaternion rotation = (_player.cameraType == Player.CameraType.FirstPerson) ? _player.camera.transform.rotation : _player.tpsVirtualCamera.transform.rotation;
                 projectile = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 projectile.transform.position = spawnPoint.position;
                 projectile.transform.rotation = Quaternion.identity;
@@ -156,7 +157,7 @@ public class SpellCast : PlayerExtension
             {
                 projectile = Instantiate(projectilePrefab, spawnPoint.position, Quaternion.identity);
             }
-            
+
 
             if (hasDestroyTime && destroyTime > 0f) Destroy(projectile, destroyTime);
 
@@ -168,6 +169,9 @@ public class SpellCast : PlayerExtension
                 rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic; // �ѹ����
                 rb.linearVelocity = spawnPoint.forward * speed; // ���仢�ҧ˹�� (3D ������ forward)
             }
+            MagicBullet magicBullet = projectile.GetComponent<MagicBullet>();
+            if (magicBullet == null) magicBullet = projectile.AddComponent<MagicBullet>();
+            magicBullet.SetUp(damage);
         }
     }
 
