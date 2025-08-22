@@ -6,8 +6,6 @@ public class Block : PlayerExtension, IUseStamina
 {
     [Header("Properties")]
     public KeyCode activateKey = KeyCode.Mouse1;
-    public float cooldownTime = 0.5f;
-    public float holdThreshold = 2f;
 
     public bool isBlocking = false;
     public bool useStamina;

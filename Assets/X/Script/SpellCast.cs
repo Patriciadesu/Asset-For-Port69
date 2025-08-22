@@ -13,8 +13,8 @@ public class SpellCast : PlayerExtension
 
     [Header("Spell")]
     public GameObject projectilePrefab;
-    public float damage;
     public Transform spawnPoint;
+    public float damage;
     public float timeToFire = 0.8f;
     public float speed = 12f;
 

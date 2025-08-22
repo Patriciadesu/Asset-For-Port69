@@ -12,6 +12,7 @@ public class MagicBullet : MonoBehaviour
         if (collision.gameObject.TryGetComponent<Boss>(out Boss boss))
         {
             boss.TakeDamage(damage);
+            Destroy(this.gameObject);
         }
     }
     public void OnTriggerEnter(Collider other)
@@ -19,6 +20,7 @@ public class MagicBullet : MonoBehaviour
         if (other.TryGetComponent<Boss>(out Boss boss))
         {
             boss.TakeDamage(damage);
+            Destroy(this.gameObject);
         }
     }
 }
