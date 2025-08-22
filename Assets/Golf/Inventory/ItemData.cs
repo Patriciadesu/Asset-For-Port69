@@ -7,7 +7,7 @@ public class ItemData : ScriptableObject
     public Sprite itemimage; // Image of the item
     [SerializeReference]
     public ItemType type;
-    
+    public IEnumerator Use() => type.OnUse();
 }
 
 [System.Serializable]

@@ -54,7 +54,7 @@ public class Itemslot : MonoBehaviour
             }
             else
             {
-                StartCoroutine(items[currentIndex].type.OnUse()); // Use the item in the current slot
+                StartCoroutine(items[currentIndex].Use()); // Use the item in the current slot
                 slots[currentIndex].sprite = null; // Clear the item image after use
                 items[currentIndex] = null; // Remove the item from the inventory after use
 
