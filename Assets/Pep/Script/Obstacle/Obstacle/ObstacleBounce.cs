@@ -1,6 +1,5 @@
 using UnityEngine;
 
-
 public class ObstacleBounce : ObstacleBase
 {
     protected override void Launch(Vector3 direction, float speed)
@@ -11,6 +10,15 @@ public class ObstacleBounce : ObstacleBase
     private void OnCollisionEnter(Collision collision)
     {
         if (!isActive) return;
-        rb.linearVelocity = Vector3.Reflect(rb.linearVelocity, collision.contacts[0].normal);
+
+        Vector3 normal = collision.contacts[0].normal;
+
+        rb.linearVelocity = Vector3.Reflect(rb.linearVelocity, normal);
+    }
+
+    protected override void OnHitPlayer(GameObject player)
+    {
+        Debug.Log($"{name} bounced into the player!");
+
     }
 }

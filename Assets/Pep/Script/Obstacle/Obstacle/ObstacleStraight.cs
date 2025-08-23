@@ -6,4 +6,9 @@ public class ObstacleStraight : ObstacleBase
     {
         rb.linearVelocity = direction.normalized * speed;
     }
+
+    protected override void OnHitPlayer(GameObject player)
+    {
+        Debug.Log($"{name} hit the player straight on!");
+    }
 }

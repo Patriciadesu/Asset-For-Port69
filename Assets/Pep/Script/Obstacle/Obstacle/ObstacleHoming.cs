@@ -9,13 +9,30 @@ public class ObstacleHoming : ObstacleBase
     {
         this.speed = speed;
         GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if (player != null) target = player.transform;
+        if (player != null)
+        {
+            target = player.transform;
+        }
+        else
+        {
+
+            rb.linearVelocity = direction.normalized * speed;
+        }
     }
 
     private void FixedUpdate()
     {
-        if (!isActive || target == null) return;
-        Vector3 dir = (target.position - transform.position).normalized;
-        rb.velocity = dir * speed;
+        if (!isActive) return;
+
+        if (target != null)
+        {
+            Vector3 dir = (target.position - transform.position).normalized;
+            rb.linearVelocity = dir * speed;
+        }
+    }
+
+    protected override void OnHitPlayer(GameObject player)
+    {
+        Debug.Log($"{name} homed in on the player!");
     }
 }

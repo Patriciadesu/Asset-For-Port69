@@ -4,8 +4,8 @@ public class ObstacleZigzag : ObstacleBase
 {
     private Vector3 moveDir;
     private float speed;
-    public float zigzagStrength = 3f;
-    public float frequency = 5f;
+    [SerializeField] private float zigzagStrength = 3f;
+    [SerializeField] private float frequency = 5f;
 
     protected override void Launch(Vector3 direction, float speed)
     {
@@ -16,7 +16,15 @@ public class ObstacleZigzag : ObstacleBase
     private void FixedUpdate()
     {
         if (!isActive) return;
-        Vector3 offset = Vector3.right * Mathf.Sin(Time.time * frequency) * zigzagStrength;
-        rb.velocity = (moveDir + offset).normalized * speed;
+
+        Vector3 perpendicular = Vector3.Cross(moveDir, Vector3.up).normalized;
+        Vector3 offset = perpendicular * Mathf.Sin(Time.time * frequency) * zigzagStrength;
+
+        rb.linearVelocity = (moveDir * speed) + offset;
+    }
+
+    protected override void OnHitPlayer(GameObject player)
+    {
+        Debug.Log($"{name} zigzagged into the player!");
     }
 }

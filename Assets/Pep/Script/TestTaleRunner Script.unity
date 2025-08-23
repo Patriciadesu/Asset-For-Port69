@@ -131,7 +131,6 @@ GameObject:
   - component: {fileID: 327580436}
   - component: {fileID: 327580435}
   - component: {fileID: 327580434}
-  - component: {fileID: 327580433}
   - component: {fileID: 327580432}
   m_Layer: 0
   m_Name: Spawner
@@ -152,36 +151,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f0908adbdc31d340921105a0558a3b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  endPoint: {fileID: 390210867}
   spawnInterval: 2
-  obstacleLifetime: 5
-  poolSize: 10
   speed: 5
-  launchPoint: {fileID: 0}
-  useEndPoint: 1
-  localEndPoint: {x: 0, y: 0, z: 11.4344425}
-  autoAddRigidbody: 1
-  autoAddCollider: 1
-  physicMaterial: {fileID: 13400000, guid: b3b3385fe242942459d78f9c0b0bdbd7, type: 2}
-  obstacleLayer:
-    serializedVersion: 2
-    m_Bits: 511
-  spawnOnStart: 1
-  autoSpawn: 1
-  hasSpawned: 0
-  selectedObstacleType: 
-  selectedObstaclePrefab: {fileID: 0}
---- !u!114 &327580433
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 327580431}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 35eb1014381dcc14293409553d372b3a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  obstacleLifetime: 5
+  obstaclePrefab: {fileID: 2123044722845101074, guid: 10f61a64fc54789469ae810c000d3807, type: 3}
+  showGizmos: 1
+  gizmoColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!65 &327580434
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -392,6 +368,37 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0
+--- !u!1 &390210866
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 390210867}
+  m_Layer: 0
+  m_Name: Spawner_EndPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &390210867
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 390210866}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -41.186813, y: 9.01, z: -30.455896}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &581514056
 GameObject:
   m_ObjectHideFlags: 0
@@ -432,7 +439,7 @@ MonoBehaviour:
   loopPath: 0
   debugMode: 0
   waypoints:
-  - localPosition: {x: -1.9304142, y: 0, z: -3.774269}
+  - localPosition: {x: -7.7065277, y: 0, z: -4.263691}
     waitTime: 0
     speedCurve:
       serializedVersion: 2
@@ -828,3 +835,4 @@ SceneRoots:
   - {fileID: 809997495}
   - {fileID: 581514063}
   - {fileID: 327580437}
+  - {fileID: 390210867}
