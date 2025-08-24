@@ -10,24 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c5dac99691f39164e8aed76983c7dfc4, type: 3}
-  m_Name: New Transition 6
+  m_Name: New Transition 9
   m_EditorClassIdentifier: 
   condition:
-    rid: 5678062170086572151
+    rid: 5678062190286078021
   nextStates:
-  - {fileID: 11400000, guid: 07ae1c868f6a1f44ba934e107e26932b, type: 2}
+  - {fileID: 11400000, guid: 0dd7363aebfa0c74993125620c51ae64, type: 2}
   onConditionMet:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: 167, y: 215}
+  position: {x: -410, y: 406}
   references:
     version: 2
     RefIds:
-    - rid: 5678062170086572151
-      type: {class: StateTimeAtLeastCondition, ns: , asm: Assembly-CSharp}
+    - rid: 5678062190286078021
+      type: {class: OnStateChangedCondition, ns: , asm: Assembly-CSharp}
       data:
         onConditionMet:
           m_PersistentCalls:
             m_Calls: []
         allowStateInterruption: 1
-        timeThreshold: 1

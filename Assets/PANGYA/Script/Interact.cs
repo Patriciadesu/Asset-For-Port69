@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public class PressEToST : PlayerExtension
+public class Interact : PlayerExtension
 {
-    public Transform InteractorSource;
+    private Transform InteractorSource => _player.camera.transform;
     public float InteractRange;
 
     void Update()

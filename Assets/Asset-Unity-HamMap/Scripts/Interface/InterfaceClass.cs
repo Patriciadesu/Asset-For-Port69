@@ -12,3 +12,8 @@ public interface ICancleGravity
 {
     public bool canApplyGravity { get; set; }
 }
+
+public interface IInteractable
+{
+    void  Interact();
+}

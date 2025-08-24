@@ -13,18 +13,18 @@ MonoBehaviour:
   m_Name: New Transition 7
   m_EditorClassIdentifier: 
   condition:
-    rid: 5678062170086572152
+    rid: 5678062190286078036
   nextStates:
-  - {fileID: 11400000, guid: 0dd7363aebfa0c74993125620c51ae64, type: 2}
+  - {fileID: 11400000, guid: 3b1411241eb962a4d91369351d5ef48d, type: 2}
   onConditionMet:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: 331, y: 199}
+  position: {x: 0, y: 225}
   references:
     version: 2
     RefIds:
-    - rid: 5678062170086572152
-      type: {class: OnStateEndCondition, ns: , asm: Assembly-CSharp}
+    - rid: 5678062190286078036
+      type: {class: PlayerInSightCondition, ns: , asm: Assembly-CSharp}
       data:
         onConditionMet:
           m_PersistentCalls:

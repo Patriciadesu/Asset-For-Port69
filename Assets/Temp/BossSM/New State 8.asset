@@ -10,24 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 24a4e1e8d60a72a4cbeccd371e6db72e, type: 3}
-  m_Name: New State 7
+  m_Name: New State 8
   m_EditorClassIdentifier: 
   stateName: New State
-  isInitialState: 0
+  isInitialState: 1
   state:
-    rid: 5678062170086572148
+    rid: 5678062190286078038
   transitions:
-  - {fileID: 11400000, guid: 908b930d55b027b4689187806e585e53, type: 2}
+  - {fileID: 11400000, guid: cfa86849baedee245b236583bc3ef79a, type: 2}
   onStateChange:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: 148, y: 406}
+  position: {x: 0, y: 0}
   references:
     version: 2
     RefIds:
-    - rid: 5678062170086572148
-      type: {class: BossAttackState, ns: , asm: Assembly-CSharp}
+    - rid: 5678062190286078038
+      type: {class: BossChaseState, ns: , asm: Assembly-CSharp}
       data:
-        stateName: BossAttackState
-        timelinePlayable: {fileID: 11400000, guid: b3bc0e037473d9a4aaf8f672d9fa36ef, type: 2}
-        damage: 25
+        stateName: BossChaseState
+        moveSpeed: 8
+        useNavMeshIfAvailable: 1

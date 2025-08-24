@@ -103,7 +103,7 @@ public class BossPatrolState : BossState
     public override void Enter()
     {
         base.Enter();
-        if (animator != null) animator.SetTrigger("Walk");
+        if (animator != null) animator.SetBool("Walk",true);
 
         if (_self == null) return;
 
@@ -175,6 +175,7 @@ public class BossPatrolState : BossState
             _agent.ResetPath();
             _agent.isStopped = true;
         }
+        animator.SetBool("Walk", false);
         base.Exit();
     }
 
@@ -204,7 +205,7 @@ public class BossChaseState : BossState
     public Transform explicitTarget => Player.Instance.transform;
 
     private Transform _self;
-    private Transform _target;
+    private Transform _target=> Player.Instance.transform;
     private NavMeshAgent _agent;
 
     public BossChaseState(Boss bossInstance) : base("Chase", bossInstance) { }
@@ -219,7 +220,7 @@ public class BossChaseState : BossState
     public override void Enter()
     {
         base.Enter();
-        if (animator != null) animator.SetTrigger("Run");
+        if (animator != null) animator.SetBool("Walk",true);
 
         if (useNavMeshIfAvailable && _agent != null && _agent.isOnNavMesh)
         {
@@ -271,6 +272,7 @@ public class BossChaseState : BossState
             _agent.ResetPath();
             _agent.isStopped = true;
         }
+        if (animator != null) animator.SetBool("Walk",false);
         base.Exit();
     }
 

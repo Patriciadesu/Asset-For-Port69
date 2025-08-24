@@ -10,6 +10,7 @@ public class InteractableObject : MonoBehaviour
     void Start()
     {
         GetComponent<Rigidbody>().isKinematic = !usePhysic;
+        if (isTrigger) useGravity = false;
         GetComponent<Rigidbody>().useGravity = useGravity;
         effects = GetComponents<ObjectEffect>();
         EnsureColliderExists();
