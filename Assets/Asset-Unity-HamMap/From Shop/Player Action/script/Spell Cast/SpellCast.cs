@@ -156,6 +156,10 @@ public class SpellCast : PlayerExtension
             else
             {
                 projectile = Instantiate(projectilePrefab, spawnPoint.position, Quaternion.identity);
+                if (projectile.GetComponent<Rigidbody>() == null)
+                {
+                    projectile.AddComponent<InteractableObject>();
+                }
             }
 
 

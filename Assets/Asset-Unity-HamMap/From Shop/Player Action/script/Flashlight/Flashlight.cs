@@ -143,4 +143,8 @@ public class Flashlight : PlayerExtension
             light.range = lightRange;
         }
     }
+    void OnDestroy()
+    {
+        DestroyImmediate(flashLight);
+    }
 }

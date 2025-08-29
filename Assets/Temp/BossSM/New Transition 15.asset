@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5dac99691f39164e8aed76983c7dfc4, type: 3}
+  m_Name: New Transition 15
+  m_EditorClassIdentifier: 
+  condition:
+    rid: 5678062213230231685
+  nextStates:
+  - {fileID: 11400000, guid: 047484bfec6666146b52430209a61f53, type: 2}
+  onConditionMet:
+    m_PersistentCalls:
+      m_Calls: []
+  position: {x: 331, y: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 5678062213230231685
+      type: {class: PlayerOutOfSightCondition, ns: , asm: Assembly-CSharp}
+      data:
+        onConditionMet:
+          m_PersistentCalls:
+            m_Calls: []
+        allowStateInterruption: 1

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24a4e1e8d60a72a4cbeccd371e6db72e, type: 3}
+  m_Name: New State 10
+  m_EditorClassIdentifier: 
+  stateName: Attack
+  isInitialState: 0
+  state:
+    rid: 5678062213230231640
+  transitions:
+  - {fileID: 11400000, guid: 6a9dc5d11f8f7be4189b297a5e0d3284, type: 2}
+  onStateChange:
+    m_PersistentCalls:
+      m_Calls: []
+  position: {x: -83, y: 243}
+  references:
+    version: 2
+    RefIds:
+    - rid: 5678062213230231640
+      type: {class: BossAttackState, ns: , asm: Assembly-CSharp}
+      data:
+        stateName: BossAttackState
+        timelinePlayable: {fileID: 11400000, guid: 67d4d6c5e971fba48a082bf9a8b103ac, type: 2}
+        damage: 20

@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class PlayerUIManager : MonoBehaviour
+public class PlayerUIManager : Singleton<PlayerUIManager>
 {
     public Slider staminaBar; // Always visible
     public Slider healthBar; // Always visible

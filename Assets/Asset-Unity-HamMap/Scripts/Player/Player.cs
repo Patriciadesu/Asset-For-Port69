@@ -321,7 +321,7 @@ public class Player : Singleton<Player>
         if (canMove)
         {
             move = (transform.right * horizontal + transform.forward * vertical).normalized;
-            rigidbody.MovePosition(rigidbody.position + move * Speed * Time.fixedDeltaTime);
+            rigidbody.linearVelocity = new Vector3(move.x * Speed, rigidbody.linearVelocity.y, move.z * Speed);
             animator.SetFloat("MoveX", horizontal);
             animator.SetFloat("MoveY", vertical);
             animator.SetBool("isRun", horizontal != 0 || vertical != 0);
