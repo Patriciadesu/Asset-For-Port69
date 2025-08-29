@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class JetPack : PlayerExtension,ICancleGravity
+public class JetPack : PlayerExtension, ICancleGravity
 {
     [Header("UI")]
     public bool enableJetpackUI = true;
@@ -96,4 +96,19 @@ public class JetPack : PlayerExtension,ICancleGravity
     //         currentFuel = jetPackFuel;
     //     }
     // }
+}
+
+public partial class PlayerUIManager : Singleton<PlayerUIManager>
+{
+
+    public bool enableJetpackFuelUI = true;
+    public void UpdateJetpack(float currentFuel, float maxFuel, bool isJetpacking, bool isGrounded, bool hasUsedJetpack)
+    {
+        if (!enableJetpackFuelUI) return;
+        bool showUI = isJetpacking || (!isGrounded && hasUsedJetpack);
+        jetpackFuelUI.gameObject.SetActive(showUI);
+        if (showUI)
+            jetpackFuelUI.value = currentFuel / maxFuel;
+    }
+
 }

@@ -48,3 +48,13 @@ public class Crouch : PlayerExtension
         }
     }
 }
+public partial class PlayerUIManager : Singleton<PlayerUIManager>
+{
+    public bool enableCrouchUI = true;
+    public void UpdateCrouch(bool isCrouching)
+    {
+        if (!enableCrouchUI) return;
+        crouchUI.SetActive(isCrouching);
+    }
+
+}

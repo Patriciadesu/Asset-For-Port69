@@ -34,3 +34,17 @@ public class MultipleJump : PlayerExtension
             uiManager.UpdateMultipleJump(jumpCount, maxJumps, _player.isGrounded);
     }
 }
+public partial class PlayerUIManager : Singleton<PlayerUIManager>
+{
+
+    public bool enableMultipleJumpUI = true;
+    public void UpdateMultipleJump(int jumpCount, int maxJumps, bool isGrounded)
+    {
+        if (!enableMultipleJumpUI) return;
+        bool showUI = !isGrounded && 1 < jumpCount && jumpCount <= maxJumps;
+        multipleJumpUI.gameObject.SetActive(showUI);
+        if (showUI)
+            multipleJumpUI.text = $"Jump X{jumpCount}";
+    }
+
+}

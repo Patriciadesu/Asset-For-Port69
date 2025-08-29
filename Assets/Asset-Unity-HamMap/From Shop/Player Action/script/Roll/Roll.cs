@@ -7,7 +7,7 @@ public class Roll : PlayerExtension, IUseStamina
     [Header("UI")]
     public bool enableRollUI = true;
     private PlayerUIManager uiManager;
-    
+
     [Header("Properties")]
     public KeyCode activateKey = KeyCode.Q;
     public float rollSpeed = 1f;
@@ -17,7 +17,7 @@ public class Roll : PlayerExtension, IUseStamina
 
 
     public bool useStamina = true; // Toggle stamina consumption during roll
-    [ShowIf("useStamina")]public float staminaCost = 15f;
+    [ShowIf("useStamina")] public float staminaCost = 15f;
     public bool isUsingStamina => useStamina && isRolling;
     public bool canDrainStamina => _player.currentstamina >= staminaCost && useStamina;
 
@@ -37,13 +37,13 @@ public class Roll : PlayerExtension, IUseStamina
         if (enableRollUI)
             uiManager = Object.FindAnyObjectByType<PlayerUIManager>();
     }
-    
+
     protected void Update()
     {
-    
+
         if (enableRollUI && uiManager != null)
             uiManager.UpdateRollCooldown(Time.time - lastRollTime, cooldownTime);
-            
+
         if (isRolling)
         {
             Vector3 rollVelocity = rollDirection * rollSpeed * _player.Speed;
@@ -108,3 +108,17 @@ public class Roll : PlayerExtension, IUseStamina
         throw new System.NotImplementedException();
     }
 }
+
+public partial class PlayerUIManager : Singleton<PlayerUIManager>
+{
+    public bool enableRollCooldownUI = true;
+    public void UpdateRollCooldown(float timeSinceLastRoll, float cooldownTime)
+    {
+        if (!enableRollCooldownUI) return;
+        bool isOnCooldown = timeSinceLastRoll < cooldownTime;
+        rollCooldownUI.gameObject.SetActive(isOnCooldown);
+        if (isOnCooldown)
+            rollCooldownUI.value = timeSinceLastRoll / cooldownTime;
+    }
+}
+

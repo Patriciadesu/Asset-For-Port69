@@ -11,7 +11,7 @@ public class Dash : PlayerExtension, IUseStamina
     public KeyCode activateKey = KeyCode.R;
     public float dashSpeed = 5f;
     public float cooldownTime = 1f;
-    
+
     private float lastDashTime = 0f;
     // Expose dashing state for stamina regen check
     private bool isDashing = false;
@@ -22,7 +22,7 @@ public class Dash : PlayerExtension, IUseStamina
 
 
     public bool useStamina;
-    [ShowIf("useStamina")]public float staminaCost = 10f;
+    [ShowIf("useStamina")] public float staminaCost = 10f;
     public bool isUsingStamina => useStamina && isDashing;
     public bool canDrainStamina => _player.currentstamina >= staminaCost && useStamina;
 
@@ -42,7 +42,7 @@ public class Dash : PlayerExtension, IUseStamina
 
     protected void Update()
     {
-            
+
         if (Input.GetKeyDown(activateKey) && CanDash)
         {
             StartDash();
@@ -80,4 +80,18 @@ public class Dash : PlayerExtension, IUseStamina
         lastDashTime = Time.time;
         _player.animator.speed = 1f;
     }
+}
+
+public partial class PlayerUIManager : Singleton<PlayerUIManager>
+{
+    public bool enableDashCooldownUI = true;
+    public void UpdateDashCooldown(float timeSinceLastDash, float cooldownTime)
+    {
+        if (!enableDashCooldownUI) return;
+        bool isOnCooldown = timeSinceLastDash < cooldownTime;
+        dashCooldownUI.gameObject.SetActive(isOnCooldown);
+        if (isOnCooldown)
+            dashCooldownUI.value = timeSinceLastDash / cooldownTime;
+    }
+
 }

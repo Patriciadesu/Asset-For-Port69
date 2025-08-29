@@ -78,3 +78,16 @@ public class Sprint : PlayerExtension, IUseStamina
         }
     }
 }
+
+public partial class PlayerUIManager : Singleton<PlayerUIManager>
+{
+    public bool enableSprintUI = true;
+
+    
+    public void UpdateSprint(bool isSprinting)
+    {
+        if (!enableSprintUI) return;
+        sprintUI.SetActive(isSprinting);
+    }
+
+}

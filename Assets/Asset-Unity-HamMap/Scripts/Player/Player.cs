@@ -6,7 +6,7 @@ using static UnityEditor.Experimental.GraphView.GraphView;
 
 
 [ExecuteAlways]
-public class Player : Singleton<Player>
+public partial class Player : Singleton<Player>
 {
     #region Player Properties
 
@@ -103,9 +103,6 @@ public class Player : Singleton<Player>
     [Foldout("Player Stats", true), SerializeField, Range(0, 1000)] public float maxhealth = 100f;
     [Foldout("Player Stats", true), SerializeField, Range(0, 1000)] public float maxstamina = 100f;
     [Foldout("Player Stats", true), SerializeField, Range(0, 50)] public float staminaRegenRate = 20f; // New: Stamina regen per second
-    [Header("UI Settings")]
-    [Foldout("Player Stats", true)] public bool enableHealthBar = true;
-    [Foldout("Player Stats", true)] public bool enableStaminaBar = true;
     [HideInInspector] public float currenthealth;
     [HideInInspector] public float currentstamina;
     #endregion

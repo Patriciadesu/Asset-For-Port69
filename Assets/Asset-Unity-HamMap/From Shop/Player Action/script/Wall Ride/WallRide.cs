@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class WallRun : PlayerExtension,ICancleGravity
+public class WallRun : PlayerExtension, ICancleGravity
 {
     [Header("UI")]
     public bool enableWallRunUI = true;
@@ -114,4 +114,15 @@ public class WallRun : PlayerExtension,ICancleGravity
         Vector3 projected = Vector3.ProjectOnPlane(forward, wallNormal);
         return projected.normalized;
     }
+}
+
+public partial class PlayerUIManager : Singleton<PlayerUIManager>
+{
+    public bool enableWallRunUI = true;
+    public void UpdateWallRun(bool isWallRunning)
+    {
+        if (!enableWallRunUI) return;
+        wallRunUI.SetActive(isWallRunning);
+    }
+
 }

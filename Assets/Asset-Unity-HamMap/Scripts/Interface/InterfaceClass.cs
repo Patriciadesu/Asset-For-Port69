@@ -15,5 +15,5 @@ public interface ICancleGravity
 
 public interface IInteractable
 {
-    void  Interact();
+    void Interact();
 }
