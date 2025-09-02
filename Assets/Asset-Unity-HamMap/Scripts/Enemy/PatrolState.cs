@@ -8,13 +8,13 @@ using System;
 
 [System.Serializable]
 
-public class BossPatrolState : BossState
+public class PatrolState : BossState
 {
     [Tooltip("Patrol points in the scene. The boss will loop through these.")]
     public Transform[] waypoints => boss.waypoints;
 
     [Tooltip("Movement speed when patrolling (used if no NavMeshAgent).")]
-    public float moveSpeed = 2f;
+    [SerializeField]public float moveSpeed = 2f;
 
     [Tooltip("How close to a waypoint before switching to the next.")]
     public float arriveThreshold = 0.2f;
@@ -32,7 +32,7 @@ public class BossPatrolState : BossState
     private float _idleTimer;
     private bool _isWaiting;
 
-    public BossPatrolState(Boss bossInstance) : base("Patrol", bossInstance) { }
+    public PatrolState(Boss bossInstance) : base("Patrol", bossInstance) { }
 
     public override void BindRuntime(Boss bossInstance)
     {

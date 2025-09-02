@@ -7,7 +7,7 @@ using UnityEngine.AI;
 using System;
 
 [System.Serializable]
-public class BossAttackState : BossState
+public class AttackState : BossState
 {
     public TimelineAsset timelinePlayable;
     public float damage;
@@ -21,7 +21,7 @@ public class BossAttackState : BossState
     private float safetyTimer;
     private const float SafetyTimeout = 0.25f; // seconds, end quickly when no valid timeline
 
-    public BossAttackState(Boss bossInstance) : base("Attack", bossInstance) { }
+    public AttackState(Boss bossInstance) : base("Attack", bossInstance) { }
 
     public override void Enter()
     {

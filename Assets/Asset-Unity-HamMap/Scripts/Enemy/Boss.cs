@@ -6,14 +6,14 @@ using UnityEngine.Events;
 using UnityEngine.Playables;
 
 [RequireComponent(typeof(Animator))]
-public class Boss : MonoBehaviour
+public partial class Boss : MonoBehaviour
 {
     public BossStateGraph stateGraph;
     public Collider[] attackCollider;
 
     private bool hasPatrolState => stateGraph != null && stateGraph.transitionNodes != null &&
                                    stateGraph.transitionNodes.Any(t => t.nextStates != null &&
-                                                                       t.nextStates.Any(s => s != null && s.state is BossPatrolState));
+                                                                       t.nextStates.Any(s => s != null && s.state is PatrolState));
     [ShowIf("hasPatrolState")] public Transform[] waypoints;
 
     [HideInInspector] public UnityEvent onStateChanged;
@@ -228,10 +228,10 @@ public class Boss : MonoBehaviour
     }
 
     private bool IsInAttackState()
-        => stateGraph != null && stateGraph.currentState != null && stateGraph.currentState.state is BossAttackState;
+        => stateGraph != null && stateGraph.currentState != null && stateGraph.currentState.state is AttackState;
 
     private float GetCurrentAttackDamage()
-        => stateGraph != null && stateGraph.currentState != null && stateGraph.currentState.state is BossAttackState a
+        => stateGraph != null && stateGraph.currentState != null && stateGraph.currentState.state is AttackState a
            ? a.damage
            : 0f;
 

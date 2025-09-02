@@ -1,9 +1,9 @@
 using UnityEngine;
 
 [System.Serializable]
-public class BossIdleState : BossState
+public class IdleState : BossState
 {
-    public BossIdleState(Boss bossInstance) : base("Idle", bossInstance) { }
+    public IdleState(Boss bossInstance) : base("Idle", bossInstance) { }
     public override void Enter()
     {
         if (animator != null) animator.SetTrigger("Idle");

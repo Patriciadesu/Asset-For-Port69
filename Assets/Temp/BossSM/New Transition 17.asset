@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5dac99691f39164e8aed76983c7dfc4, type: 3}
+  m_Name: New Transition 17
+  m_EditorClassIdentifier: 
+  condition:
+    rid: 5678062360706678863
+  nextStates:
+  - {fileID: 11400000, guid: c03cfbfce34282b4ca186aa1b3bab148, type: 2}
+  onConditionMet:
+    m_PersistentCalls:
+      m_Calls: []
+  position: {x: 1189, y: 353}
+  references:
+    version: 2
+    RefIds:
+    - rid: 5678062360706678863
+      type: {class: OnStateEndCondition, ns: , asm: Assembly-CSharp}
+      data:
+        onConditionMet:
+          m_PersistentCalls:
+            m_Calls: []
+        allowStateInterruption: 1

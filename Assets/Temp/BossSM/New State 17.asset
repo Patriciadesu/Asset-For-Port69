@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24a4e1e8d60a72a4cbeccd371e6db72e, type: 3}
+  m_Name: New State 17
+  m_EditorClassIdentifier: 
+  stateName: New State
+  isInitialState: 0
+  state:
+    rid: 5678062360706678862
+  transitions:
+  - {fileID: 11400000, guid: 0dbe1987423e461488a6783c1fc418f2, type: 2}
+  onStateChange:
+    m_PersistentCalls:
+      m_Calls: []
+  position: {x: 483, y: 513}
+  references:
+    version: 2
+    RefIds:
+    - rid: 5678062360706678862
+      type: {class: ShootState, ns: , asm: Assembly-CSharp}
+      data:
+        stateName: ShootState
+        projectilePrefab: {fileID: 4298002020313714194, guid: 29155573d3a147b4784158d8e88eee5a, type: 3}
+        shootPoint: {fileID: 0}
+        projectileSpeed: 4.4
+        shootCooldown: 0
+        timelinePlayable: {fileID: 0}
