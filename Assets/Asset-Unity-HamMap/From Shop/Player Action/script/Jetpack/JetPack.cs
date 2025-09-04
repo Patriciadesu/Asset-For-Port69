@@ -7,7 +7,7 @@ public class JetPack : PlayerExtension, ICancleGravity
     private PlayerUIManager uiManager;
 
     [Header("Properties")]
-    public KeyCode activateKey = KeyCode.X;
+    public KeyCode activateKey = KeyCode.Space;
     public float jetPackSpeed = 5f;
     public float jetPackFuel = 100f;
     public float fuelConsumptionRate = 20f;
