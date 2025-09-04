@@ -48,3 +48,11 @@ public partial class PlayerUIManager : Singleton<PlayerUIManager>
     }
 
 }
+
+public class MultipleJumpUISetter : IPlayerUISetter
+{
+    public void OnStart(PlayerUIManager playerUI)
+    {
+        if (playerUI.enableMultipleJumpUI) playerUI.multipleJumpUI.gameObject.SetActive(false);
+    }
+}

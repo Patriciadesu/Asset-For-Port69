@@ -180,7 +180,7 @@ public class BossStateNodeView : Node
             if (newIndex < 0 || newIndex >= stateTypes.Count) return;
 
             var newType = stateTypes[newIndex];
-            var newInstance = (BossState)FormatterServices.GetUninitializedObject(newType);
+            var newInstance = (BossState)Activator.CreateInstance(newType, new object[] { null });
             newInstance.stateName = newType.Name;
 
             Undo.RecordObject(nodeData, "Change BossState Type");
@@ -202,7 +202,7 @@ public class BossStateNodeView : Node
         if (nodeData.state == null && stateTypes.Count > 0)
         {
             var t0 = stateTypes[currentIndex];
-            var inst = (BossState)FormatterServices.GetUninitializedObject(t0);
+            var inst = (BossState)Activator.CreateInstance(t0, new object[] { null });
             inst.stateName = t0.Name;
 
             Undo.RecordObject(nodeData, "Set Default BossState");
@@ -211,48 +211,9 @@ public class BossStateNodeView : Node
             soStateNode.Update();
         }
 
-        //RebuildBossStateChildFields();
     }
 
-    // private void RebuildBossStateChildFields()
-    // {
-    //     bossStateFieldsRoot.Clear();
-
-    //     if (nodeData.state == null)
-    //     {
-    //         bossStateFieldsRoot.Add(new Label("No BossState selected."));
-    //         return;
-    //     }
-
-    //     if (soStateNode == null) soStateNode = new SerializedObject(nodeData);
-    //     soStateNode.Update();
-
-    //     // This expects BossStateNode to have a [SerializeReference] BossState state;
-    //     var stateProp = soStateNode.FindProperty("state");
-    //     if (stateProp == null)
-    //     {
-    //         bossStateFieldsRoot.Add(new Label("No 'state' property found."));
-    //         return;
-    //     }
-
-    //     var stateType = nodeData.state.GetType();
-    //     var childNames = GetDerivedSerializedFieldNames(stateType, typeof(BossState));
-
-    //     for (int i = 0; i < childNames.Count; i++)
-    //     {
-    //         var name = childNames[i];
-    //         var p = stateProp.FindPropertyRelative(name);
-    //         if (p != null)
-    //         {
-    //             var pf = new PropertyField(p);
-    //             pf.Bind(soStateNode);
-    //             bossStateFieldsRoot.Add(pf);
-    //         }
-    //     }
-
-    //     soStateNode.ApplyModifiedProperties();
-    // }
-
+    
     private static List<string> GetDerivedSerializedFieldNames(Type type, Type baseType)
     {
         const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;

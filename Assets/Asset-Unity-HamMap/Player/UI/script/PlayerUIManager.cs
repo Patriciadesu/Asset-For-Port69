@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.Events;
 using NaughtyAttributes;
+using Unity.VisualScripting;
+using System;
 
 public partial class PlayerUIManager : Singleton<PlayerUIManager>
 {
@@ -26,20 +28,25 @@ public partial class PlayerUIManager : Singleton<PlayerUIManager>
 
     public void Start()
     {
-        player = Object.FindAnyObjectByType<Player>();
-
+        player = Player.Instance;
         // Apply UI settings from Player
         enableHealthBar = player.enableHealthBar;
         enableStaminaBar = player.enableStaminaBar;
 
         // Initialize UI states
-        if (enableSprintUI) sprintUI.SetActive(false);
-        if (enableDashCooldownUI) dashCooldownUI.gameObject.SetActive(false);
-        if (enableRollCooldownUI) rollCooldownUI.gameObject.SetActive(false);
-        if (enableJetpackFuelUI) jetpackFuelUI.gameObject.SetActive(false);
-        if (enableMultipleJumpUI) multipleJumpUI.gameObject.SetActive(false);
-        if (enableCrouchUI) crouchUI.SetActive(false);
-        if (enableWallRunUI) wallRunUI.SetActive(false);
+        rollCooldownUI.gameObject.SetActive(false);
+        dashCooldownUI.gameObject.SetActive(false);
+        sprintUI.gameObject.SetActive(false);
+        jetpackFuelUI.gameObject.SetActive(false);
+        multipleJumpUI.gameObject.SetActive(false);
+        crouchUI.gameObject.SetActive(false);
+        wallRunUI.gameObject.SetActive(false);
+
+        foreach (IPlayerUISetter uISetter in GetComponents<IPlayerUISetter>())
+        {
+            uISetter.OnStart(this);
+        }
+
         grapplingHookUI.SetActive(false);
     }
 

@@ -7,6 +7,9 @@ using UnityEngine.AI;
 using System;
 using UnityEngine.UIElements;
 using static NodeHelper.NodeUIHelpers;
+using NaughtyAttributes;
+using System.Linq;
+
 
 [System.Serializable]
 
@@ -167,6 +170,14 @@ public class PatrolState : BossState
         container.Add(FloatField("Move Speed", () => this.moveSpeed, v => this.moveSpeed = v));
         container.Add(FloatField("Arrive Threshold", () => this.arriveThreshold, v => this.arriveThreshold = v));
         container.Add(BoolField("Use AI to Move", () => this.useNavMeshIfAvailable, v => this.useNavMeshIfAvailable = v));
-        container.Add(FloatField("Idle Time",() => this.idleTime, v => this.idleTime = v));
+        container.Add(FloatField("Idle Time", () => this.idleTime, v => this.idleTime = v));
     }
+}
+
+public partial class Boss : MonoBehaviour
+{
+    private bool hasPatrolState => stateGraph != null && stateGraph.transitionNodes != null &&
+                                   stateGraph.transitionNodes.Any(t => t.nextStates != null &&
+                                                                       t.nextStates.Any(s => s != null && s.state is PatrolState));
+    [ShowIf("hasPatrolState")] public Transform[] waypoints;                                                                   
 }

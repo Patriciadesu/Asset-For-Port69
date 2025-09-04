@@ -15,21 +15,18 @@ MonoBehaviour:
   stateName: Patrol
   isInitialState: 1
   state:
-    rid: 5678062213230231678
+    rid: 3811229562494779490
   transitions:
   - {fileID: 11400000, guid: bf844fe405597f747aa2b179de1ed6af, type: 2}
   onStateChange:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: 0, y: 0}
+  position: {x: -19, y: -94}
   references:
     version: 2
     RefIds:
-    - rid: 5678062213230231678
-      type: {class: BossPatrolState, ns: , asm: Assembly-CSharp}
+    - rid: 3811229562494779490
+      type: {class: PatrolState, ns: , asm: Assembly-CSharp}
       data:
-        stateName: BossPatrolState
-        moveSpeed: 10
-        arriveThreshold: 0
-        useNavMeshIfAvailable: 1
-        idleTime: 2
+        stateName: PatrolState
+        idleTime: 0

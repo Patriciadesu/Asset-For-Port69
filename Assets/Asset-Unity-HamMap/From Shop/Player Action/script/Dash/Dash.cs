@@ -82,7 +82,7 @@ public class Dash : PlayerExtension, IUseStamina, IInteruptPlayerMovement
 
 public partial class PlayerUIManager : Singleton<PlayerUIManager>
 {
-    public bool enableDashCooldownUI = true;
+    [Header("Enable/Disable UI Elements")]public bool enableDashCooldownUI = true;
     public void UpdateDashCooldown(float timeSinceLastDash, float cooldownTime)
     {
         if (!enableDashCooldownUI) return;
@@ -92,4 +92,12 @@ public partial class PlayerUIManager : Singleton<PlayerUIManager>
             dashCooldownUI.value = timeSinceLastDash / cooldownTime;
     }
 
+}
+
+public class DashUISetter : IPlayerUISetter
+{
+    public void OnStart(PlayerUIManager playerUI)
+    {
+        if (playerUI.enableDashCooldownUI) playerUI.dashCooldownUI.gameObject.SetActive(false);
+    }
 }

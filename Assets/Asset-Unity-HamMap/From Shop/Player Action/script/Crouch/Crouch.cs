@@ -58,3 +58,10 @@ public partial class PlayerUIManager : Singleton<PlayerUIManager>
     }
 
 }
+public class CrouchUISetter : IPlayerUISetter
+{
+    public void OnStart(PlayerUIManager playerUI)
+    {
+        if (playerUI.enableCrouchUI) playerUI.crouchUI.SetActive(false);
+    }
+}

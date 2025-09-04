@@ -125,3 +125,11 @@ public partial class PlayerUIManager : Singleton<PlayerUIManager>
     }
 }
 
+public class RollUISetter : IPlayerUISetter
+{
+    public void OnStart(PlayerUIManager playerUI)
+    {
+        if (playerUI.enableRollCooldownUI) playerUI.rollCooldownUI.gameObject.SetActive(false);
+    }
+}
+

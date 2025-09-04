@@ -91,3 +91,10 @@ public partial class PlayerUIManager : Singleton<PlayerUIManager>
     }
 
 }
+public class SprintUISetter : IPlayerUISetter
+{
+    public void OnStart(PlayerUIManager playerUI)
+    {
+        if (playerUI.enableSprintUI) playerUI.sprintUI.SetActive(false);
+    }
+}

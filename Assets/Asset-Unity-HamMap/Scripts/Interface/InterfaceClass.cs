@@ -28,6 +28,12 @@ public interface INodeInspectorContributor
     /// Called by the node view when values change and you want to re-check visibility / refresh.
     void RefreshInspectorUI();
 }
+
+public interface IPlayerUISetter
+{
+    public void OnStart(PlayerUIManager playerUI);
+}
+
 public interface IInteruptPlayerMovement
 {
     public bool isPerforming { get; }

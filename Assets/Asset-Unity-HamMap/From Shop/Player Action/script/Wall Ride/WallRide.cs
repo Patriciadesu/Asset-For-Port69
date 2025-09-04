@@ -125,3 +125,11 @@ public partial class PlayerUIManager : Singleton<PlayerUIManager>
     }
 
 }
+
+public class WallRunUISetter : IPlayerUISetter
+{
+    public void OnStart(PlayerUIManager playerUI)
+    {
+        if (playerUI.enableWallRunUI) playerUI.wallRunUI.SetActive(false);
+    }
+}

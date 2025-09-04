@@ -112,3 +112,11 @@ public partial class PlayerUIManager : Singleton<PlayerUIManager>
     }
 
 }
+
+public class JetPackUISetter : IPlayerUISetter
+{
+    public void OnStart(PlayerUIManager playerUI)
+    {
+        if (playerUI.enableJetpackFuelUI) playerUI.jetpackFuelUI.gameObject.SetActive(false);
+    }
+}

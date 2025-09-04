@@ -131,7 +131,7 @@ public class ShootState : BossState
 
 public partial class Boss : MonoBehaviour
 {
-    public float shootInterval = -999;
+    [HideInInspector]public float shootInterval = -999;
 
     public IEnumerator ShootCooldown(UnityAction callback)
     {

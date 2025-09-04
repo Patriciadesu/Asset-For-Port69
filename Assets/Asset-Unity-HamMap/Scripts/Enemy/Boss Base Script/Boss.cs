@@ -9,12 +9,12 @@ using UnityEngine.Playables;
 public partial class Boss : MonoBehaviour
 {
     public BossStateGraph stateGraph;
-    public Collider[] attackCollider;
 
-    private bool hasPatrolState => stateGraph != null && stateGraph.transitionNodes != null &&
+    private bool hasAttackState => stateGraph != null && stateGraph.transitionNodes != null &&
                                    stateGraph.transitionNodes.Any(t => t.nextStates != null &&
-                                                                       t.nextStates.Any(s => s != null && s.state is PatrolState));
-    [ShowIf("hasPatrolState")] public Transform[] waypoints;
+                                                                       t.nextStates.Any(s => s != null && s.state is AttackState));                                                             
+    [ShowIf("hasAttackState")] public Collider[] attackCollider;
+    
 
     [HideInInspector] public UnityEvent onStateChanged;
     [HideInInspector] public UnityEvent<float> onStateTimeChanged;
