@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using NaughtyAttributes;
 using UnityEngine;
 
-public class Dash : PlayerExtension, IUseStamina
+public class Dash : PlayerExtension, IUseStamina, IInteruptPlayerMovement
 {
     [Header("UI")]
     public bool enableDashUI = true;
@@ -15,7 +15,7 @@ public class Dash : PlayerExtension, IUseStamina
     private float lastDashTime = 0f;
     // Expose dashing state for stamina regen check
     private bool isDashing = false;
-    public bool IsDashing => isDashing;
+    public bool isPerforming => isDashing;
     private bool isReadyToDash => Time.time >= lastDashTime + cooldownTime;
     private bool CanDash => _player.canMove && _player.isGrounded && _player.canApplyGravity && isReadyToDash && _player.currentstamina >= staminaCost;
     private float dashAnimSpeed => dashSpeed / _player.GetAnimationLength("dash");
@@ -53,7 +53,6 @@ public class Dash : PlayerExtension, IUseStamina
     {
         // Begin dashing state
         isDashing = true;
-        _player.canMove = false;
         if (canDrainStamina)
         {
             DrainStamina(staminaCost);
@@ -74,7 +73,6 @@ public class Dash : PlayerExtension, IUseStamina
     private void FinishDash()
     {
         _player.rigidbody.linearVelocity = new Vector3(0, _player.rigidbody.linearVelocity.y, 0);
-        _player.canMove = true;
         // End dashing state
         isDashing = false;
         lastDashTime = Time.time;

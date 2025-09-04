@@ -15,18 +15,18 @@ MonoBehaviour:
   stateName: Idle
   isInitialState: 1
   state:
-    rid: 5678062170086572124
+    rid: 3811229562494779470
   transitions:
   - {fileID: 11400000, guid: d7b69ca29d076da43b7658a85aa2ad4d, type: 2}
   - {fileID: 11400000, guid: 9f608384a2ed4f34385805940e69ead0, type: 2}
   onStateChange:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: -134, y: -356}
+  position: {x: -122, y: -576}
   references:
     version: 2
     RefIds:
-    - rid: 5678062170086572124
-      type: {class: BossIdleState, ns: , asm: Assembly-CSharp}
+    - rid: 3811229562494779470
+      type: {class: IdleState, ns: , asm: Assembly-CSharp}
       data:
-        stateName: BossIdleState
+        stateName: IdleState

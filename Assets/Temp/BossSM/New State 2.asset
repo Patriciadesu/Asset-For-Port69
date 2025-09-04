@@ -21,7 +21,7 @@ MonoBehaviour:
   onStateChange:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: -284, y: -36}
+  position: {x: -284, y: -99}
   references:
     version: 2
     RefIds:
@@ -29,4 +29,3 @@ MonoBehaviour:
       type: {class: BossTeleportState, ns: , asm: Assembly-CSharp}
       data:
         stateName: BossTeleportState
-        teleportPosition: 0

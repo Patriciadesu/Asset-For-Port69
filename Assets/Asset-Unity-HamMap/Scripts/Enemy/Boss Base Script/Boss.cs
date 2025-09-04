@@ -232,7 +232,7 @@ public partial class Boss : MonoBehaviour
 
     private float GetCurrentAttackDamage()
         => stateGraph != null && stateGraph.currentState != null && stateGraph.currentState.state is AttackState a
-           ? a.damage
+           ? a.Damage
            : 0f;
 
     // Signals to drive conditions from gameplay

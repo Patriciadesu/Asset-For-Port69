@@ -3,17 +3,17 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
+using UnityEngine.UIElements;
+using static NodeHelper.NodeUIHelpers;
 
 [System.Serializable]
 public class ShootState : BossState
 {
-    [Header("Shoot Settings")]
-    public GameObject projectilePrefab;   // Prefab of projectile
-    public Transform shootPoint;          // Spawn position
-    public float projectileSpeed = 15f;
-    public float shootCooldown = 2;
-    public TimelineAsset timelinePlayable; // Optional animation timeline
-
+    private GameObject projectilePrefab;   // Prefab of projectile
+    private Transform shootPoint;          // Spawn position
+    private float projectileSpeed = 15f;
+    private float shootCooldown = 2;
+    private TimelineAsset timelinePlayable; // Optional animation timeline
     private PlayableDirector director;
     private bool hasShot;
     private bool endedOnce;
@@ -47,12 +47,11 @@ public class ShootState : BossState
             director.Play();
         }
     }
-
     public override void Update()
     {
         base.Update();
 
-        if (!hasShot)
+        if (!hasShot && boss.shootInterval <= 0)
         {
             hasShot = true;
             boss.shootInterval = shootCooldown;
@@ -89,6 +88,7 @@ public class ShootState : BossState
             proj = GameObject.CreatePrimitive(PrimitiveType.Cube);
             proj.transform.position = shootPos;
             proj.transform.rotation = Quaternion.LookRotation(dir);
+            proj.AddComponent<Rigidbody>();
         }
 
         if (proj.TryGetComponent<Rigidbody>(out Rigidbody rb))
@@ -114,6 +114,17 @@ public class ShootState : BossState
 
         base.Exit();
     }
+
+    public override void BuildInspectorUI(VisualElement container)
+    {
+        base.BuildInspectorUI(container);
+        container.Add(GameObjectField("Bullet Prefab", () => this.projectilePrefab, v => this.projectilePrefab = v));
+        container.Add(TransformField("Shooting Point", () => this.shootPoint, v => this.shootPoint = v));
+        container.Add(FloatField("Bullet Speed", () => this.projectileSpeed, v => this.projectileSpeed = v));
+        container.Add(FloatField("Cooldown Per Shot", () => this.shootCooldown, v => this.shootCooldown = v));
+        container.Add(TimelineField("Shooting Timeline", () => this.timelinePlayable, v => this.timelinePlayable = v));
+    }
+
 }
 
 

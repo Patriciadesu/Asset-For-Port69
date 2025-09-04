@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class WallRun : PlayerExtension, ICancleGravity
+public class WallRun : PlayerExtension, ICancleGravity, IInteruptPlayerMovement
 {
     [Header("UI")]
     public bool enableWallRunUI = true;
@@ -13,6 +13,7 @@ public class WallRun : PlayerExtension, ICancleGravity
     private Vector3 direction;
     private Vector3 wallNormal;
     private bool isWallRunning;
+    public bool isPerforming => isWallRunning;
     public bool canApplyGravity { get; set; } = true;
 
     public override void OnStart(Player player)
@@ -58,7 +59,6 @@ public class WallRun : PlayerExtension, ICancleGravity
         isWallRunning = true;
         direction = GetWallParallelDirection(point.normal);
         wallNormal = point.normal;
-        _player.canMove = false;
         canApplyGravity = false;
         _player.OnUpdate -= _player.JumpHandler;
         _player.animator.SetBool("isWallRiding", true);
@@ -96,7 +96,6 @@ public class WallRun : PlayerExtension, ICancleGravity
         if (isWallRunning)
         {
             isWallRunning = false;
-            _player.canMove = true;
             canApplyGravity = true;
             _player.OnUpdate += _player.JumpHandler;
             _player.animator.SetBool("isWallRiding", false);

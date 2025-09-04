@@ -5,24 +5,20 @@ using UnityEngine.Playables;
 using Unity.VisualScripting;
 using UnityEngine.AI;
 using System;
+using UnityEngine.UIElements;
+using static NodeHelper.NodeUIHelpers;
 
 [System.Serializable]
 
 public class PatrolState : BossState
 {
-    [Tooltip("Patrol points in the scene. The boss will loop through these.")]
     public Transform[] waypoints => boss.waypoints;
+    private float moveSpeed = 2f;
 
-    [Tooltip("Movement speed when patrolling (used if no NavMeshAgent).")]
-    [SerializeField]public float moveSpeed = 2f;
+    private float arriveThreshold = 0.2f;
 
-    [Tooltip("How close to a waypoint before switching to the next.")]
-    public float arriveThreshold = 0.2f;
+    private bool useNavMeshIfAvailable = true;
 
-    [Tooltip("If true and a NavMeshAgent exists on the Boss, use it for movement.")]
-    public bool useNavMeshIfAvailable = true;
-
-    [Tooltip("Idle time (in seconds) at each waypoint before moving on.")]
     public float idleTime = 2f;
 
     private int _index;
@@ -73,7 +69,6 @@ public class PatrolState : BossState
             }
         }
     }
-
     public override void Update()
     {
         if (_self == null || waypoints == null || waypoints.Length == 0)
@@ -165,5 +160,13 @@ public class PatrolState : BossState
         }
 
         if (animator != null) animator.SetBool("Walk", true);
+    }
+    public override void BuildInspectorUI(VisualElement container)
+    {
+        base.BuildInspectorUI(container);
+        container.Add(FloatField("Move Speed", () => this.moveSpeed, v => this.moveSpeed = v));
+        container.Add(FloatField("Arrive Threshold", () => this.arriveThreshold, v => this.arriveThreshold = v));
+        container.Add(BoolField("Use AI to Move", () => this.useNavMeshIfAvailable, v => this.useNavMeshIfAvailable = v));
+        container.Add(FloatField("Idle Time",() => this.idleTime, v => this.idleTime = v));
     }
 }

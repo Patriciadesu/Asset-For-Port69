@@ -5,12 +5,15 @@ using UnityEngine.Playables;
 using Unity.VisualScripting;
 using UnityEngine.AI;
 using System;
+using UnityEngine.UIElements;
+using static NodeHelper.NodeUIHelpers;
 
 [System.Serializable]
-public class AttackState : BossState
+public class AttackState : BossState, INodeInspectorContributor
 {
-    public TimelineAsset timelinePlayable;
-    public float damage;
+    private TimelineAsset timelinePlayable;
+    private float damage;
+    public float Damage => damage;
 
     private PlayableDirector director;
     private bool subscribed;
@@ -155,5 +158,15 @@ public class AttackState : BossState
 
         stage = StateStage.Exit;
     }
+
+
+    public override void BuildInspectorUI(VisualElement container)
+    {
+        base.BuildInspectorUI(container);
+        container.Add(TimelineField("Timeline Animation", () => this.timelinePlayable, v => this.timelinePlayable = v));
+        container.Add(FloatField("Damage", () => this.damage, v => this.damage = v));
+    }
+
+
 }
 

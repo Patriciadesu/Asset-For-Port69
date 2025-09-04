@@ -15,19 +15,17 @@ MonoBehaviour:
   stateName: Attack
   isInitialState: 0
   state:
-    rid: 5678062170086572132
+    rid: 3811229507130753123
   transitions:
   - {fileID: 11400000, guid: 57c0d34eecd33274a94475b66e641b4c, type: 2}
   onStateChange:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: -268, y: 294}
+  position: {x: -284, y: 283}
   references:
     version: 2
     RefIds:
-    - rid: 5678062170086572132
-      type: {class: BossAttackState, ns: , asm: Assembly-CSharp}
+    - rid: 3811229507130753123
+      type: {class: AttackState, ns: , asm: Assembly-CSharp}
       data:
-        stateName: BossAttackState
-        timelinePlayable: {fileID: 11400000, guid: dbe96bd1424b052498c21dfc1b2f1dca, type: 2}
-        damage: 30
+        stateName: AttackState

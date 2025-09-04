@@ -5,17 +5,17 @@ using UnityEngine.Playables;
 using Unity.VisualScripting;
 using UnityEngine.AI;
 using System;
-
+using static NodeHelper.NodeUIHelpers;
+using UnityEngine.UIElements;
 public enum StateStage { Enter, Update, Exit }
 
-[System.Serializable]
-public abstract class BossState
+public class BossState : INodeInspectorContributor
 {
     public string stateName;
     public StateStage stage { get; set; } = StateStage.Enter;
     protected Boss boss;
     protected Animator animator;
-    protected bool isFinished =false;
+    protected bool isFinished = false;
     public bool IsFinished => isFinished;
 
     public BossState(string name, Boss bossInstance)
@@ -36,7 +36,7 @@ public abstract class BossState
         Debug.Log($"Entering state: {stateName}");
         stage = StateStage.Update;
     }
-    public virtual void Update()      { Debug.Log($"Updating state: {stateName}"); }
+    public virtual void Update() { Debug.Log($"Updating state: {stateName}"); }
     public virtual void FixedUpdate() { Debug.Log($"Fixed updating state: {stateName}"); }
 
     // Traditional no-arg Exit (cleanup only)
@@ -56,5 +56,13 @@ public abstract class BossState
         {
             boss.stateGraph.ChangeState(nextState);
         }
+    }
+    public virtual void BuildInspectorUI(VisualElement container)
+    {
+        RefreshInspectorUI();
+    }
+
+    public virtual void RefreshInspectorUI()
+    {
     }
 }

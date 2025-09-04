@@ -1,5 +1,6 @@
 using NaughtyAttributes;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Cinemachine;
 using UnityEngine;
 using static UnityEditor.Experimental.GraphView.GraphView;
@@ -68,10 +69,11 @@ public partial class Player : Singleton<Player>
     [HideInInspector] public Vector3 lastCheckpoint;
     [HideInInspector] public Vector3 spawnPoint;
 
-    public bool isGrounded = true;
+    [HideInInspector] public bool isGrounded = true;
     [HideInInspector] public List<ICancleGravity> cancleGravityComponents = new List<ICancleGravity>();
-    public bool canApplyGravity => cancleGravityComponents.TrueForAll(x => x.canApplyGravity);
-    [HideInInspector] public bool canMove = true;
+    [HideInInspector] public bool canApplyGravity => cancleGravityComponents.TrueForAll(x => x.canApplyGravity);
+    [HideInInspector] public List<IInteruptPlayerMovement> interuptPlayerMovementComponents = new List<IInteruptPlayerMovement>();
+    [HideInInspector] public bool canMove => !interuptPlayerMovementComponents.Any(x => x.isPerforming);
     [HideInInspector] public bool canRotateCamera = true;
 
     #region Player Delegates
@@ -129,6 +131,10 @@ public partial class Player : Singleton<Player>
 
             staminaComponentStates.Clear();
             staminaComponentStates.AddRange(GetComponents<IUseStamina>());
+            interuptPlayerMovementComponents.Clear();
+            interuptPlayerMovementComponents.AddRange(GetComponents<IInteruptPlayerMovement>());
+            cancleGravityComponents.Clear();
+            cancleGravityComponents.AddRange(GetComponents<ICancleGravity>());
 
             foreach (var extension in extensions)
             {
@@ -317,11 +323,18 @@ public partial class Player : Singleton<Player>
         Vector3 move;
         if (canMove)
         {
+            Debug.Log("Player is moving");
             move = (transform.right * horizontal + transform.forward * vertical).normalized;
             rigidbody.linearVelocity = new Vector3(move.x * Speed, rigidbody.linearVelocity.y, move.z * Speed);
             animator.SetFloat("MoveX", horizontal);
             animator.SetFloat("MoveY", vertical);
             animator.SetBool("isRun", horizontal != 0 || vertical != 0);
+        }
+        else
+        {
+            animator.SetFloat("MoveX", 0);
+            animator.SetFloat("MoveY", 0);
+            animator.SetBool("isRun", false);
         }
     }
     public void JumpHandler()

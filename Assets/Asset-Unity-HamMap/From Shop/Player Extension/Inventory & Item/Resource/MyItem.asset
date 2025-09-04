@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62912b254ca41fb4291255ffab0b975a, type: 3}
+  m_Name: MyItem
+  m_EditorClassIdentifier: 
+  itemimage: {fileID: 546559851, guid: 3b82ae74037a076459cf2d54791dacc9, type: 3}
+  type:
+    rid: 3811229562494779454
+  references:
+    version: 2
+    RefIds:
+    - rid: 3811229562494779454
+      type: {class: Heal, ns: , asm: Assembly-CSharp}
+      data:
+        healAmount: 20

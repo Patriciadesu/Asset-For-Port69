@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class DialogManager : Singleton<DialogManager> , ICancleGravity
+public class DialogManager : Singleton<DialogManager> , ICancleGravity,IInteruptPlayerMovement
 {
     enum ContinueInput
     {
@@ -25,6 +25,7 @@ public class DialogManager : Singleton<DialogManager> , ICancleGravity
     private string[] dialog;
     private int currentDialog;
     public bool canApplyGravity { get; set; } = true;
+    public bool isPerforming => isDialogPlaying;
     private CanvasGroup canvasGroup => this.GetComponent<CanvasGroup>();
 
     #region Dialog State
@@ -86,15 +87,11 @@ public class DialogManager : Singleton<DialogManager> , ICancleGravity
             default:
                 throw new ArgumentOutOfRangeException();
         }
-        if (freezePlayerWhileDialog)
-        {
-            Player.Instance.canMove = false;
-            canApplyGravity = false;
-        }
         Player.Instance.animator.SetBool("isRunning", false);
         Player.Instance.animator.SetBool("isRun", false);
         dialog = _dialog;
         currentDialog = 0;
+        canApplyGravity = false;
         isDialogPlaying = true;
         dialogUI.SetActive(true);
         dialogText.text = "";
@@ -108,16 +105,12 @@ public class DialogManager : Singleton<DialogManager> , ICancleGravity
     public void EndDialog()
     {
         canvasGroup.alpha = 0;
-        if (freezePlayerWhileDialog)
-        {
-            Player.Instance.canMove = true;
-            canApplyGravity = true;
-        }
         if(ContinueInput.ClickButton == continueWith)
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
+        canApplyGravity = true;
         isDialogPlaying = false;
         dialogUI.SetActive(false);
 

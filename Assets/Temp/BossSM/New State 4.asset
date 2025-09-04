@@ -12,21 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24a4e1e8d60a72a4cbeccd371e6db72e, type: 3}
   m_Name: New State 4
   m_EditorClassIdentifier: 
-  stateName: Idle
+  stateName: New State
   isInitialState: 0
   state:
-    rid: 5678062170086572137
+    rid: 3811229562494779487
   transitions:
   - {fileID: 11400000, guid: 4d6bd828f686f59408ce977f6616c230, type: 2}
-  - {fileID: 11400000, guid: 57c0d34eecd33274a94475b66e641b4c, type: 2}
   onStateChange:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: 72, y: 1024}
+  position: {x: 465, y: 1062}
   references:
     version: 2
     RefIds:
-    - rid: 5678062170086572137
-      type: {class: BossIdleState, ns: , asm: Assembly-CSharp}
+    - rid: 3811229562494779487
+      type: {class: IdleState, ns: , asm: Assembly-CSharp}
       data:
-        stateName: BossIdleState
+        stateName: IdleState

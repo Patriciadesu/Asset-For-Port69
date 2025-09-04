@@ -2,7 +2,7 @@
 using NaughtyAttributes;
 using UnityEngine;
 
-public class Roll : PlayerExtension, IUseStamina
+public class Roll : PlayerExtension, IUseStamina,IInteruptPlayerMovement
 {
     [Header("UI")]
     public bool enableRollUI = true;
@@ -13,6 +13,7 @@ public class Roll : PlayerExtension, IUseStamina
     public float rollSpeed = 1f;
     public float rollDuration = 0.15f;
     public float cooldownTime = 1f;
+    public bool isPerforming  => isRolling;
 
 
 
@@ -46,6 +47,8 @@ public class Roll : PlayerExtension, IUseStamina
 
         if (isRolling)
         {
+            Debug.Log("Player is Rolling");
+            Debug.Log("PLayer's Rigidbody is null?" + _player.rigidbody == null);
             Vector3 rollVelocity = rollDirection * rollSpeed * _player.Speed;
             _player.rigidbody.linearVelocity = new Vector3(rollVelocity.x, _player.rigidbody.linearVelocity.y, rollVelocity.z);
         }
@@ -87,6 +90,7 @@ public class Roll : PlayerExtension, IUseStamina
     void StopRoll()
     {
         // Modify collider back instead of controller
+        isRolling = false;
         if (_player.cameraType == Player.CameraType.FirstPerson)
         {
             _player.camera.transform.SetParent(_player.transform);
@@ -98,7 +102,6 @@ public class Roll : PlayerExtension, IUseStamina
             collider.center = new Vector3(collider.center.x, collider.center.y * 2, collider.center.z);
         }
         _player.canRotateCamera = true;
-        isRolling = false;
         _player.animator.speed = 1;
         lastRollTime = Time.time; // Reset the last roll time
     }

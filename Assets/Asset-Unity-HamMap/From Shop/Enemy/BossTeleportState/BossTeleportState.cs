@@ -5,6 +5,8 @@ using UnityEngine.Playables;
 using Unity.VisualScripting;
 using UnityEngine.AI;
 using System;
+using UnityEngine.UIElements;
+using static NodeHelper.NodeUIHelpers;
 [System.Serializable]
 public class BossTeleportState : BossState
 {
@@ -16,7 +18,7 @@ public class BossTeleportState : BossState
         RandomAroundBoss,
         BackToInitialPosition
     }
-    public TeleportPosition teleportPosition = TeleportPosition.OnTopOfPlayer;
+    private TeleportPosition teleportPosition = TeleportPosition.OnTopOfPlayer;
 
     public BossTeleportState(string name, Boss bossInstance) : base("Teleport", bossInstance)
     {
@@ -55,6 +57,12 @@ public class BossTeleportState : BossState
         boss.transform.position = targetPosition;
         isFinished = true; // Mark as finished immediately
         boss.onAttackEnd.Invoke(); // Trigger any attack end logic immediately after teleport
+    }
+
+    public override void BuildInspectorUI(VisualElement container)
+    {
+        base.BuildInspectorUI(container);
+        container.Add(EnumField<TeleportPosition>("Teleport To", () => this.teleportPosition, v => this.teleportPosition = v));
     }
 
 }

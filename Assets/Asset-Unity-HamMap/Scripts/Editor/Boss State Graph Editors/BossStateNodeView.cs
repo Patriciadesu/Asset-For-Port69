@@ -22,8 +22,16 @@ public class BossStateNodeView : Node
     private PopupField<string> bossStateTypePopup;
     private VisualElement bossStateFieldsRoot;
 
+    // Custom-inspector area (for INodeInspectorContributor)
+    private VisualElement _inspectorRoot;
+    private Foldout _inspectorFoldout;
+
+    // Timeline UI (shows only when the state has a TimelineAsset field)
     private VisualElement timelineDropZone;
     private ObjectField timelineObjectField;
+
+    // Convenience property (null-safe)
+    private BossState State => nodeData != null ? nodeData.state : null;
 
     public BossStateNodeView(BossStateNode nodeData,
                              Action<BossStateNodeView> onSelected = null,
@@ -35,6 +43,7 @@ public class BossStateNodeView : Node
         title = nodeData.stateName;
         style.width = 260;
 
+        // Ports
         input = InstantiatePort(Orientation.Vertical, Direction.Input, Port.Capacity.Multi, typeof(bool));
         input.portName = "";
         titleContainer.Add(input);
@@ -49,6 +58,7 @@ public class BossStateNodeView : Node
             output.AddManipulator(new EdgeConnector<Edge>(edgeListener));
         }
 
+        // Name
         var nameField = new TextField("Name") { value = nodeData.stateName };
         nameField.RegisterValueChangedCallback(evt =>
         {
@@ -60,6 +70,7 @@ public class BossStateNodeView : Node
         });
         mainContainer.Add(nameField);
 
+        // Initial toggle
         var initToggle = new Toggle("Initial") { value = nodeData.isInitialState };
         initToggle.RegisterValueChangedCallback(evt =>
         {
@@ -70,14 +81,29 @@ public class BossStateNodeView : Node
         });
         mainContainer.Add(initToggle);
 
+        // BossState type + auto fields
         BuildBossStateSection();
+
+        // Custom Inspector foldout (INodeInspectorContributor)
+        _inspectorFoldout = new Foldout { text = "Inspector", value = true };
+        _inspectorRoot = new VisualElement();
+        _inspectorRoot.style.marginTop = 4;
+        _inspectorRoot.style.marginBottom = 4;
+        _inspectorFoldout.Add(_inspectorRoot);
+        mainContainer.Add(_inspectorFoldout);
+
+
+
+        RefreshNodeFromData();
 
         RefreshExpandedState();
         RefreshPorts();
+
+        // Position
         SetPosition(new Rect(UnityEngine.Random.Range(50, 400), UnityEngine.Random.Range(50, 400), 260, 200));
         SetPosition(new Rect(nodeData.position, new Vector2(260, 200)));
 
-        // On move, save back
+        // Save position on move
         this.RegisterCallback<GeometryChangedEvent>(_ =>
         {
             var rect = GetPosition();
@@ -88,6 +114,8 @@ public class BossStateNodeView : Node
                 EditorUtility.SetDirty(nodeData);
             }
         });
+
+        // Context menu
         this.AddManipulator(new ContextualMenuManipulator(evt =>
         {
             var gv = this.GetFirstAncestorOfType<GraphView>() as StateMachineGraphView;
@@ -110,21 +138,8 @@ public class BossStateNodeView : Node
         if (soStateNode == null) soStateNode = new SerializedObject(nodeData);
         else soStateNode.Update();
 
-        RebuildBossStateChildFields();
-
-        System.Reflection.FieldInfo field = null;
-        bool show = nodeData.state != null &&
-                    TryGetTimelineFieldInfo(nodeData.state.GetType(), out field);
-
-        if (timelineDropZone != null)
-            timelineDropZone.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
-
-        if (timelineObjectField != null)
-        {
-            timelineObjectField.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
-            if (show && field != null)
-                timelineObjectField.SetValueWithoutNotify(field.GetValue(nodeData.state) as UnityEngine.Timeline.TimelineAsset);
-        }
+        // Rebuild custom inspector UI (interface-based)
+        BuildInspector();
 
         RefreshExpandedState();
         RefreshPorts();
@@ -173,15 +188,17 @@ public class BossStateNodeView : Node
             EditorUtility.SetDirty(nodeData);
 
             soStateNode.Update();
-            RebuildBossStateChildFields();
+            RefreshNodeFromData(); // update timeline UI etc.
+            BuildInspector();      // refresh interface-driven UI
         });
         mainContainer.Add(bossStateTypePopup);
-        
+
         bossStateFieldsRoot = new VisualElement();
         bossStateFieldsRoot.style.marginTop = 4;
         bossStateFieldsRoot.style.marginBottom = 4;
         mainContainer.Add(bossStateFieldsRoot);
 
+        // Ensure we have an instance by default
         if (nodeData.state == null && stateTypes.Count > 0)
         {
             var t0 = stateTypes[currentIndex];
@@ -194,47 +211,47 @@ public class BossStateNodeView : Node
             soStateNode.Update();
         }
 
-        RebuildBossStateChildFields();
+        //RebuildBossStateChildFields();
     }
 
+    // private void RebuildBossStateChildFields()
+    // {
+    //     bossStateFieldsRoot.Clear();
 
-    private void RebuildBossStateChildFields()
-    {
-        bossStateFieldsRoot.Clear();
+    //     if (nodeData.state == null)
+    //     {
+    //         bossStateFieldsRoot.Add(new Label("No BossState selected."));
+    //         return;
+    //     }
 
-        if (nodeData.state == null)
-        {
-            bossStateFieldsRoot.Add(new Label("No BossState selected."));
-            return;
-        }
+    //     if (soStateNode == null) soStateNode = new SerializedObject(nodeData);
+    //     soStateNode.Update();
 
-        if (soStateNode == null) soStateNode = new SerializedObject(nodeData);
-        soStateNode.Update();
+    //     // This expects BossStateNode to have a [SerializeReference] BossState state;
+    //     var stateProp = soStateNode.FindProperty("state");
+    //     if (stateProp == null)
+    //     {
+    //         bossStateFieldsRoot.Add(new Label("No 'state' property found."));
+    //         return;
+    //     }
 
-        var stateProp = soStateNode.FindProperty("state");
-        if (stateProp == null)
-        {
-            bossStateFieldsRoot.Add(new Label("No 'state' property found."));
-            return;
-        }
+    //     var stateType = nodeData.state.GetType();
+    //     var childNames = GetDerivedSerializedFieldNames(stateType, typeof(BossState));
 
-        var stateType = nodeData.state.GetType();
-        var childNames = GetDerivedSerializedFieldNames(stateType, typeof(BossState));
+    //     for (int i = 0; i < childNames.Count; i++)
+    //     {
+    //         var name = childNames[i];
+    //         var p = stateProp.FindPropertyRelative(name);
+    //         if (p != null)
+    //         {
+    //             var pf = new PropertyField(p);
+    //             pf.Bind(soStateNode);
+    //             bossStateFieldsRoot.Add(pf);
+    //         }
+    //     }
 
-        for (int i = 0; i < childNames.Count; i++)
-        {
-            var name = childNames[i];
-            var p = stateProp.FindPropertyRelative(name);
-            if (p != null)
-            {
-                var pf = new PropertyField(p);
-                pf.Bind(soStateNode);
-                bossStateFieldsRoot.Add(pf);
-            }
-        }
-
-        soStateNode.ApplyModifiedProperties();
-    }
+    //     soStateNode.ApplyModifiedProperties();
+    // }
 
     private static List<string> GetDerivedSerializedFieldNames(Type type, Type baseType)
     {
@@ -246,30 +263,33 @@ public class BossStateNodeView : Node
             .Select(f => f.Name)
             .ToList();
 
-        // explicit exclude base fields (safety)
+        // exclude base fields
         var baseFields = baseType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
             .Select(f => f.Name).ToHashSet();
         fields.RemoveAll(baseFields.Contains);
         return fields;
     }
 
-    // ---------- Timeline drag/drop ----------
-    private static bool TryGetTimelineFieldInfo(Type stateType, out FieldInfo field)
+    // ---------- Custom inspector via interface ----------
+    private void BuildInspector()
     {
-        field = null;
-        if (stateType == null) return false;
+        _inspectorRoot.Clear();
 
-        var t = stateType;
-        const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-        while (t != null && t != typeof(object))
+        if (State is INodeInspectorContributor contributor)
         {
-            var fi = t.GetFields(flags).FirstOrDefault(f =>
-                f.FieldType == typeof(UnityEngine.Timeline.TimelineAsset) &&
-                !f.IsStatic &&
-                (f.IsPublic || f.GetCustomAttribute<SerializeField>() != null));
-            if (fi != null) { field = fi; return true; }
-            t = t.BaseType;
+            contributor.BuildInspectorUI(_inspectorRoot);
         }
-        return false;
+        else
+        {
+            var label = new Label("No custom inspector for this state.");
+            _inspectorRoot.Add(label);
+        }
+    }
+
+    // Call this when something changes and you want the UI to update
+    public void RefreshInspector()
+    {
+        if (State is INodeInspectorContributor contributor)
+            contributor.RefreshInspectorUI();
     }
 }

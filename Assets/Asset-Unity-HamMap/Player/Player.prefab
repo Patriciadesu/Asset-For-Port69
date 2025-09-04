@@ -1488,7 +1488,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 1.766, z: 0.19000006}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 3775940332179268307}
   m_Father: {fileID: 1359799449778664167}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &171486444557883602
@@ -2875,6 +2876,37 @@ Transform:
   - {fileID: 2405880349795185491}
   m_Father: {fileID: 4878223673154251349}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4443295849894856777
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3775940332179268307}
+  m_Layer: 0
+  m_Name: Spawnpoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3775940332179268307
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4443295849894856777}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0.008726535, w: 0.9999619}
+  m_LocalPosition: {x: -0.053, y: -0.106, z: 1.075}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 665884463927084071}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4492487080912698347
 GameObject:
   m_ObjectHideFlags: 0
@@ -4175,6 +4207,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e7d606cc1939cd4392d578f305cf0b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enableHealthBar: 1
+  enableStaminaBar: 1
   mouseSensitivity: 2
   cameraType: 0
   cameraFOV: 60.3
@@ -4199,13 +4233,10 @@ MonoBehaviour:
   lastCheckpoint: {x: 0, y: 0, z: 0}
   spawnPoint: {x: 0, y: 0, z: 0}
   isGrounded: 1
-  canMove: 1
   canRotateCamera: 1
   maxhealth: 100
   maxstamina: 100
   staminaRegenRate: 20
-  enableHealthBar: 1
-  enableStaminaBar: 1
   currenthealth: 100
   currentstamina: 100
 --- !u!1 &6158670414927746804

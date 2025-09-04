@@ -5,22 +5,16 @@ using UnityEngine.Playables;
 using Unity.VisualScripting;
 using UnityEngine.AI;
 using System;
+using UnityEngine.UIElements;
+using static NodeHelper.NodeUIHelpers;
 
 [System.Serializable]
-public class BossChaseState : BossState
+public class BossChaseState : BossState, INodeInspectorContributor
 {
-
-    [Tooltip("Movement speed while chasing (used if no NavMeshAgent).")]
-    public float moveSpeed = 3.5f;
-
-    [Tooltip("If true and a NavMeshAgent exists on the Boss, use it for chase movement.")]
-    public bool useNavMeshIfAvailable = true;
-
-    [Tooltip("Optional direct reference to a target. If null, will search by tag once on Enter/if lost.")]
-    public Transform explicitTarget => Player.Instance.transform;
-
+    private float moveSpeed = 3.5f;
+    private bool useNavMeshIfAvailable = true;
     private Transform _self;
-    private Transform _target=> Player.Instance.transform;
+    private Transform _target => Player.Instance.transform;
     private NavMeshAgent _agent;
 
     public BossChaseState(Boss bossInstance) : base("Chase", bossInstance) { }
@@ -35,7 +29,7 @@ public class BossChaseState : BossState
     public override void Enter()
     {
         base.Enter();
-        if (animator != null) animator.SetBool("Walk",true);
+        if (animator != null) animator.SetBool("Walk", true);
 
         if (useNavMeshIfAvailable && _agent != null && _agent.isOnNavMesh)
         {
@@ -87,8 +81,15 @@ public class BossChaseState : BossState
             _agent.ResetPath();
             _agent.isStopped = true;
         }
-        if (animator != null) animator.SetBool("Walk",false);
+        if (animator != null) animator.SetBool("Walk", false);
         base.Exit();
+    }
+
+    public override void BuildInspectorUI(VisualElement container)
+    {
+        base.BuildInspectorUI(container);
+        container.Add(FloatField("Move Speed", () => this.moveSpeed, v => this.moveSpeed = v));
+        container.Add(BoolField("Use AI to Move",() => this.useNavMeshIfAvailable, v => this.useNavMeshIfAvailable = v));
     }
 
 }
