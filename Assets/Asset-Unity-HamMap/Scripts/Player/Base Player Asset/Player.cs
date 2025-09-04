@@ -44,6 +44,7 @@ public partial class Player : Singleton<Player>
     [HideInInspector] public List<IUseStamina> staminaComponentStates = new List<IUseStamina>();
     public bool canGenerateStamina => staminaComponentStates.TrueForAll(x => !x.isUsingStamina);
     public bool canHit;
+    [HideInInspector]public float damageReductionPercentage = 0;
     
     #endregion
 
@@ -194,20 +195,24 @@ public partial class Player : Singleton<Player>
     }
     public void TakeDamage(float amount)
     {
-        if (canHit)
+        if (!canHit)
         {
-            currenthealth -= Mathf.Max(amount, 0);
-            animator.SetTrigger("GetHit");
-            Debug.Log("Player took damage: " + amount + ", Current Health: " + currenthealth);
-            if (currenthealth <= 0)
-            {
-                currenthealth = 0;
-                Respawn();
-            }
-        }else
+            canHit = true;
+            animator.SetBool("isBlocking", false);
+        }
+        float damageTaken = amount - (amount * damageReductionPercentage / 100);
+        currenthealth -= Mathf.Max(amount, 0);
+        animator.SetTrigger("GetHit");
+        Debug.Log("Player took damage: " + amount + ", Current Health: " + currenthealth);
+        if (currenthealth <= 0)
         {
-           canHit = true;
-           animator.SetBool("isBlocking", false);
+            currenthealth = 0;
+            Respawn();
+        }
+        if (!canHit)
+        {
+            canHit = true;
+            animator.SetBool("isBlocking", false);
         }
     }
     void OnCollisionEnter(Collision collision)

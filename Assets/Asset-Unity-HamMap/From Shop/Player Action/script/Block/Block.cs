@@ -7,9 +7,13 @@ public class Block : PlayerExtension, IUseStamina
     [Header("Properties")]
     public KeyCode activateKey = KeyCode.Mouse1;
 
-    public bool isBlocking = false;
+    public float blockCooldown = 1;
+    [Range(0,100)]public float damageReductionPercentage;
     public bool useStamina;
     [ShowIf("useStamina")] public float staminaCost = 5f;
+    private float blockCooldownTimer = 0;
+    private bool isBlocking = false;
+    private bool canBlock => Time.time >= blockCooldownTimer;
     public bool isUsingStamina => useStamina;
     public bool canDrainStamina => _player.currentstamina >= staminaCost && useStamina;
     public void DrainStamina(float amount)
@@ -22,40 +26,34 @@ public class Block : PlayerExtension, IUseStamina
 
     void Update()
     {
-        UpdateisBlocking();
-        if (Input.GetKey(activateKey))
+        if (Input.GetKeyDown(activateKey) && canBlock && canDrainStamina)
         {
             StartBlocking();
         }
-        else
+        else if (Input.GetKeyUp(activateKey) && _player.canHit == false)
         {
             StopBlocking();
         }
-    }
-    void UpdateisBlocking()
-    {
-        if (isBlocking)
+
+        if (_player.canHit && isBlocking)
         {
-            _player.canHit = false;
-        }else
-        {
-            _player.canHit = true;
+            StopBlocking();
         }
+
     }
 
     void StartBlocking()
     {
-        if (canDrainStamina)
-        {
-            DrainStamina(staminaCost * Time.deltaTime);
-        }
         isBlocking = true;
+        _player.canHit = false;
         _player.animator.SetBool("isBlocking", true);
     }
 
     void StopBlocking()
     {
+        blockCooldownTimer = Time.time + blockCooldown;
         isBlocking = false;
+        _player.canHit = true;
         _player.animator.SetBool("isBlocking", false);
     }
 }

@@ -2,7 +2,7 @@ using System.Collections;
 using NaughtyAttributes;
 using UnityEngine;
 using Unity.Cinemachine;
-
+using UnityEngine.UI;
 
 
 public class BowShot : PlayerExtension
@@ -22,7 +22,7 @@ public class BowShot : PlayerExtension
     private float timeHeldSoFar;
 
     [Header("Arrow")]
-    public GameObject projectilePrefab;
+    [ShowAssetPreview(128, 128)] public GameObject projectilePrefab;
     private Transform spawnPoint;
     public float speed = 30f;
     public float damage = 10f;
@@ -30,35 +30,68 @@ public class BowShot : PlayerExtension
     public bool hasDestroyTime = true;
     [ShowIf(nameof(hasDestroyTime))] public float DestroyTime = 2.5f;
 
-    [Header("Auto camera switching")]
-    public bool switchBackToThirdPerson = true;
-    [Min(0f)] public float switchBackDelay = 0.05f;
-    [Min(0.05f)] public float returnLerpTimeMin = 0.05f;
+    [Header("Aiming Mode"),ShowIf("playerCameraType",Player.CameraType.ThirdPerson)]
+    [Tooltip("If true, lerp TPS -> FPS while drawing. If false, stay TPS and shoot via crosshair center ray.")]
+    public bool aimZooming = true;
+
+    private bool switchBackToThirdPerson = true;
+    private float switchBackDelay = 0.05f;
+    private float returnLerpTimeMin = 0.05f;
+
+    [Header("Crosshair")]
+    [Tooltip("Assign a RectTransform for a custom crosshair. If empty, a default will be created.")]
+    [ShowAssetPreview]public RectTransform crosshairRoot;
+    private bool showCrosshairOnlyWhenAiming = true;
+    [Min(2f)] public float crosshairSize = 12f;
+    [Min(1f)] public float crosshairThickness = 2f;
+    public Color crosshairColor = Color.white;
+
+    private Canvas _ownedCanvas;
+    private bool _ownsCrosshairRoot = false;
+    private static Sprite _pixelSprite;
+
+    private Player.CameraType playerCameraType => Player.Instance.cameraType;
 
     public override void OnStart(Player player)
     {
         base.OnStart(player);
         CacheClipLength();
 
-        if (projectilePrefab == null)
-        {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            go.transform.localScale = new Vector3(0.05f, 0.02f, 0.5f);
-            Rigidbody arrowRb = go.AddComponent<Rigidbody>();
-            arrowRb.constraints = RigidbodyConstraints.FreezeRotation;
-            projectilePrefab = go;
-        }
-
         if (spawnPoint == null)
-        {
             spawnPoint = new GameObject("ArrowSpawnPoint").transform;
-        }
-        if (_player != null && _player.camera != null)
-        {
-            spawnPoint.SetParent(_player.camera.transform, false);
-            spawnPoint.localPosition = new Vector3(0.0f, -0.05f, 0.4f);
-            spawnPoint.localRotation = Quaternion.identity;
-        }
+
+        UpdateSpawnPointToActiveCamera();
+
+        EnsureCrosshair();
+        SetCrosshairVisible(!showCrosshairOnlyWhenAiming);
+    }
+
+    private void UpdateSpawnPointToActiveCamera()
+    {
+        var camTf = GetActiveCameraTransform();
+        if (camTf == null) return;
+
+        spawnPoint.SetParent(camTf, false);
+        spawnPoint.localPosition = new Vector3(0f, -0.05f, 0.4f);
+        spawnPoint.localRotation = Quaternion.identity;
+    }
+
+    private Transform GetActiveCameraTransform()
+    {
+        // Prefer whatever is currently the MainCamera (active render camera)
+        if (Camera.main != null) return Camera.main.transform;
+        // Fallback to player's FP camera if provided
+        if (_player != null && _player.camera != null) return _player.camera.transform;
+        return null;
+    }
+
+    GameObject CreateDefaultArrow()
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        go.transform.localScale = new Vector3(0.05f, 0.02f, 0.5f);
+        var rb = go.AddComponent<Rigidbody>();
+        rb.constraints = RigidbodyConstraints.FreezeRotation;
+        return go;
     }
 
     void Update()
@@ -76,9 +109,9 @@ public class BowShot : PlayerExtension
     {
         if (canShot) return;
 
-        if (_player != null && _player.cameraType == Player.CameraType.ThirdPerson)
+        // Decide whether to lerp TPS -> FPS based on toggle
+        if (aimZooming && _player != null && _player.cameraType == Player.CameraType.ThirdPerson)
         {
-            // Start forward lerp to FP; this coroutine is now preemptible
             _player.StartCoroutine(_player.LerpTpCamToFpThenEnableFp(DrawTime));
         }
 
@@ -99,6 +132,8 @@ public class BowShot : PlayerExtension
             _player.animator.speed = Mathf.Max(speedForDraw, 0.001f);
             _player.animator.Play("BowShot", 0, 0f);
         }
+
+        if (showCrosshairOnlyWhenAiming) SetCrosshairVisible(true);
     }
 
     private void CheckHolding()
@@ -131,7 +166,10 @@ public class BowShot : PlayerExtension
 
             Shoot();
 
-            if (switchBackToThirdPerson)
+            if (showCrosshairOnlyWhenAiming) SetCrosshairVisible(false);
+
+            // Only switch back if we actually zoomed in
+            if (aimZooming && switchBackToThirdPerson)
                 _player.StartCoroutine(SwitchBackToTPSAfterDelay());
         }
         else
@@ -151,12 +189,14 @@ public class BowShot : PlayerExtension
             _player.animator.Play("Idle", 0, 0f);
         }
 
-        // 🔑 NEW: actively interrupt the forward lerp and reverse immediately
-        if (_player != null)
+        // Only interrupt/return camera if we zoomed
+        if (aimZooming && _player != null)
         {
             float backTime = Mathf.Max(returnLerpTimeMin, timeHeldSoFar);
             _player.InterruptCamLerpAndReturn(backTime);
         }
+
+        if (showCrosshairOnlyWhenAiming) SetCrosshairVisible(false);
     }
 
     private System.Collections.IEnumerator SwitchBackToTPSAfterDelay()
@@ -172,18 +212,33 @@ public class BowShot : PlayerExtension
 
     private void Shoot()
     {
-        if (projectilePrefab == null || spawnPoint == null)
+        // Make sure spawn point follows the currently active camera just before firing
+        UpdateSpawnPointToActiveCamera();
+
+        // Compute aim direction from the center of the active camera (TPS or FPS)
+        var camTf = GetActiveCameraTransform();
+        Vector3 dir = spawnPoint.forward;
+        if (camTf != null)
         {
-            Debug.LogWarning("[BowShot] Missing projectilePrefab or spawnPoint.");
-            return;
+            Ray ray = new Ray(camTf.position, camTf.forward);
+            if (Physics.Raycast(ray, out var hit, 1000f, ~0, QueryTriggerInteraction.Ignore))
+                dir = (hit.point - spawnPoint.position).normalized;
+            else
+                dir = (camTf.position + camTf.forward * 1000f - spawnPoint.position).normalized;
         }
 
-        var projectile = Object.Instantiate(projectilePrefab, spawnPoint.position, spawnPoint.rotation);
-        if (hasDestroyTime) Object.Destroy(projectile, DestroyTime);
+        GameObject projectile = projectilePrefab == null
+            ? CreateDefaultArrow()
+            : Instantiate(projectilePrefab);
+
+        projectile.transform.position = spawnPoint.position;
+        projectile.transform.rotation = Quaternion.LookRotation(dir, Vector3.up);
+
+        if (hasDestroyTime) Destroy(projectile, DestroyTime);
 
         var rb = projectile.GetComponent<Rigidbody>();
         if (rb == null) rb = projectile.AddComponent<Rigidbody>();
-        rb.linearVelocity = spawnPoint.forward * speed;
+        rb.linearVelocity = dir * speed;
 
         var arrow = projectile.GetComponent<Arrow>();
         if (arrow == null) arrow = projectile.AddComponent<Arrow>();
@@ -204,12 +259,85 @@ public class BowShot : PlayerExtension
         if (clipLength <= 0f)
             Debug.LogWarning("[BowShot] Animation clip 'BowShot' not found or length is zero.");
     }
+
     public void OnDestroy()
     {
-        DestroyImmediate(spawnPoint);
+        DestroyImmediate(spawnPoint.gameObject);
+        DestroyImmediate(crosshairRoot.gameObject);
+        DestroyImmediate(_ownedCanvas.gameObject);
+    }
+
+    // -------- Crosshair helpers --------
+
+    private void EnsureCrosshair()
+    {
+        if (crosshairRoot != null) return;
+
+        var canvasGO = new GameObject("BowShot_Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+        _ownedCanvas = canvasGO.GetComponent<Canvas>();
+        _ownedCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        _ownedCanvas.sortingOrder = 5000;
+
+        var scaler = canvasGO.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+
+        var crossGO = new GameObject("Crosshair", typeof(RectTransform));
+        crosshairRoot = crossGO.GetComponent<RectTransform>();
+        crosshairRoot.SetParent(canvasGO.transform, false);
+        crosshairRoot.anchorMin = crosshairRoot.anchorMax = new Vector2(0.5f, 0.5f);
+        crosshairRoot.pivot = new Vector2(0.5f, 0.5f);
+        crosshairRoot.anchoredPosition = Vector2.zero;
+
+        BuildDefaultCrosshair(crosshairRoot);
+        _ownsCrosshairRoot = true;
+    }
+
+    private void SetCrosshairVisible(bool visible)
+    {
+        if (crosshairRoot != null)
+            crosshairRoot.gameObject.SetActive(visible);
+    }
+
+    private void BuildDefaultCrosshair(RectTransform parent)
+    {
+        CreateUIRect(parent, "Dot", new Vector2(crosshairThickness, crosshairThickness), Vector2.zero);
+
+        float half = crosshairSize;
+        float gap = half * 0.6f;
+
+        CreateUIRect(parent, "Up",    new Vector2(crosshairThickness, half), new Vector2(0,  gap + half * 0.5f));
+        CreateUIRect(parent, "Down",  new Vector2(crosshairThickness, half), new Vector2(0, -gap - half * 0.5f));
+        CreateUIRect(parent, "Left",  new Vector2(half, crosshairThickness), new Vector2(-gap - half * 0.5f, 0));
+        CreateUIRect(parent, "Right", new Vector2(half, crosshairThickness), new Vector2( gap + half * 0.5f, 0));
+    }
+
+    private Image CreateUIRect(Transform parent, string name, Vector2 size, Vector2 anchoredPos)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(parent, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.sizeDelta = size;
+        rt.anchoredPosition = anchoredPos;
+
+        var img = go.GetComponent<Image>();
+        img.sprite = GetPixelSprite();
+        img.color = crosshairColor;
+        img.raycastTarget = false;
+
+        return img;
+    }
+
+    private static Sprite GetPixelSprite()
+    {
+        if (_pixelSprite != null) return _pixelSprite;
+        var tex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+        tex.SetPixel(0, 0, Color.white);
+        tex.Apply();
+        _pixelSprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
+        return _pixelSprite;
     }
 }
-
 
 
 
