@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using NaughtyAttributes;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Dash : PlayerExtension, IUseStamina, IInteruptPlayerMovement
 {
@@ -17,21 +18,21 @@ public class Dash : PlayerExtension, IUseStamina, IInteruptPlayerMovement
     private bool isDashing = false;
     public bool isPerforming => isDashing;
     private bool isReadyToDash => Time.time >= lastDashTime + cooldownTime;
-    private bool CanDash => _player.canMove && _player.isGrounded && _player.canApplyGravity && isReadyToDash && _player.currentstamina >= staminaCost;
+    private bool CanDash => _player.canMove && _player.Movement.isGrounded && _player.canApplyGravity && isReadyToDash && _player.Stat.currentstamina >= staminaCost;
     private float dashAnimSpeed => dashSpeed / _player.GetAnimationLength("dash");
 
 
     public bool useStamina;
     [ShowIf("useStamina")] public float staminaCost = 10f;
     public bool isUsingStamina => useStamina && isDashing;
-    public bool canDrainStamina => _player.currentstamina >= staminaCost && useStamina;
+    public bool canDrainStamina => _player.Stat.currentstamina >= staminaCost && useStamina;
 
 
     public void DrainStamina(float amount)
     {
         if (canDrainStamina)
         {
-            _player.currentstamina = Mathf.Max(_player.currentstamina - amount, 0f);
+            _player.Stat.currentstamina = Mathf.Max(_player.Stat.currentstamina - amount, 0f);
         }
     }
     public override void OnStart(Player player)

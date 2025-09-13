@@ -1,31 +1,27 @@
 using NaughtyAttributes;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Unity.Cinemachine;
 using UnityEngine;
 using static UnityEditor.Experimental.GraphView.GraphView;
-
+using UnityEditor;
 
 [ExecuteAlways]
 public partial class Player : Singleton<Player>
 {
+
+    [BoxGroup("Player Camera"), SerializeReference]
+    public CameraModule Cam = null;
+
+    [BoxGroup("Player Movement"), SerializeReference]
+    public MovementModule Movement = null;
+    [BoxGroup("Player Stat"), SerializeReference]
+    public StatModule Stat = null;
     #region Player Properties
 
     #region Camera Settings
-    public enum CameraType
-    {
-        FirstPerson,
-        ThirdPerson
-    }
-    public float mouseSensitivity = 2f;
-    [Foldout("Camera", true)] public CameraType cameraType;
-    [Foldout("Camera", true), SerializeField, Range(30, 120)] float cameraFOV;
-    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(0, 1)] public float cameraSide = 0.5f;
-    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson)] public float cameraDistance = 5f;
-    [Foldout("Camera", true), ShowIf("cameraType", CameraType.ThirdPerson), Range(-1, 2)] public float yOffset = -.4f;
-    private float xRotation = 0f;
-    private float tpsYaw = 0f;
-    private float tpsPitch = 10f;
     [Foldout("DO NOT TOUCH")] public Camera camera;
     [Foldout("DO NOT TOUCH")] public Transform fpsCameraPivot;
     [Foldout("DO NOT TOUCH")] public Camera tpsCamera;
@@ -33,33 +29,6 @@ public partial class Player : Singleton<Player>
     [Foldout("DO NOT TOUCH")] public Transform tpsCameraPivot;
     #endregion
 
-    #region Movement Settings
-    public float Speed => (speed + additionalSpeed) * speedMultiplier;
-    [Foldout("Movement Settings", true), SerializeField, Range(0, 100)] private float speed = 5f;
-    [Foldout("Movement Settings", true), Range(0, 20)] public float jumpForce = 10f;
-    [Foldout("Movement Settings", true), Range(0, 10)] public float fallMultiplier = 3f;
-    [Foldout("Movement Settings", true), Range(0, 20)] public float gravityMultiplier = 2.5f;
-    [HideInInspector] public float speedMultiplier = 1f;
-    [HideInInspector] public float additionalSpeed = 0;
-    [HideInInspector] public List<IUseStamina> staminaComponentStates = new List<IUseStamina>();
-    public bool canGenerateStamina => staminaComponentStates.TrueForAll(x => !x.isUsingStamina);
-    public bool canHit;
-    [HideInInspector]public float damageReductionPercentage = 0;
-    
-    #endregion
-
-    #region Movement Buffer
-    private float coyoteTime = 0.01f;
-    private float jumpBufferTime = 0.05f;
-    private float lastGroundedTime;
-    private float lastJumpPressedTime;
-    #endregion
-
-    #region Ground Check
-    private float groundCheckDistance = 0.5f;
-    private float capsuleHeight => capsuleCollider.height;
-    private float capsuleRadius => capsuleCollider.radius;
-    #endregion
 
     #region Components
     [HideInInspector] public Rigidbody rigidbody;
@@ -70,30 +39,30 @@ public partial class Player : Singleton<Player>
     [HideInInspector] public Vector3 lastCheckpoint;
     [HideInInspector] public Vector3 spawnPoint;
 
-    [HideInInspector] public bool isGrounded = true;
-    [HideInInspector] public List<ICancleGravity> cancleGravityComponents = new List<ICancleGravity>();
-    [HideInInspector] public bool canApplyGravity => cancleGravityComponents.TrueForAll(x => x.canApplyGravity);
-    [HideInInspector] public List<IInteruptPlayerMovement> interuptPlayerMovementComponents = new List<IInteruptPlayerMovement>();
-    [HideInInspector] public bool canMove => !interuptPlayerMovementComponents.Any(x => x.isPerforming);
+    
     [HideInInspector] public bool canRotateCamera = true;
 
     #region Player Delegates
+    public delegate void StartDelegate();
+    public StartDelegate onStart;
+    public delegate void OnValidateDelegate();
+    public OnValidateDelegate onValidate;
     public delegate void FixedUpdateDelegate();
-    public FixedUpdateDelegate OnFixedUpdate;
+    public FixedUpdateDelegate onFixedUpdate;
     public delegate void UpdateDelegate();
-    public UpdateDelegate OnUpdate;
+    public UpdateDelegate onUpdate;
     public delegate void CollisionEnterDelegate(Collision collision);
-    public CollisionEnterDelegate OnCollisionEnterEvent;
+    public CollisionEnterDelegate onCollisionEnter;
     public delegate void CollisionStayDelegate(Collision collision);
-    public CollisionStayDelegate OnCollisionStayEvent;
+    public CollisionStayDelegate onCollisionStay;
     public delegate void CollisionExitDelegate(Collision collision);
-    public CollisionExitDelegate OnCollisionExitEvent;
+    public CollisionExitDelegate onCollisionExit;
     public delegate void TriggerEnterDelegate(Collider other);
-    public TriggerEnterDelegate OnTriggerEnterEvent;
+    public TriggerEnterDelegate onTriggerEnter;
     public delegate void TriggerStayDelegate(Collider other);
-    public TriggerStayDelegate OnTriggerStayEvent;
+    public TriggerStayDelegate onTriggerStay;
     public delegate void TriggerExitDelegate(Collider other);
-    public TriggerExitDelegate OnTriggerExitEvent;
+    public TriggerExitDelegate onTriggerExit;
 
     #endregion
 
@@ -101,162 +70,107 @@ public partial class Player : Singleton<Player>
     private PlayerExtension[] extensions;
 
     #endregion
-    
-    #region Player Stats
-    [Foldout("Player Stats", true), SerializeField, Range(0, 1000)] public float maxhealth = 100f;
-    [Foldout("Player Stats", true), SerializeField, Range(0, 1000)] public float maxstamina = 100f;
-    [Foldout("Player Stats", true), SerializeField, Range(0, 50)] public float staminaRegenRate = 20f; // New: Stamina regen per second
-    [HideInInspector] public float currenthealth;
-    [HideInInspector] public float currentstamina;
+    #region Interface Components
+    [HideInInspector] public List<ICancleGravity> cancleGravityComponents = new List<ICancleGravity>();
+    [HideInInspector] public bool canApplyGravity => cancleGravityComponents.TrueForAll(x => x.canApplyGravity);
+    [HideInInspector] public List<IInteruptPlayerMovement> interuptPlayerMovementComponents = new List<IInteruptPlayerMovement>();
+    [HideInInspector] public bool canMove => !interuptPlayerMovementComponents.Any(x => x.isPerforming);
+    [HideInInspector] public List<IUseStamina> staminaComponentStates = new List<IUseStamina>();
+    [HideInInspector] public bool canGenerateStamina => staminaComponentStates.TrueForAll(x => !x.isUsingStamina);
     #endregion
 
     #region Unity Methods
     void Awake()
-    {
-        rigidbody = GetComponent<Rigidbody>();
-        animator = GetComponent<Animator>();
-        capsuleCollider = GetComponent<CapsuleCollider>();
-        currenthealth = maxhealth;
-        currentstamina = maxstamina;
-    }
-    void Start()
-    {
-        if (Application.isPlaying)
-        {
-            SetExtensions();
-            SetUpdate();
-            SetFixedUpdate();
-            SetSpawnPoint(transform.position);
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+{
+    // Cache components early
+    rigidbody       = GetComponent<Rigidbody>();
+    animator        = GetComponent<Animator>();
+    capsuleCollider = GetComponent<CapsuleCollider>();
 
-            staminaComponentStates.Clear();
-            staminaComponentStates.AddRange(GetComponents<IUseStamina>());
-            interuptPlayerMovementComponents.Clear();
-            interuptPlayerMovementComponents.AddRange(GetComponents<IInteruptPlayerMovement>());
-            cancleGravityComponents.Clear();
-            cancleGravityComponents.AddRange(GetComponents<ICancleGravity>());
+    // Ensure modules exist before binding (bindings happen in Start)
+    Cam      ??= new CameraModule(this);
+    Movement ??= new MovementModule(this);
+    Stat     ??= new StatModule(this);
+}
 
-            foreach (var extension in extensions)
-            {
-                extension.OnStart(this);
-            }
-        }
-    }
-    void Update()
-    {
-        if (Application.isPlaying)
-        {
-            OnUpdate?.Invoke();
-            if (isGrounded)
-            {
-                lastGroundedTime = Time.time;
-                RegenerateStamina(); // Regenerate stamina when grounded
-            }
-            if (cameraType == CameraType.FirstPerson)
-            {
-                camera.transform.position = fpsCameraPivot.transform.position;
-            }
-            if (!canRotateCamera)
-            {
-                
-            }
-        }
-        else
-        {
-            SetUpCamera();
-            foreach (GameObject cam in GameObject.FindGameObjectsWithTag("MainCamera"))
-            {
-                if (cam != camera.gameObject)
-                {
-                    DestroyImmediate(cam);
-                }
-            }
-        }
-    }
-    void FixedUpdate()
-    {
-        if (Application.isPlaying)
-        {
-            OnFixedUpdate?.Invoke();
-        }
-    }
-    private void RegenerateStamina()
-    {
-        // Skip regeneration during sprint, roll, or dash
-        if (currentstamina < maxstamina && canGenerateStamina)
-        {
-            currentstamina += staminaRegenRate * Time.deltaTime;
-            if (currentstamina > maxstamina)
-            {
-                currentstamina = maxstamina;
-            }
-        }
-    }
-    public void TakeDamage(float amount)
-    {
-        if (!canHit)
-        {
-            canHit = true;
-            animator.SetBool("isBlocking", false);
-        }
-        float damageTaken = amount - (amount * damageReductionPercentage / 100);
-        currenthealth -= Mathf.Max(amount, 0);
-        animator.SetTrigger("GetHit");
-        Debug.Log("Player took damage: " + amount + ", Current Health: " + currenthealth);
-        if (currenthealth <= 0)
-        {
-            currenthealth = 0;
-            Respawn();
-        }
-        if (!canHit)
-        {
-            canHit = true;
-            animator.SetBool("isBlocking", false);
-        }
-    }
-    void OnCollisionEnter(Collision collision)
-    {
-        if (Application.isPlaying)
-        {
-            OnCollisionEnterEvent?.Invoke(collision);
-        }
-    }
-    void OnCollisionStay(Collision collision)
-    {
-        if (Application.isPlaying)
-        {
-            OnCollisionStayEvent?.Invoke(collision);
-        }
-    }
-    void OnCollisionExit(Collision collision)
-    {
-        if (Application.isPlaying)
-        {
-            OnCollisionExitEvent?.Invoke(collision);
-        }
-    }
-    void OnTriggerEnter(Collider other)
-    {
-        if (Application.isPlaying)
-        {
-            OnTriggerEnterEvent?.Invoke(other);
-        }
-    }
-    void OnTriggerStay(Collider other)
-    {
-        if (Application.isPlaying)
-        {
-            OnTriggerStayEvent?.Invoke(other);
-        }
-    }
-    void OnTriggerExit(Collider other)
-    {
-        if (Application.isPlaying)
-        {
-            OnTriggerExitEvent?.Invoke(other);
-        }
-    }
+void Start()
+{
+    if (!Application.isPlaying) return;
+
+    // Gather extensions but defer their OnStart until after player/modules are ready
+    SetExtensions();
+    SetSpawnPoint(transform.position);
+
+    Cursor.lockState = CursorLockMode.Locked;
+    Cursor.visible   = false;
+
+    // Bind modules once
+    Stat.Bind(this);
+    Cam.Bind(this);
+    Movement.Bind(this);
+
+    // Fire player start
+    onStart?.Invoke();
+
+    // Let extensions know the player is fully initialized
+    foreach (var ext in extensions)
+        ext.OnStart(this);
+
+    // Populate interface-component lists
+    RefreshInterfaceComponents();
+}
+
+#if UNITY_EDITOR
+void OnValidate()
+{
+    // Keep cached component refs fresh in Edit Mode
+    rigidbody       = GetComponent<Rigidbody>();
+    animator        = GetComponent<Animator>();
+    capsuleCollider = GetComponent<CapsuleCollider>();
+
+    // Ensure modules so we can forward validation
+    Cam      ??= new CameraModule(this);
+    Movement ??= new MovementModule(this);
+    Stat     ??= new StatModule(this);
+
+    // Forward OnValidate so inspector changes reflect immediately
+    Cam.OnValidate();
+    Movement.OnValidate();
+    Stat.OnValidate();
+}
+#endif
+
+void Update()
+{
+    onUpdate?.Invoke();
+
+    // Safety: if a module was nulled at runtime, recreate it
+    Cam      ??= new CameraModule(this);
+    Movement ??= new MovementModule(this);
+    Stat     ??= new StatModule(this);
+}
+
+void FixedUpdate() => onFixedUpdate?.Invoke();
+
+void OnCollisionEnter(Collision c) { if (Application.isPlaying) onCollisionEnter?.Invoke(c); }
+void OnCollisionStay (Collision c) { if (Application.isPlaying) onCollisionStay ?.Invoke(c); }
+void OnCollisionExit (Collision c) { if (Application.isPlaying) onCollisionExit ?.Invoke(c); }
+void OnTriggerEnter (Collider o)   { if (Application.isPlaying) onTriggerEnter ?.Invoke(o); }
+void OnTriggerStay  (Collider o)   { if (Application.isPlaying) onTriggerStay  ?.Invoke(o); }
+void OnTriggerExit  (Collider o)   { if (Application.isPlaying) onTriggerExit  ?.Invoke(o); }
+
+// ——— helpers ———
+void RefreshInterfaceComponents()
+{
+    interuptPlayerMovementComponents.Clear();
+    cancleGravityComponents.Clear();
+    staminaComponentStates.Clear();
+
+    var all = GameObject.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+    foreach (var x in all.OfType<IInteruptPlayerMovement>()) interuptPlayerMovementComponents.Add(x);
+    foreach (var x in all.OfType<ICancleGravity>())          cancleGravityComponents.Add(x);
+    foreach (var x in all.OfType<IUseStamina>())             staminaComponentStates.Add(x);
+}
     #endregion
 
     #region Player Methods
@@ -272,172 +186,16 @@ public partial class Player : Singleton<Player>
         }
     }
 
-    public void SetUpdate()
-    {
-        OnUpdate = null;
-        OnUpdate += CheckGrounded;
-        OnUpdate += JumpHandler;
-
-        OnUpdate += HandleMouseLook;
-    }
-
-    public void SetFixedUpdate()
-    {
-        OnFixedUpdate = null;
-        OnFixedUpdate += ApplyGravity;
-        OnFixedUpdate += Move;
-
-    }
 
     public void SetSpawnPoint(Vector3 spawnPoint)
     {
         this.spawnPoint = spawnPoint;
     }
 
-    void SetUpCamera()
-    {
-        switch (cameraType)
-        {
-            case CameraType.FirstPerson:
-                tpsCamera.gameObject.SetActive(false);
-                camera.gameObject.SetActive(true);
-                camera.transform.position = fpsCameraPivot.position;
-                camera.transform.rotation = Quaternion.Euler(transform.forward);
-                camera.fieldOfView = cameraFOV;
-                break;
-            case CameraType.ThirdPerson:
-                tpsCamera.gameObject.SetActive(true);
-                camera.gameObject.SetActive(false);
-                tpsVirtualCamera.GetComponent<CinemachineCamera>().Lens.FieldOfView = cameraFOV;
-                tpsVirtualCamera.CameraDistance = cameraDistance;
-                tpsVirtualCamera.CameraSide = cameraSide;
-                tpsVirtualCamera.ShoulderOffset.y = yOffset;
-                break;
-        }
-
-    }
 
     #endregion
 
-    #region Movement Methods
-    void Move()
-    {
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
 
-        Vector3 move;
-        if (canMove)
-        {
-            Debug.Log("Player is moving");
-            move = (transform.right * horizontal + transform.forward * vertical).normalized;
-            rigidbody.linearVelocity = new Vector3(move.x * Speed, rigidbody.linearVelocity.y, move.z * Speed);
-            animator.SetFloat("MoveX", horizontal);
-            animator.SetFloat("MoveY", vertical);
-            animator.SetBool("isRun", horizontal != 0 || vertical != 0);
-        }
-        else
-        {
-            animator.SetFloat("MoveX", 0);
-            animator.SetFloat("MoveY", 0);
-            animator.SetBool("isRun", false);
-        }
-    }
-    public void JumpHandler()
-    {
-        if (Input.GetButtonDown("Jump") && isGrounded)
-        {
-            lastJumpPressedTime = Time.time;
-        }
-        if (Time.time - lastJumpPressedTime <= jumpBufferTime && Time.time - lastGroundedTime <= coyoteTime)
-        {
-            Jump();
-            lastJumpPressedTime = -999f; // Reset to prevent double fire
-        }
-    }
-    public void Jump()
-    {
-        animator.SetTrigger("jump");
-        rigidbody.linearVelocity = new Vector3(rigidbody.linearVelocity.x, 0f, rigidbody.linearVelocity.z);
-        rigidbody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-    }
-    #endregion
-
-    #region Graivty Methods
-
-    void ApplyGravity()
-    {
-        Debug.Log("Applying Gravity");
-        float _fallMultiplier = canApplyGravity ? 1 : fallMultiplier;
-        if (rigidbody.linearVelocity.y <= 0)
-        {
-            rigidbody.linearVelocity += Vector3.up * Physics.gravity.y * (_fallMultiplier - 1) * Time.deltaTime;
-        }
-        else if (rigidbody.linearVelocity.y > 0 && !Input.GetButton("Jump"))
-        {
-            rigidbody.linearVelocity += Vector3.up * Physics.gravity.y * (gravityMultiplier - 1) * Time.deltaTime;
-        }
-        if (isGrounded && rigidbody.linearVelocity.y < 0)
-        {
-           rigidbody.linearVelocity = new Vector3(rigidbody.linearVelocity.x, -2f, rigidbody.linearVelocity.z);
-        }
-
-
-    }
-    void CheckGrounded()
-    {
-        Vector3 center = transform.position + capsuleCollider.center;
-        float radius = capsuleCollider.radius * 0.95f;
-        float height = capsuleCollider.height * 0.5f - radius;
-
-        Vector3 point1 = center + Vector3.up * height;
-        Vector3 point2 = center - Vector3.up * height;
-
-        Vector3 direction = Vector3.down;
-        float distance = 0.2f;
-
-        RaycastHit[] hits = Physics.CapsuleCastAll(
-            point1, point2, radius, direction, distance,
-            ~0, // Everything
-            QueryTriggerInteraction.Ignore
-        );
-
-        isGrounded = false;
-
-        foreach (RaycastHit hit in hits)
-        {
-            if (hit.collider != capsuleCollider)
-            {
-                isGrounded = true;
-                break;
-            }
-        }
-    }
-
-
-    #endregion
-
-    void HandleMouseLook()
-    {
-        if (!canRotateCamera) return;
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-
-        if (cameraType == CameraType.FirstPerson)
-        {
-            transform.Rotate(Vector3.up * mouseX);
-            xRotation -= mouseY;
-            xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-            camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-        }
-        else if (cameraType == CameraType.ThirdPerson)
-        {
-            tpsYaw += mouseX;
-            tpsPitch -= mouseY;
-            tpsPitch = Mathf.Clamp(tpsPitch, -20f, 60f);
-            tpsCameraPivot.rotation = Quaternion.Euler(tpsPitch, tpsYaw, 0f);
-            transform.rotation = Quaternion.Euler(0f, tpsYaw, 0f);
-        }
-    }
 
     public void Respawn()
     {
@@ -450,7 +208,7 @@ public partial class Player : Singleton<Player>
         }
         else this.transform.position = lastCheckpoint;
 
-        currenthealth = maxhealth;
+        Stat.currenthealth = Stat.maxhealth;
     }
     //Done
     public float GetAnimationLength(string animationName)
@@ -469,23 +227,13 @@ public partial class Player : Singleton<Player>
 
     #region Gizmos
     //Done
-    void OnDrawGizmosSelected()
-    {
 
-        Vector3 start = transform.position + capsuleCollider.center;
-        float radius = capsuleRadius * 0.95f;
-        float height = capsuleHeight * 0.5f - radius;
-
-        Vector3 point1 = start + Vector3.up * height;
-        Vector3 point2 = start - Vector3.up * height - Vector3.up * groundCheckDistance;
-
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(point1 - Vector3.up * groundCheckDistance, radius);
-        Gizmos.DrawWireSphere(point2, radius);
-        Gizmos.DrawLine(point1 - Vector3.up * groundCheckDistance + Vector3.left * radius, point2 + Vector3.left * radius);
-        Gizmos.DrawLine(point1 - Vector3.up * groundCheckDistance + Vector3.right * radius, point2 + Vector3.right * radius);
-    }
 
     #endregion
 
+}
+public enum CameraType
+{
+    FirstPerson,
+    ThirdPerson
 }

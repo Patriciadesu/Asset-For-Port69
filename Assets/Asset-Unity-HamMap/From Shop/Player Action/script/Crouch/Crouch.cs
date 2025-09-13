@@ -10,7 +10,7 @@ public class Crouch : PlayerExtension
     public KeyCode activateKey = KeyCode.C;
     public float crouchSpeed = 2f;
     private bool isCrouching = false;
-    private bool CanCrouch => _player.canMove && _player.isGrounded && _player.canApplyGravity;
+    private bool CanCrouch => _player.canMove && _player.Movement.isGrounded && _player.canApplyGravity;
 
     public override void OnStart(Player player)
     {
@@ -36,13 +36,13 @@ public class Crouch : PlayerExtension
         CapsuleCollider collider = _player.capsuleCollider;
         if (isCrouching)
         {
-            _player.additionalSpeed -= crouchSpeed;
+            _player.Movement.additionalSpeed -= crouchSpeed;
             collider.height /= 2;
             collider.center = new Vector3(collider.center.x, collider.center.y / 2, collider.center.z);
         }
         else
         {
-            _player.additionalSpeed += crouchSpeed;
+            _player.Movement.additionalSpeed += crouchSpeed;
             collider.height *= 2;
             collider.center = new Vector3(collider.center.x, collider.center.y * 2, collider.center.z);
         }

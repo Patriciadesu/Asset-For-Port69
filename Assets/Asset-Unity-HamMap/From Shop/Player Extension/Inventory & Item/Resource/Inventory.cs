@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using Unity.VisualScripting;
 
-public class Itemslot : MonoBehaviour
+public class Inventory : Singleton<Inventory>
 {
     public RectTransform highlight;
     public ItemData[] items = new ItemData[9];
@@ -52,12 +52,12 @@ public class Itemslot : MonoBehaviour
                 Debug.Log("No item in the current slot to use.");
                 return; // Exit if there's no item to use
             }
-            else
+            else if(items[currentIndex] is IUsableItem)
             {
-                StartCoroutine(items[currentIndex].Use()); // Use the item in the current slot
+                IUsableItem usableItem = items[currentIndex] as IUsableItem;
+                StartCoroutine(usableItem.Use()); // Use the item in the current slot
                 slots[currentIndex].sprite = null; // Clear the item image after use
                 items[currentIndex] = null; // Remove the item from the inventory after use
-
             }
 
         }

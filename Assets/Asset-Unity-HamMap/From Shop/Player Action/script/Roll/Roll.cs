@@ -20,7 +20,7 @@ public class Roll : PlayerExtension, IUseStamina,IInteruptPlayerMovement
     public bool useStamina = true; // Toggle stamina consumption during roll
     [ShowIf("useStamina")] public float staminaCost = 15f;
     public bool isUsingStamina => useStamina && isRolling;
-    public bool canDrainStamina => _player.currentstamina >= staminaCost && useStamina;
+    public bool canDrainStamina => _player.Stat.currentstamina >= staminaCost && useStamina;
 
 
 
@@ -29,7 +29,7 @@ public class Roll : PlayerExtension, IUseStamina,IInteruptPlayerMovement
     private Vector3 rollDirection;
     private float rollAnimSpeed => rollSpeed / _player.GetAnimationLength("Slide");
     private bool isRolling = false;
-    private bool CanRoll => _player.canMove && _player.isGrounded && _player.canApplyGravity && isReadyToRoll && _player.currentstamina >= staminaCost;
+    private bool CanRoll => _player.canMove && _player.Movement.isGrounded && _player.canApplyGravity && isReadyToRoll && _player.Stat.currentstamina >= staminaCost;
 
     public override void OnStart(Player player)
     {
@@ -49,7 +49,7 @@ public class Roll : PlayerExtension, IUseStamina,IInteruptPlayerMovement
         {
             Debug.Log("Player is Rolling");
             Debug.Log("PLayer's Rigidbody is null?" + _player.rigidbody == null);
-            Vector3 rollVelocity = rollDirection * rollSpeed * _player.Speed;
+            Vector3 rollVelocity = rollDirection * rollSpeed * _player.Movement.Speed;
             _player.rigidbody.linearVelocity = new Vector3(rollVelocity.x, _player.rigidbody.linearVelocity.y, rollVelocity.z);
         }
         else if (Input.GetKeyDown(activateKey) && CanRoll)
@@ -62,7 +62,7 @@ public class Roll : PlayerExtension, IUseStamina,IInteruptPlayerMovement
     {
         if (canDrainStamina)
         {
-            _player.currentstamina = Mathf.Max(_player.currentstamina - amount, 0f);
+            _player.Stat.currentstamina = Mathf.Max(_player.Stat.currentstamina - amount, 0f);
         }
     }
 
@@ -74,7 +74,7 @@ public class Roll : PlayerExtension, IUseStamina,IInteruptPlayerMovement
         {
             DrainStamina(staminaCost);
         }
-        if (_player.cameraType == Player.CameraType.FirstPerson)
+        if (_player.Cam.cameraType == CameraType.FirstPerson)
         {
             _player.camera.transform.SetParent(_player.fpsCameraPivot);
         }
@@ -91,7 +91,7 @@ public class Roll : PlayerExtension, IUseStamina,IInteruptPlayerMovement
     {
         // Modify collider back instead of controller
         isRolling = false;
-        if (_player.cameraType == Player.CameraType.FirstPerson)
+        if (_player.Cam.cameraType == CameraType.FirstPerson)
         {
             _player.camera.transform.SetParent(_player.transform);
         }

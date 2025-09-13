@@ -11,6 +11,3 @@ public class PlayerData : SingletonPersistent<PlayerData>
     public Inventory inventory;
 }
 
-public class Inventory {
-    
-}

@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6352948095145280387}
   - component: {fileID: 8145913365612776483}
   - component: {fileID: 1658870241778118309}
-  - component: {fileID: -7563794086091877962}
+  - component: {fileID: 3425254462870316769}
   m_Layer: 0
   m_Name: Obstacle Zigzag
   m_TagString: Untagged
@@ -104,7 +104,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -137,7 +137,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &-7563794086091877962
+--- !u!114 &3425254462870316769
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

@@ -21,7 +21,7 @@ MonoBehaviour:
   onStateChange:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: -467, y: -2}
+  position: {x: -295, y: -139}
   references:
     version: 2
     RefIds:
@@ -29,4 +29,4 @@ MonoBehaviour:
       type: {class: RotateToPlayerState, ns: , asm: Assembly-CSharp}
       data:
         stateName: RotateToPlayerState
-        rotateMode: 0
+        rotateMode: 1

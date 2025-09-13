@@ -1,6 +1,5 @@
 using NaughtyAttributes;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class Block : PlayerExtension, IUseStamina
 {
@@ -15,12 +14,12 @@ public class Block : PlayerExtension, IUseStamina
     private bool isBlocking = false;
     private bool canBlock => Time.time >= blockCooldownTimer;
     public bool isUsingStamina => useStamina;
-    public bool canDrainStamina => _player.currentstamina >= staminaCost && useStamina;
+    public bool canDrainStamina => _player.Stat.currentstamina >= staminaCost && useStamina;
     public void DrainStamina(float amount)
     {
         if (canDrainStamina)
         {
-            _player.currentstamina = Mathf.Max(_player.currentstamina - amount, 0f);
+            _player.Stat.currentstamina = Mathf.Max(_player.Stat.currentstamina - amount, 0f);
         }
     }
 
@@ -30,12 +29,12 @@ public class Block : PlayerExtension, IUseStamina
         {
             StartBlocking();
         }
-        else if (Input.GetKeyUp(activateKey) && _player.canHit == false)
+        else if (Input.GetKeyUp(activateKey) && _player.Stat.canHit == false)
         {
             StopBlocking();
         }
 
-        if (_player.canHit && isBlocking)
+        if (_player.Stat.canHit && isBlocking)
         {
             StopBlocking();
         }
@@ -45,7 +44,7 @@ public class Block : PlayerExtension, IUseStamina
     void StartBlocking()
     {
         isBlocking = true;
-        _player.canHit = false;
+        _player.Stat.canHit = false;
         _player.animator.SetBool("isBlocking", true);
     }
 
@@ -53,7 +52,7 @@ public class Block : PlayerExtension, IUseStamina
     {
         blockCooldownTimer = Time.time + blockCooldown;
         isBlocking = false;
-        _player.canHit = true;
+        _player.Stat.canHit = true;
         _player.animator.SetBool("isBlocking", false);
     }
 }

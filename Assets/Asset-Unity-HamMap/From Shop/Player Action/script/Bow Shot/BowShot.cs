@@ -30,7 +30,7 @@ public class BowShot : PlayerExtension
     public bool hasDestroyTime = true;
     [ShowIf(nameof(hasDestroyTime))] public float DestroyTime = 2.5f;
 
-    [Header("Aiming Mode"),ShowIf("playerCameraType",Player.CameraType.ThirdPerson)]
+    [Header("Aiming Mode"),ShowIf("playerCameraType",CameraType.ThirdPerson)]
     [Tooltip("If true, lerp TPS -> FPS while drawing. If false, stay TPS and shoot via crosshair center ray.")]
     public bool aimZooming = true;
 
@@ -50,7 +50,7 @@ public class BowShot : PlayerExtension
     private bool _ownsCrosshairRoot = false;
     private static Sprite _pixelSprite;
 
-    private Player.CameraType playerCameraType => Player.Instance.cameraType;
+    private CameraType playerCameraType => Player.Instance.Cam.cameraType;
 
     public override void OnStart(Player player)
     {
@@ -110,7 +110,7 @@ public class BowShot : PlayerExtension
         if (canShot) return;
 
         // Decide whether to lerp TPS -> FPS based on toggle
-        if (aimZooming && _player != null && _player.cameraType == Player.CameraType.ThirdPerson)
+        if (aimZooming && _player != null && _player.Cam.cameraType == CameraType.ThirdPerson)
         {
             _player.StartCoroutine(_player.LerpTpCamToFpThenEnableFp(DrawTime));
         }
@@ -203,7 +203,7 @@ public class BowShot : PlayerExtension
     {
         if (switchBackDelay > 0f) yield return new WaitForSeconds(switchBackDelay);
 
-        if (_player != null && _player.cameraType == Player.CameraType.FirstPerson)
+        if (_player != null && _player.Cam.cameraType == CameraType.FirstPerson)
         {
             float backTime = Mathf.Max(returnLerpTimeMin, DrawTime * 0.5f);
             yield return _player.LerpBackToTpFromFp(backTime);
@@ -403,7 +403,7 @@ public partial class Player
                 tpsCamera.gameObject.SetActive(false);
                 camera.gameObject.SetActive(true);
                 camera.transform.SetPositionAndRotation(fpsCameraPivot.position, fpsCameraPivot.rotation);
-                cameraType = CameraType.FirstPerson;
+                Cam.cameraType = CameraType.FirstPerson;
                 _handedOffToFP = true;
             }
 
@@ -463,7 +463,7 @@ public partial class Player
             // Ensure FP is NOT active (we never handed off)
             if (camera != null) camera.gameObject.SetActive(false);
             if (tpsCamera != null) tpsCamera.gameObject.SetActive(true);
-            cameraType = CameraType.ThirdPerson;
+            Cam.cameraType = CameraType.ThirdPerson;
 
             // Now reverse from CURRENT TPS camera pose back to cached pose
             _camLerpRoutine = StartCoroutine(DoLerpTpsCurrentToCached(duration, onCompleted: () =>
@@ -478,7 +478,7 @@ public partial class Player
         }
 
         // Case 2: FP was already active — use the standard return path
-        if (cameraType == CameraType.FirstPerson)
+        if (Cam.cameraType == CameraType.FirstPerson)
         {
             StopCurrentCamLerp();
             _camLerpRoutine = StartCoroutine(LerpBackToTpFromFp(duration));
@@ -526,7 +526,7 @@ public partial class Player
         // Make TPS visible, hide FP
         tpsCamera.gameObject.SetActive(true);
         camera.gameObject.SetActive(false);
-        cameraType = CameraType.ThirdPerson;
+        Cam.cameraType = CameraType.ThirdPerson;
 
         // Lerp from current TPS pose (which should be near FP pivot) back to cached TPS pose
         yield return DoLerpTpsCurrentToCached(duration, onCompleted: () =>

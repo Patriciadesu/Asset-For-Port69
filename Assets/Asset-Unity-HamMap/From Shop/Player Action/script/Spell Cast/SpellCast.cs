@@ -30,12 +30,12 @@ public class SpellCast : PlayerExtension
     public bool useStamina;
     [ShowIf("useStamina")] public float staminaCost = 2f;
     public bool isUsingStamina => useStamina && hasFired;
-    public bool canDrainStamina => _player.currentstamina >= staminaCost && useStamina;
+    public bool canDrainStamina => _player.Stat.currentstamina >= staminaCost && useStamina;
     public void DrainStamina(float amount)
     {
         if (canDrainStamina)
         {
-            _player.currentstamina = Mathf.Max(_player.currentstamina - amount, 0f);
+            _player.Stat.currentstamina = Mathf.Max(_player.Stat.currentstamina - amount, 0f);
         }
     }
     // �й���� Player ���¡ OnStart ����� Player ����� (_player �١�����)
@@ -146,7 +146,7 @@ public class SpellCast : PlayerExtension
             GameObject projectile = null;
             if (!projectilePrefab)
             {
-                Quaternion rotation = (_player.cameraType == Player.CameraType.FirstPerson) ? _player.camera.transform.rotation : _player.tpsVirtualCamera.transform.rotation;
+                Quaternion rotation = (_player.Cam.cameraType == CameraType.FirstPerson) ? _player.camera.transform.rotation : _player.tpsVirtualCamera.transform.rotation;
                 projectile = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 projectile.transform.position = spawnPoint.position;
                 projectile.transform.rotation = Quaternion.identity;

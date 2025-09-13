@@ -1,125 +1,118 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using NaughtyAttributes;
+
 namespace DoorScript
 {
-    public enum GizmoType
-    {
-        Box,
-        Sphere,
-        WireCube,
-        WireSphere
-    }
+    public enum GizmoType { Box, Sphere, WireCube, WireSphere }
+
     [RequireComponent(typeof(AudioSource))]
     public class Door : MonoBehaviour
     {
-        [Header("Door Settings")]
-        public bool open;
-        public float smooth = 1.0f;
-        public float DoorOpenAngle = -90.0f;
-        public float DoorCloseAngle = 0.0f;
-        [Header("Door Timer")]
+        // ─────────────────────────────────────────────────────────────────────────────
+        // Lock & key (ALWAYS consume one key on first use)
+        // ─────────────────────────────────────────────────────────────────────────────
+        [BoxGroup("Unlock Settings")]
+        [Tooltip("If true, a key is required to open. On first successful use, one key is consumed and the door becomes unlocked.")]
+        public bool isLocked = true;
+
+        [BoxGroup("Unlock Settings")]
+        [Tooltip("If set, this exact KeyItem is required. If left null, ANY KeyItem works.")]
+        public KeyItem requiredKey;
+
+        [BoxGroup("Unlock Settings")]
+        [Tooltip("Open automatically when a player with the key enters the zone. If off, player must press Interact Key.")]
+        public bool openOnEnter = true;
+
+        [BoxGroup("Unlock Settings"), ShowIf(nameof(openOnEnter), false)]
+        public KeyCode interactKey = KeyCode.F;
+
+        // ─────────────────────────────────────────────────────────────────────────────
+        // Door motion / audio
+        // ─────────────────────────────────────────────────────────────────────────────
+        private const string G = "Door Settings";
+        [Foldout(G)] public bool open;
+        [Foldout(G)] public float smooth = 1.0f;
+        [Foldout(G)] public float DoorOpenAngle = -90.0f;
+        [Foldout(G)] public float DoorCloseAngle = 0.0f;
+
+        [Foldout(G), Header("Auto-Close")]
         public bool useAutoClose = true;
-        [Range(0.1f, 30f)]
+        [Foldout(G), Range(0.1f, 30f)]
         public float autoCloseTime = 2.0f;
+
         private float closeTimer;
         private bool timerActive = false;
-        [Header("Audio Settings")]
+
+        [Foldout(G), Header("Audio")]
         public AudioSource asource;
-        public AudioClip openDoor, closeDoor;
-        [Header("Trigger Gizmo Settings")]
+        [Foldout(G)] public AudioClip openDoor, closeDoor;
+
+        // ─────────────────────────────────────────────────────────────────────────────
+        // Detection / gizmos
+        // ─────────────────────────────────────────────────────────────────────────────
+        [Foldout(G), Header("Trigger Gizmo")]
         public GizmoType gizmoType = GizmoType.Box;
-        public Vector3 gizmoSize = new Vector3(2f, 2f, 2f);
-        public Vector3 gizmoPivot = Vector3.zero;
-        public Color gizmoColor = Color.green;
-        [Range(0.1f, 1f)]
-        public float gizmoAlpha = 0.3f;
-        [Header("Player Detection")]
+        [Foldout(G)] public Vector3 gizmoSize = new Vector3(2f, 2f, 2f);
+        [Foldout(G)] public Vector3 gizmoPivot = Vector3.zero;
+        [Foldout(G)] public Color gizmoColor = Color.green;
+        [Foldout(G), Range(0.1f, 1f)] public float gizmoAlpha = 0.3f;
+
+        [Foldout(G), Header("Player Detection")]
         public string playerTag = "Player";
-        public bool useTriggerDetection = true;
-        public bool useColliderDetection = true;
-        [Header("Debug")]
-        public bool enableDebugLogs = true;
-        private List<GameObject> playersInZone = new List<GameObject>();
+        [Foldout(G)] public bool useTriggerDetection = true;
+        [Foldout(G)] public bool useColliderDetection = true;
+
+        [Foldout(G), Header("Debug")]
+        public bool enableDebugLogs = false;
+
+        private readonly List<GameObject> playersInZone = new();
         private bool wasPlayerInZone = false;
-        void Start()
-        {
-            asource = GetComponent<AudioSource>();
-            if (GetComponent<Rigidbody>() == null)
-            {
-                Rigidbody rb = gameObject.AddComponent<Rigidbody>();
-                rb.isKinematic = true;
-                if (enableDebugLogs) Debug.Log("Added kinematic Rigidbody to door for trigger detection");
-            }
-            if (GetComponent<Collider>() == null)
-            {
-                BoxCollider collider = gameObject.AddComponent<BoxCollider>();
-                collider.isTrigger = useTriggerDetection;
-                collider.size = gizmoSize;
-                collider.center = gizmoPivot;
-                if (enableDebugLogs) Debug.Log("Added BoxCollider to door. isTrigger = " + collider.isTrigger);
-            }
-            else
-            {
-                Collider existingCollider = GetComponent<Collider>();
-                if (useTriggerDetection && !useColliderDetection)
-                {
-                    existingCollider.isTrigger = true;
-                }
-                else if (!useTriggerDetection && useColliderDetection)
-                {
-                    existingCollider.isTrigger = false;
-                }
-                else if (useTriggerDetection && useColliderDetection)
-                {
-                    existingCollider.isTrigger = true;
-                }
-                if (enableDebugLogs) Debug.Log("Configured existing collider. isTrigger = " + existingCollider.isTrigger);
-            }
-            if (enableDebugLogs)
-            {
-                Debug.Log("Door setup complete. Looking for player tag: '" + playerTag + "'");
-                Debug.Log("Trigger Detection: " + useTriggerDetection + ", Collider Detection: " + useColliderDetection);
-            }
-        }
+
+        // ─────────────────────────────────────────────────────────────────────────────
+        // Unity lifecycle
+        // ─────────────────────────────────────────────────────────────────────────────
+        void Reset() => EnsurePhysicsAndCollider();
+        void OnValidate() => SyncColliderToGizmo();
+        void Awake() { asource = GetComponent<AudioSource>(); EnsurePhysicsAndCollider(); }
+        void Start() { SyncColliderToGizmo(); }
+
         void Update()
         {
-            if (open)
-            {
-                var target = Quaternion.Euler(0, DoorOpenAngle, 0);
-                transform.localRotation = Quaternion.Slerp(transform.localRotation, target, Time.deltaTime * 5 * smooth);
-            }
-            else
-            {
-                var target1 = Quaternion.Euler(0, DoorCloseAngle, 0);
-                transform.localRotation = Quaternion.Slerp(transform.localRotation, target1, Time.deltaTime * 5 * smooth);
-            }
+            // Smooth hinge motion
+            var target = Quaternion.Euler(0, open ? DoorOpenAngle : DoorCloseAngle, 0);
+            transform.localRotation = Quaternion.Slerp(transform.localRotation, target, Time.deltaTime * 5f * smooth);
+
+            // Auto-close logic
             if (useAutoClose && timerActive)
             {
                 closeTimer -= Time.deltaTime;
-                if (closeTimer <= 0)
+                if (closeTimer <= 0f && open && playersInZone.Count == 0)
                 {
-                    if (open && playersInZone.Count == 0)
-                    {
-                        OpenDoor();
-                        timerActive = false;
-                    }
+                    ToggleDoor(false);
+                    timerActive = false;
+                    // IMPORTANT: We do NOT relock here. Door stays unlocked once a key has been consumed.
                 }
             }
+
             bool playerCurrentlyInZone = playersInZone.Count > 0;
+
+            // Auto-open
             if (playerCurrentlyInZone && !wasPlayerInZone)
             {
-                if (!open)
-                {
-                    OpenDoor();
-                }
-                if (useAutoClose)
-                {
-                    closeTimer = autoCloseTime;
-                    timerActive = true;
-                }
+                if (openOnEnter)
+                    TryOpenWithLockCheck();
             }
-            else if (!playerCurrentlyInZone && wasPlayerInZone)
+
+            // Press-to-interact
+            if (playerCurrentlyInZone && !openOnEnter && Input.GetKeyDown(interactKey))
+            {
+                TryOpenWithLockCheck();
+            }
+
+            // Start auto-close when player leaves
+            if (!playerCurrentlyInZone && wasPlayerInZone)
             {
                 if (useAutoClose && open)
                 {
@@ -127,129 +120,222 @@ namespace DoorScript
                     timerActive = true;
                 }
             }
+
             wasPlayerInZone = playerCurrentlyInZone;
-            Collider col = GetComponent<Collider>();
-            if (col != null)
+
+            // Keep collider sized with gizmo settings (useful if tweaked live)
+            SyncColliderToGizmo();
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────
+        // Core behaviors
+        // ─────────────────────────────────────────────────────────────────────────────
+        void TryOpenWithLockCheck()
+        {
+            if (open) return;
+
+            if (!isLocked)
             {
-                if (col is BoxCollider boxCol)
+                // Already unlocked previously; just open
+                ToggleDoor(true);
+                if (useAutoClose) { closeTimer = autoCloseTime; timerActive = true; }
+                return;
+            }
+
+            // Locked: must have (and consume) a key
+            if (PlayerHasRequiredKey())
+            {
+                // ALWAYS consume one key on first successful use
+                if (TryConsumeOneKey())
                 {
-                    boxCol.size = gizmoSize;
-                    boxCol.center = gizmoPivot;
+                    isLocked = false; // permanently unlocked (until you set it true again)
+                    ToggleDoor(true);
+                    if (useAutoClose) { closeTimer = autoCloseTime; timerActive = true; }
                 }
-                else if (col is SphereCollider sphereCol)
+                else if (enableDebugLogs)
                 {
-                    sphereCol.radius = gizmoSize.x * 0.5f;
-                    sphereCol.center = gizmoPivot;
+                    Debug.LogWarning("[Door] Had key but failed to consume (inventory mismatch?)");
                 }
             }
+            else if (enableDebugLogs)
+            {
+                Debug.Log("[Door] Locked and player doesn't have the required key.");
+            }
         }
-        public void OpenDoor()
+
+        void ToggleDoor(bool toOpen)
         {
-            open = !open;
-            asource.clip = open ? openDoor : closeDoor;
-            asource.Play();
+            open = toOpen;
+            if (asource != null)
+            {
+                asource.clip = open ? openDoor : closeDoor;
+                if (asource.clip != null) asource.Play();
+            }
         }
+
+        bool PlayerHasRequiredKey()
+        {
+            var inv = Inventory.Instance;
+            if (inv == null || inv.items == null) return false;
+
+            if (requiredKey != null)
+                return inv.items.Any(i => i != null && i.type == requiredKey);
+            else
+                return inv.items.Any(i => i != null && i.type is KeyItem);
+        }
+
+        // ALWAYS consumes exactly ONE matching key (specific or any)
+        bool TryConsumeOneKey()
+        {
+            var inv = Inventory.Instance;
+            if (inv == null || inv.items == null) return false;
+
+            for (int i = 0; i < inv.items.Length; i++)
+            {
+                var it = inv.items[i];
+                if (it == null) continue;
+
+                bool match = (requiredKey != null) ? (it.type == requiredKey) : (it.type is KeyItem);
+                if (match)
+                {
+                    if (i < inv.slots.Length && inv.slots[i] != null) inv.slots[i].sprite = null;
+                    inv.items[i] = null; // consume
+                    if (enableDebugLogs) Debug.Log("[Door] Consumed one key. Door is now unlocked.");
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────
+        // Detection hooks
+        // ─────────────────────────────────────────────────────────────────────────────
         void OnTriggerEnter(Collider other)
         {
-            if (enableDebugLogs) Debug.Log("OnTriggerEnter detected: " + other.name + " with tag: " + other.tag);
-            if (useTriggerDetection && other.CompareTag(playerTag))
-            {
-                if (enableDebugLogs) Debug.Log("Player entered trigger zone!");
-                AddPlayerToZone(other.gameObject);
-            }
+            if (!useTriggerDetection) return;
+            if (other.CompareTag(playerTag)) AddPlayerToZone(other.gameObject);
         }
+
         void OnTriggerExit(Collider other)
         {
-            if (enableDebugLogs) Debug.Log("OnTriggerExit detected: " + other.name + " with tag: " + other.tag);
-            if (useTriggerDetection && other.CompareTag(playerTag))
-            {
-                if (enableDebugLogs) Debug.Log("Player exited trigger zone!");
-                RemovePlayerFromZone(other.gameObject);
-            }
+            if (!useTriggerDetection) return;
+            if (other.CompareTag(playerTag)) RemovePlayerFromZone(other.gameObject);
         }
+
         void OnCollisionEnter(Collision collision)
         {
-            if (enableDebugLogs) Debug.Log("OnCollisionEnter detected: " + collision.gameObject.name + " with tag: " + collision.gameObject.tag);
-            if (useColliderDetection && collision.gameObject.CompareTag(playerTag))
-            {
-                if (enableDebugLogs) Debug.Log("Player collision detected!");
-                AddPlayerToZone(collision.gameObject);
-            }
+            if (!useColliderDetection) return;
+            if (collision.gameObject.CompareTag(playerTag)) AddPlayerToZone(collision.gameObject);
         }
+
         void OnCollisionExit(Collision collision)
         {
-            if (useColliderDetection && collision.gameObject.CompareTag(playerTag))
-            {
-                RemovePlayerFromZone(collision.gameObject);
-            }
+            if (!useColliderDetection) return;
+            if (collision.gameObject.CompareTag(playerTag)) RemovePlayerFromZone(collision.gameObject);
         }
+
         void OnCollisionStay(Collision collision)
         {
-            if (useColliderDetection && collision.gameObject.CompareTag(playerTag))
-            {
-                AddPlayerToZone(collision.gameObject);
-            }
+            if (!useColliderDetection) return;
+            if (collision.gameObject.CompareTag(playerTag)) AddPlayerToZone(collision.gameObject);
         }
-        private void AddPlayerToZone(GameObject player)
+
+        void AddPlayerToZone(GameObject player)
         {
             if (!playersInZone.Contains(player))
             {
                 playersInZone.Add(player);
-                if (enableDebugLogs) Debug.Log("Added player to zone. Total players: " + playersInZone.Count);
+                if (enableDebugLogs) Debug.Log($"[Door] Player entered zone. Count: {playersInZone.Count}");
             }
         }
-        private void RemovePlayerFromZone(GameObject player)
+
+        void RemovePlayerFromZone(GameObject player)
         {
-            if (playersInZone.Contains(player))
+            if (playersInZone.Remove(player) && enableDebugLogs)
+                Debug.Log($"[Door] Player left zone. Count: {playersInZone.Count}");
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────
+        // Helpers
+        // ─────────────────────────────────────────────────────────────────────────────
+        void EnsurePhysicsAndCollider()
+        {
+            if (!asource) asource = GetComponent<AudioSource>();
+
+            var rb = GetComponent<Rigidbody>();
+            if (!rb)
             {
-                playersInZone.Remove(player);
-                if (enableDebugLogs) Debug.Log("Removed player from zone. Total players: " + playersInZone.Count);
+                rb = gameObject.AddComponent<Rigidbody>();
+                rb.isKinematic = true;
+            }
+            else rb.isKinematic = true;
+
+            var col = GetComponent<Collider>();
+            if (!col)
+            {
+                var b = gameObject.AddComponent<BoxCollider>();
+                b.isTrigger = useTriggerDetection || !useColliderDetection;
+            }
+            else
+            {
+                col.isTrigger = (useTriggerDetection && !useColliderDetection) || (useTriggerDetection && useColliderDetection);
             }
         }
+
+        void SyncColliderToGizmo()
+        {
+            var col = GetComponent<Collider>();
+            if (!col) return;
+
+            if (col is BoxCollider box)
+            {
+                box.size = gizmoSize;
+                box.center = gizmoPivot;
+            }
+            else if (col is SphereCollider sphere)
+            {
+                sphere.radius = gizmoSize.x * 0.5f;
+                sphere.center = gizmoPivot;
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────
+        // Gizmos
+        // ─────────────────────────────────────────────────────────────────────────────
         void OnDrawGizmos()
         {
-            Color gizmoColorWithAlpha = gizmoColor;
-            gizmoColorWithAlpha.a = gizmoAlpha;
-            Gizmos.color = gizmoColorWithAlpha;
-            Vector3 gizmoPosition = transform.position + transform.TransformDirection(gizmoPivot);
+            var gizColor = gizmoColor; gizColor.a = gizmoAlpha;
+            Gizmos.color = gizColor;
+            var pos = transform.position + transform.TransformDirection(gizmoPivot);
+            Gizmos.matrix = Matrix4x4.TRS(pos, transform.rotation, Vector3.one);
+
             switch (gizmoType)
             {
-                case GizmoType.Box:
-                    Gizmos.matrix = Matrix4x4.TRS(gizmoPosition, transform.rotation, Vector3.one);
-                    Gizmos.DrawCube(Vector3.zero, gizmoSize);
-                    break;
-                case GizmoType.Sphere:
-                    Gizmos.matrix = Matrix4x4.TRS(gizmoPosition, transform.rotation, Vector3.one);
-                    Gizmos.DrawSphere(Vector3.zero, gizmoSize.x * 0.5f);
-                    break;
-                case GizmoType.WireCube:
-                    Gizmos.matrix = Matrix4x4.TRS(gizmoPosition, transform.rotation, Vector3.one);
-                    Gizmos.DrawWireCube(Vector3.zero, gizmoSize);
-                    break;
-                case GizmoType.WireSphere:
-                    Gizmos.matrix = Matrix4x4.TRS(gizmoPosition, transform.rotation, Vector3.one);
-                    Gizmos.DrawWireSphere(Vector3.zero, gizmoSize.x * 0.5f);
-                    break;
+                case GizmoType.Box:        Gizmos.DrawCube(Vector3.zero, gizmoSize); break;
+                case GizmoType.Sphere:     Gizmos.DrawSphere(Vector3.zero, gizmoSize.x * 0.5f); break;
+                case GizmoType.WireCube:   Gizmos.DrawWireCube(Vector3.zero, gizmoSize); break;
+                case GizmoType.WireSphere: Gizmos.DrawWireSphere(Vector3.zero, gizmoSize.x * 0.5f); break;
             }
+
             Gizmos.matrix = Matrix4x4.identity;
         }
+
         void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.yellow;
-            Vector3 gizmoPosition = transform.position + transform.TransformDirection(gizmoPivot);
+            var pos = transform.position + transform.TransformDirection(gizmoPivot);
+            Gizmos.matrix = Matrix4x4.TRS(pos, transform.rotation, Vector3.one);
+
             switch (gizmoType)
             {
                 case GizmoType.Box:
                 case GizmoType.WireCube:
-                    Gizmos.matrix = Matrix4x4.TRS(gizmoPosition, transform.rotation, Vector3.one);
-                    Gizmos.DrawWireCube(Vector3.zero, gizmoSize);
-                    break;
+                    Gizmos.DrawWireCube(Vector3.zero, gizmoSize); break;
                 case GizmoType.Sphere:
                 case GizmoType.WireSphere:
-                    Gizmos.matrix = Matrix4x4.TRS(gizmoPosition, transform.rotation, Vector3.one);
-                    Gizmos.DrawWireSphere(Vector3.zero, gizmoSize.x * 0.5f);
-                    break;
+                    Gizmos.DrawWireSphere(Vector3.zero, gizmoSize.x * 0.5f); break;
             }
+
             Gizmos.matrix = Matrix4x4.identity;
         }
     }

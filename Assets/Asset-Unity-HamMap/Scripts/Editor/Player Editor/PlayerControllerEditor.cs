@@ -41,7 +41,6 @@ public class PlayerControllerEditor : NaughtyInspector
         EditorGUILayout.Space();
         SerializedObject serializedObject = new SerializedObject(target);
         Player player = (Player)target;
-
         #region Player Action
         GUIStyle boldFoldoutStyle = new GUIStyle(EditorStyles.foldout);
         boldFoldoutStyle.fontStyle = FontStyle.Bold;

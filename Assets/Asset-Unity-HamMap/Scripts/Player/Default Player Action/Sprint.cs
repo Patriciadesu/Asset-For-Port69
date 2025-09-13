@@ -13,7 +13,7 @@ public class Sprint : PlayerExtension, IUseStamina
     public bool useStamina = true; // Toggle stamina consumption during sprint
     [ShowIf("useStamina")] public float sprintCost = 10f; // Stamina consumed per second
     public bool isUsingStamina => useStamina && isSprinting;
-    public bool canDrainStamina => _player.currentstamina >= sprintCost && useStamina;
+    public bool canDrainStamina => _player.Stat.currentstamina >= sprintCost && useStamina;
     private bool isSprinting = false;
     public bool IsSprinting => isSprinting;
 
@@ -28,7 +28,7 @@ public class Sprint : PlayerExtension, IUseStamina
 
     protected void Update()
     {
-        bool canSprint = _player.canMove && _player.currentstamina > 0;
+        bool canSprint = _player.canMove && _player.Stat.currentstamina > 0;
         if (Input.GetKey(activateKey) && canSprint && !isSprinting)
         {
             StartSprint();
@@ -57,7 +57,7 @@ public class Sprint : PlayerExtension, IUseStamina
     private void StartSprint()
     {
         isSprinting = true;
-        _player.additionalSpeed += sprintSpeed;
+        _player.Movement.additionalSpeed += sprintSpeed;
         _player.animator.SetBool("isRunning", true);
     }
 
@@ -66,7 +66,7 @@ public class Sprint : PlayerExtension, IUseStamina
         if (isSprinting)
         {
             isSprinting = false;
-            _player.additionalSpeed -= sprintSpeed;
+            _player.Movement.additionalSpeed -= sprintSpeed;
             _player.animator.SetBool("isRunning", false);
         }
     }
@@ -74,7 +74,7 @@ public class Sprint : PlayerExtension, IUseStamina
     {
         if (canDrainStamina)
         {
-            _player.currentstamina = Mathf.Max(_player.currentstamina - amount, 0f);
+            _player.Stat.currentstamina = Mathf.Max(_player.Stat.currentstamina - amount, 0f);
         }
     }
 }

@@ -60,7 +60,7 @@ public class WallRun : PlayerExtension, ICancleGravity, IInteruptPlayerMovement
         direction = GetWallParallelDirection(point.normal);
         wallNormal = point.normal;
         canApplyGravity = false;
-        _player.OnUpdate -= _player.JumpHandler;
+        _player.onUpdate -= _player.Movement.JumpHandler;
         _player.animator.SetBool("isWallRiding", true);
         float side = Vector3.Dot(_player.transform.right, wallNormal);
         _player.animator.SetTrigger(side < 0 ? "isWallRiding_R" : "isWallRiding_L");
@@ -69,7 +69,7 @@ public class WallRun : PlayerExtension, ICancleGravity, IInteruptPlayerMovement
     private void WallRide()
     {
         _player.rigidbody.MovePosition(_player.rigidbody.position + direction * wallRideSpeed * Time.fixedDeltaTime);
-        if (Input.GetButtonUp("Jump") || _player.isGrounded)
+        if (Input.GetButtonUp("Jump") || _player.Movement.isGrounded)
         {
             if (Input.GetButtonUp("Jump"))
             {
@@ -97,7 +97,7 @@ public class WallRun : PlayerExtension, ICancleGravity, IInteruptPlayerMovement
         {
             isWallRunning = false;
             canApplyGravity = true;
-            _player.OnUpdate += _player.JumpHandler;
+            _player.onUpdate += _player.Movement.JumpHandler;
             _player.animator.SetBool("isWallRiding", false);
         }
     }

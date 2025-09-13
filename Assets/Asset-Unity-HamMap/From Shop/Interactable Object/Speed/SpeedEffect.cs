@@ -35,7 +35,7 @@ public class SpeedEffect : ObjectEffect
 
     private System.Collections.IEnumerator ApplySpeedBoost(Player player, float multiplier, float duration)
     {
-        float originalMultiplier = player.speedMultiplier;
+        float originalMultiplier = player.Movement.speedMultiplier;
         float newMultiplier = originalMultiplier * multiplier;
 
         if (debugMode)
@@ -43,7 +43,7 @@ public class SpeedEffect : ObjectEffect
             Debug.Log($"Speed multiplier changed: {originalMultiplier} to {newMultiplier}");
         }
 
-        player.speedMultiplier = newMultiplier;
+        player.Movement.speedMultiplier = newMultiplier;
         currentElapsedTime = 0f;
 
         while (currentElapsedTime < duration)
@@ -58,7 +58,7 @@ public class SpeedEffect : ObjectEffect
             yield return null;
         }
 
-        player.speedMultiplier = originalMultiplier;
+        player.Movement.speedMultiplier = originalMultiplier;
         activeCoroutine = null;
         currentElapsedTime = -1f;
 

@@ -19,7 +19,7 @@ public abstract class ObstacleBase : MonoBehaviour
     }
     protected virtual void OnHitPlayer(GameObject player)
     {
-        Debug.Log($"{name} hit the player!");
+        player.GetComponent<Player>().Respawn();
     }
     private void OnTriggerEnter(Collider other)
     {
@@ -27,6 +27,15 @@ public abstract class ObstacleBase : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             OnHitPlayer(other.gameObject);
+            Deactivate();
+        }
+    }
+    private void OllisionEnter(Collision collision)
+    {
+        if (!isActive) return;
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            OnHitPlayer(collision.gameObject);
             Deactivate();
         }
     }

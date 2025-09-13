@@ -46,14 +46,14 @@ public class JetPack : PlayerExtension, ICancleGravity
         //     RegenerateFuel();
         // }
 
-        if (!isJetPacking && _player.isGrounded)
+        if (!isJetPacking && _player.Movement.isGrounded)
         {
             currentFuel = jetPackFuel;
             hasUsedJetpack = false; // Reset flag when landing
         }
 
         if (enableJetpackUI && uiManager != null)
-            uiManager.UpdateJetpack(currentFuel, jetPackFuel, isJetPacking, _player.isGrounded, hasUsedJetpack);
+            uiManager.UpdateJetpack(currentFuel, jetPackFuel, isJetPacking, _player.Movement.isGrounded, hasUsedJetpack);
     }
 
     private void StartJetPack()
@@ -61,7 +61,7 @@ public class JetPack : PlayerExtension, ICancleGravity
         isJetPacking = true;
         hasUsedJetpack = true; // Mark that jetpack has been used
         _player.animator.SetTrigger("jetpack");
-        _player.OnUpdate -= _player.JumpHandler;
+        _player.onUpdate -= _player.Movement.JumpHandler;
         canApplyGravity = false; // Disable gravity while jetpacking
     }
 
@@ -84,7 +84,7 @@ public class JetPack : PlayerExtension, ICancleGravity
     private void StopJetPack()
     {
         isJetPacking = false;
-        _player.OnUpdate += _player.JumpHandler;
+        _player.onUpdate += _player.Movement.JumpHandler;
         canApplyGravity = true;
     }
 

@@ -18,37 +18,37 @@ public class ItemType
         yield return null;
     }
 }
-public class Heal : ItemType
+public class Heal : ItemType,IUsableItem
 {
     public float healAmount;
     public override IEnumerator OnUse()
     {
         base.OnUse();
-        Player.Instance.currenthealth += healAmount;
+        Player.Instance.Stat.currenthealth += healAmount;
         yield return null;
     }
 }
-public class Stamina : ItemType
+public class Stamina : ItemType,IUsableItem
 {
     public int addStaminaAmount;
     public override IEnumerator OnUse()
     {
         base.OnUse();
-        Player.Instance.currentstamina += addStaminaAmount;
+         Player.Instance.Stat.currentstamina += addStaminaAmount;
         yield return null;
     }
 }
-public class DoDamageToPlayer : ItemType
+public class DoDamageToPlayer : ItemType,IUsableItem
 {
     public int damageAmount;
     public override IEnumerator OnUse()
     {
         base.OnUse();
-        Player.Instance.TakeDamage(damageAmount);
+        Player.Instance.Stat.TakeDamage(damageAmount);
         yield return null;
     }
 }
-public class SpeedBoost : ItemType
+public class SpeedBoost : ItemType,IUsableItem
 {
     public int speedAmount;
     public float useTime;
@@ -56,9 +56,9 @@ public class SpeedBoost : ItemType
     public override IEnumerator OnUse()
     {
         base.OnUse();
-        Player.Instance.additionalSpeed = speedAmount;
+        Player.Instance.Movement.additionalSpeed = speedAmount;
         yield return new WaitForSeconds(useTime);
-        Player.Instance.additionalSpeed = 0;
+        Player.Instance.Movement.additionalSpeed = 0;
     }
 }
 

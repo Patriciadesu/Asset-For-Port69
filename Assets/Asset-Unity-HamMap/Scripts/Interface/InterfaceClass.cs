@@ -2,6 +2,8 @@ using UnityEngine;
 using System;
 using UnityEngine.UIElements;
 using NaughtyAttributes;
+using System.Collections;
+using System.Collections.Generic;
 
 public interface IUseStamina
 {
@@ -37,4 +39,12 @@ public interface IPlayerUISetter
 public interface IInteruptPlayerMovement
 {
     public bool isPerforming { get; }
+}
+public interface IUsableItem
+{
+    public IEnumerator Use() { yield return null; }
+}
+public interface IPerformOnCollect
+{
+    public IEnumerator OnCollect() { yield return null; } 
 }

@@ -19,7 +19,7 @@ MonoBehaviour:
   onConditionMet:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: -265, y: 384}
+  position: {x: -265, y: 296}
   references:
     version: 2
     RefIds:

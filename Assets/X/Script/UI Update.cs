@@ -10,6 +10,6 @@ public class UIUpdate : MonoBehaviour
 
     void Update()
     {
-        staminaFill.fillAmount = _player.currentstamina / _player.maxstamina;
+        staminaFill.fillAmount = _player.Stat.currentstamina / _player.Stat.maxstamina;
     }
 }

@@ -34,7 +34,7 @@ public class FreezeEffect : ObjectEffect
 
     private System.Collections.IEnumerator ApplyFreezeEffect(Player player, float duration)
     {
-        float originalMultiplier = player.speedMultiplier;
+        float originalMultiplier = player.Movement.speedMultiplier;
         float newMultiplier = 0f;
 
         if (debugMode)
@@ -42,7 +42,7 @@ public class FreezeEffect : ObjectEffect
             Debug.Log($"Speed multiplier changed: {originalMultiplier} to {newMultiplier}");
         }
 
-        player.speedMultiplier = newMultiplier;
+        player.Movement.speedMultiplier = newMultiplier;
         currentElapsedTime = 0f;
 
         while (currentElapsedTime < duration)
@@ -57,7 +57,7 @@ public class FreezeEffect : ObjectEffect
             yield return null;
         }
 
-        player.speedMultiplier = originalMultiplier;
+        player.Movement.speedMultiplier = originalMultiplier;
         activeCoroutine = null;
         currentElapsedTime = -1f;
 

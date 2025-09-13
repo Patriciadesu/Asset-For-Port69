@@ -21,13 +21,13 @@ public class WalkSound : PlayerExtension
             audioSource.spatialBlend = 1f; // 3D sound
         }
 
-        player.OnUpdate += HandleFootsteps;
+        player.onUpdate += HandleFootsteps;
     }
 
     private void HandleFootsteps()
     {
         // Only play footsteps if player is grounded and moving
-        if (!_player.isGrounded) return;
+        if (!_player.Movement.isGrounded) return;
 
         float moveX = Input.GetAxis("Horizontal");
         float moveY = Input.GetAxis("Vertical");
@@ -36,7 +36,7 @@ public class WalkSound : PlayerExtension
 
         if (isMoving) return;
 
-        float speed = _player.Speed;
+        float speed = _player.Movement.Speed;
         float interval = stepInterval;
 
         // If running, footsteps come faster

@@ -13,18 +13,18 @@ public class Buff : PlayerExtension, IUseStamina
     private bool isBuff = false;
 
     private bool isReadyToBuff => Time.time >= lastBuffTime + cooldownTime;
-    private bool CanBuff => isReadyToBuff && _player.currentstamina >= staminaCost;
+    private bool CanBuff => isReadyToBuff && _player.Stat.currentstamina >= staminaCost;
 
     public bool useStamina;
     [ShowIf("useStamina")] public float staminaCost = 2f;
     [ShowIf("useStamina")][Range(1, 10)] public int staminaCostMultiplyer;
     public bool isUsingStamina => useStamina && isBuff;
-    public bool canDrainStamina => _player.currentstamina >= staminaCost && useStamina;
+    public bool canDrainStamina => _player.Stat.currentstamina >= staminaCost && useStamina;
     public void DrainStamina(float amount)
     {
         if (canDrainStamina)
         {
-            _player.currentstamina = Mathf.Max(_player.currentstamina - amount, 0f);
+            _player.Stat.currentstamina = Mathf.Max(_player.Stat.currentstamina - amount, 0f);
         }
     }
     void Update()

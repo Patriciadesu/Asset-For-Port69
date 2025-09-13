@@ -20,18 +20,18 @@ public class MultipleJump : PlayerExtension
 
     protected void Update()
     {
-        if (_player.isGrounded)
+        if (_player.Movement.isGrounded)
         {
             jumpCount = 1;
         }
         else if (Input.GetKeyDown(activateKey) && jumpCount < maxJumps && _player.canApplyGravity)
         {
-            _player.Jump();
+            _player.Movement.Jump();
             jumpCount++;
         }
 
         if (enableMultipleJumpUI && uiManager != null)
-            uiManager.UpdateMultipleJump(jumpCount, maxJumps, _player.isGrounded);
+            uiManager.UpdateMultipleJump(jumpCount, maxJumps, _player.Movement.isGrounded);
     }
 }
 public partial class PlayerUIManager : Singleton<PlayerUIManager>

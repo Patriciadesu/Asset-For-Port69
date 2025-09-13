@@ -15,6 +15,7 @@ MonoBehaviour:
   stateNodes:
   - {fileID: 11400000, guid: 1fa732e3b04ac3440ab2b1393b836f62, type: 2}
   - {fileID: 11400000, guid: 418114796c624e448a9ecd8810c9e54e, type: 2}
+  - {fileID: 11400000, guid: 681586a84165993438452183dd540024, type: 2}
   transitionNodes:
   - {fileID: 11400000, guid: ac8b95328ed01524fbcee53ceb9de51c, type: 2}
   - {fileID: 11400000, guid: 40518c48f99950a4881a99ea1d701a25, type: 2}

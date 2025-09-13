@@ -1,20 +1,21 @@
 ﻿using System.Collections;
 using UnityEngine;
-
+using NaughtyAttributes; // ← add this
 public class ObstacleSpawner : MonoBehaviour
 {
     [Header("Spawner Settings")]
-    [SerializeField] private Transform endPoint;
+    [SerializeField]private Transform endPoint;
     [SerializeField] private float spawnInterval = 2f;
     [SerializeField] private float speed = 10f;
     [SerializeField] private float obstacleLifetime = 5f;
 
     [Header("Obstacle Prefab")]
+    [ShowAssetPreview(96, 96)] 
     [SerializeField] private GameObject obstaclePrefab;
 
     [Header("Debug")]
-    [SerializeField] private bool showGizmos = true;
-    [SerializeField] private Color gizmoColor = Color.red;
+    private bool showGizmos = true;
+    private Color gizmoColor = Color.red;
 
     private Coroutine spawnCoroutine;
     private bool isSpawning = false;

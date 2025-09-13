@@ -27,7 +27,7 @@ public class CameraShakeEffect : ObjectEffect
             lastActivationTime = Time.time;
             
             // Handle different camera types
-            if (player.cameraType == Player.CameraType.FirstPerson)
+            if (player.Cam.cameraType == CameraType.FirstPerson)
             {
                 Camera fpsCamera = player.camera;
                 if (fpsCamera != null)
@@ -36,7 +36,7 @@ public class CameraShakeEffect : ObjectEffect
                     Debug.Log($"{gameObject.name} triggered FPS camera shake effect!");
                 }
             }
-            else if (player.cameraType == Player.CameraType.ThirdPerson)
+            else if (player.Cam.cameraType == CameraType.ThirdPerson)
             {
                 Transform tpsCameraPivot = player.tpsCameraPivot;
                 if (tpsCameraPivot != null)

@@ -1475,7 +1475,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &665884463927084071
 Transform:
   m_ObjectHideFlags: 0
@@ -1935,7 +1935,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4285302504513984810
 Transform:
   m_ObjectHideFlags: 0
@@ -4210,37 +4210,58 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enableHealthBar: 1
   enableStaminaBar: 1
-  mouseSensitivity: 2
-  cameraType: 0
-  cameraFOV: 60.3
-  cameraSide: 0.5
-  cameraDistance: 5.54
-  yOffset: -0.9
+  Cam:
+    rid: 3811229740870140151
+  Movement:
+    rid: 3811229740870140152
+  Stat:
+    rid: 3811229740870140153
   camera: {fileID: 171486444557883602}
   fpsCameraPivot: {fileID: 3325574968896947418}
   tpsCamera: {fileID: 9128651045211048464}
   tpsVirtualCamera: {fileID: 262400022786167043}
   tpsCameraPivot: {fileID: 5627062494781127554}
-  speed: 5
-  jumpForce: 10
-  fallMultiplier: 3
-  gravityMultiplier: 2.5
-  speedMultiplier: 1
-  additionalSpeed: 0
-  canHit: 0
-  damageReductionPercentage: 0
   rigidbody: {fileID: 3021642040412494781}
   animator: {fileID: 8222397751238312266}
   capsuleCollider: {fileID: 361009230347338624}
   lastCheckpoint: {x: 0, y: 0, z: 0}
   spawnPoint: {x: 0, y: 0, z: 0}
-  isGrounded: 1
   canRotateCamera: 1
-  maxhealth: 100
-  maxstamina: 100
-  staminaRegenRate: 20
-  currenthealth: 100
-  currentstamina: 100
+  references:
+    version: 2
+    RefIds:
+    - rid: 3811229740870140151
+      type: {class: CameraModule, ns: , asm: Assembly-CSharp}
+      data:
+        enableModule: 1
+        mouseSensitivity: 2
+        cameraType: 1
+        cameraFOV: 60
+        cameraSide: 0.5
+        cameraDistance: 5
+        yOffset: -0.4
+    - rid: 3811229740870140152
+      type: {class: MovementModule, ns: , asm: Assembly-CSharp}
+      data:
+        enableModule: 1
+        baseSpeed: 5
+        jumpForce: 10
+        fallMultiplier: 3
+        gravityMultiplier: 2.5
+        speedMultiplier: 1
+        additionalSpeed: 0
+        isGrounded: 1
+    - rid: 3811229740870140153
+      type: {class: StatModule, ns: , asm: Assembly-CSharp}
+      data:
+        enableModule: 1
+        canHit: 0
+        maxhealth: 100
+        maxstamina: 100
+        staminaRegenRate: 20
+        currenthealth: 0
+        currentstamina: 0
+        damageReductionPercentage: 0
 --- !u!1 &6158670414927746804
 GameObject:
   m_ObjectHideFlags: 0
@@ -4331,7 +4352,7 @@ MonoBehaviour:
     LookAtTarget: {fileID: 0}
     CustomLookAtTarget: 0
   Lens:
-    FieldOfView: 98.9
+    FieldOfView: 60
     OrthographicSize: 14.39
     NearClipPlane: 0.01
     FarClipPlane: 1000
@@ -4365,8 +4386,8 @@ MonoBehaviour:
   Damping: {x: 0.1, y: 0.5, z: 0.3}
   ShoulderOffset: {x: 0.8, y: -0.4, z: 0}
   VerticalArmLength: 0.77
-  CameraSide: 0
-  CameraDistance: 5.54
+  CameraSide: 0.5
+  CameraDistance: 5
   AvoidObstacles:
     Enabled: 0
     CollisionFilter:

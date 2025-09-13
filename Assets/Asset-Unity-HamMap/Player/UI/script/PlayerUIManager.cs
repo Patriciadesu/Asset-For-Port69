@@ -54,11 +54,11 @@ public partial class PlayerUIManager : Singleton<PlayerUIManager>
     {
         // Always update stamina bar if enabled
         if (enableStaminaBar)
-            staminaBar.value = player.currentstamina / player.maxstamina;
+            staminaBar.value = player.Stat.currentstamina / player.Stat.maxstamina;
 
         // Always update health bar if enabled
         if (enableHealthBar)
-            healthBar.value = player.currenthealth / player.maxhealth;
+            healthBar.value = player.Stat.currenthealth / player.Stat.maxhealth;
     }
 
     // Methods to update UI for each ability

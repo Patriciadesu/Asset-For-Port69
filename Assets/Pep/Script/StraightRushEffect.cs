@@ -25,10 +25,10 @@ public class StraightRushEffect : ObjectEffect
     }
     private IEnumerator ApplyStraightRush(Player player)
     {
-        float originalMultiplier = player.speedMultiplier;
+        float originalMultiplier = player.Movement.speedMultiplier;
         Vector3 rushDirection = player.transform.forward;
         Rigidbody playerRb = player.GetComponent<Rigidbody>();
-        player.speedMultiplier *= rushMultiplier;
+        player.Movement.speedMultiplier *= rushMultiplier;
         if (playerRb != null)
         {
             playerRb.AddForce(rushDirection * rushForce, ForceMode.Impulse);
@@ -46,7 +46,7 @@ public class StraightRushEffect : ObjectEffect
             elapsed += Time.deltaTime;
             yield return null;
         }
-        player.speedMultiplier = originalMultiplier;
+        player.Movement.speedMultiplier = originalMultiplier;
         activeCoroutine = null;
         if (debugMode)
         {

@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24a4e1e8d60a72a4cbeccd371e6db72e, type: 3}
+  m_Name: New State 20
+  m_EditorClassIdentifier: 
+  stateName: New State
+  isInitialState: 0
+  state:
+    rid: 3811229608015560796
+  transitions: []
+  onStateChange:
+    m_PersistentCalls:
+      m_Calls: []
+  position: {x: 0, y: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 3811229608015560796
+      type: {class: ShootState, ns: , asm: Assembly-CSharp}
+      data:
+        stateName: ShootState
+        projectilePrefab: {fileID: 0}
+        firePoint: {fileID: 0}
+        projectileSpeed: 14
+        projectileDamage: 10
+        bulletLifetime: 6
+        bulletsPerBatch: 3
+        bulletInterval: 0.18
+        batchCooldown: 1.5
+        spreadDegrees: 0
+        resampleTargetEachShot: 1
+        timelinePlayable: {fileID: 0}

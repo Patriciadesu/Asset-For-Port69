@@ -1,6 +1,5 @@
 using NaughtyAttributes;
 using System.Collections.Generic;
-using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
 
 
@@ -13,7 +12,7 @@ public class Combat : PlayerExtension, IUseStamina
     public float damage = 10f;
     [Range(1, 10)] public float damagemultiplier = 2f;
 
-    float oneHandHitWindow = 0.15f; // ระยะเวลานับโดนของมือละครั้ง
+    float oneHandHitWindow = 0.15f; // ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝานับโดน๏ฟฝอง๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝะค๏ฟฝ๏ฟฝ๏ฟฝ
     float twoHandHitWindow = 0.20f;
     float heldTime;
     float lastPunchTime = 0f;
@@ -23,28 +22,28 @@ public class Combat : PlayerExtension, IUseStamina
     float keyDownTime = 0f;
 
     bool attackWindowOpen;
-    HashSet<Boss> hitThisSwing = new();   // กันตีซ้ำศัตรูตัวเดิมในสวิงเดียว
+    HashSet<Boss> hitThisSwing = new();   // ๏ฟฝัน๏ฟฝีซ๏ฟฝ๏ฟฝ๏ฟฝัต๏ฟฝูต๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝิง๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 
     bool isReadyToPunch => Time.time >= lastPunchTime + cooldownTime;
-    bool CanPunch => isReadyToPunch && _player.currentstamina >= staminaCost;
+    bool CanPunch => isReadyToPunch && _player.Stat.currentstamina >= staminaCost;
 
     public bool useStamina;
     [ShowIf("useStamina")] public float staminaCost = 2f;
     [ShowIf("useStamina")][Range(1, 10)] public int staminaCostMultiplyer = 3;
     public bool isUsingStamina => useStamina && isPunch;
-    public bool canDrainStamina => _player.currentstamina >= staminaCost && useStamina;
+    public bool canDrainStamina => _player.Stat.currentstamina >= staminaCost && useStamina;
 
     public void DrainStamina(float amount)
     {
         if (canDrainStamina)
-            _player.currentstamina = Mathf.Max(_player.currentstamina - amount, 0f);
+            _player.Stat.currentstamina = Mathf.Max(_player.Stat.currentstamina - amount, 0f);
     }
 
     public void SetUp(float _damage) => damage = _damage;
 
     void Update()
     {
-        // โหมดเตรียม (ถืออาวุธ)
+        // ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ (๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝุธ)
         if (Input.GetKey(activateKey)) PrepareCombat();
         else FinishedPrepareCombat();
 
@@ -54,7 +53,7 @@ public class Combat : PlayerExtension, IUseStamina
             isHolding = true;
         }
 
-        // ปล่อย
+        // ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
         if (Input.GetKeyUp(activateKey) && isHolding)
         {
             PrepareCombat();
@@ -80,7 +79,7 @@ public class Combat : PlayerExtension, IUseStamina
 
             _player.animator.SetTrigger("MeleeAttack1hand");
 
-            // เปิดหน้าต่างโดนเฉพาะช่วงนี้
+            // ๏ฟฝิดหน๏ฟฝาต๏ฟฝางโดนเฉพ๏ฟฝะช๏ฟฝวง๏ฟฝ๏ฟฝ๏ฟฝ
             Invoke(nameof(CloseAttackWindow), oneHandHitWindow);
             Invoke(nameof(FinishedPunch), 0.2f);
         }
@@ -114,20 +113,20 @@ public class Combat : PlayerExtension, IUseStamina
         if (!isPunch) return;
         isPunch = false;
         lastPunchTime = Time.time;
-        attackWindowOpen = false;     // safety ปิดหน้าต่าง
+        attackWindowOpen = false;     // safety ๏ฟฝิดหน๏ฟฝาต๏ฟฝาง
         _player.animator.speed = 1f;
         is2hand = false;
     }
 
     void CloseAttackWindow() => attackWindowOpen = false;
 
-    // ---------- ทำดาเมจ ----------
+    // ---------- ๏ฟฝำด๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ ----------
     void TryHit(Boss boss)
     {
         if (!attackWindowOpen) return;
         if (!is2hand)
         {
-            if (hitThisSwing.Add(boss))   // ครั้งแรกของศัตรูตัวนี้ในสวิงนี้เท่านั้น
+            if (hitThisSwing.Add(boss))   // ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝรก๏ฟฝอง๏ฟฝัต๏ฟฝูต๏ฟฝวน๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝิง๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝาน๏ฟฝ๏ฟฝ
                 boss.TakeDamage(damage);
         }else
         {
@@ -138,7 +137,7 @@ public class Combat : PlayerExtension, IUseStamina
     }
 
 
-    // ใช้ทั้ง Enter + Stay เพื่อไม่พลาดกรณีเริ่มซ้อนทับกันอยู่แล้ว
+    // ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ Enter + Stay ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝาด๏ฟฝรณ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝอน๏ฟฝับ๏ฟฝัน๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
     void OnTriggerEnter(Collider other) { if (other.TryGetComponent(out Boss b)) TryHit(b); }
     void OnTriggerStay(Collider other) { if (other.TryGetComponent(out Boss b)) TryHit(b); }
 
