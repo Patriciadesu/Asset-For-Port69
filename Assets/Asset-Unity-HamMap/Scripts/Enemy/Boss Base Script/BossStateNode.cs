@@ -12,6 +12,8 @@ public class BossStateNode : ScriptableObject
     public StateTransition[] transitions;
     public UnityEvent<BossStateNode> onStateChange = new UnityEvent<BossStateNode>();
     [HideInInspector] public Vector2 position;
+    [HideInInspector] public bool outputOnLeft; // persist which side the OUTPUT port is on
+
     private Boss _cachedBoss;
 
     public void StartTrackingConditions()

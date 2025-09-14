@@ -19,7 +19,7 @@ namespace CameraDoorScript
                 {
                     text.SetActive(true);
                     if (Input.GetKeyDown(KeyCode.E))
-                        hit.transform.GetComponent<DoorScript.Door>().OpenDoor();
+                        hit.transform.GetComponent<DoorScript.Door>().TryOpenWithLockCheck();
                 }
                 else
                 {

@@ -1,7 +1,3 @@
-using System.IO;
-using System.Linq;
-using System.Collections.Generic;
-using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -34,20 +30,13 @@ public class VerticalEdge : Edge
         Vector2 from = edgeControl.WorldToLocal(fromWorld);
         Vector2 to   = edgeControl.WorldToLocal(toWorld);
 
-        edgeControl.outputOrientation = Orientation.Vertical;
-        edgeControl.inputOrientation  = Orientation.Vertical;
+        // Horizontal avoids up/down “bounce”
+        edgeControl.outputOrientation = Orientation.Horizontal;
+        edgeControl.inputOrientation  = Orientation.Horizontal;
         edgeControl.from = from;
         edgeControl.to   = to;
 
-        // VFX-like vertical polyline feel (if your API supports controlPoints)
-        float midY = (from.y + to.y) * 0.5f;
-#if UNITY_6000_0_OR_NEWER
-        edgeControl.outputOrientation = Orientation.Vertical;
-        edgeControl.inputOrientation = Orientation.Vertical;
-        edgeControl.from = from; edgeControl.to = to;
-#endif
         edgeControl.MarkDirtyRepaint();
         return true;
     }
 }
-

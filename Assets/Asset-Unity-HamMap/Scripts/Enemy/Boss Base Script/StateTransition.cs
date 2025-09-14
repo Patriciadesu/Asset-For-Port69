@@ -9,6 +9,8 @@ public class StateTransition : ScriptableObject
     public bool allowStateInterruption => condition.allowStateInterruption;
     [HideInInspector] public UnityEvent<BossStateNode> onConditionMet;
     [HideInInspector]public Vector2 position;
+    [HideInInspector] public bool outputOnLeft; // persist which side the OUTPUT port is on
+
     private Boss _bossBound;
 
     public void Bind(Boss boss)

@@ -7,7 +7,7 @@ public class CollectItemEffect : ObjectEffect
 
     public override void ApplyEffect(Player _player)
     {
-        Itemslot itemslot = FindAnyObjectByType<Itemslot>();
+        Inventory itemslot = FindAnyObjectByType<Inventory>();
         for (int i = 0; i < itemslot.items.Length; i++)
         {
             if (itemslot.items[i] == null) // Check if the slot is empty

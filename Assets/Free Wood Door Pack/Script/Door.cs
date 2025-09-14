@@ -130,7 +130,7 @@ namespace DoorScript
         // ─────────────────────────────────────────────────────────────────────────────
         // Core behaviors
         // ─────────────────────────────────────────────────────────────────────────────
-        void TryOpenWithLockCheck()
+        public void TryOpenWithLockCheck()
         {
             if (open) return;
 

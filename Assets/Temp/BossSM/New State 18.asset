@@ -21,12 +21,13 @@ MonoBehaviour:
   onStateChange:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: -295, y: -139}
+  position: {x: 22, y: -130}
+  outputOnLeft: 0
   references:
     version: 2
     RefIds:
     - rid: 3811229562494779466
       type: {class: RotateToPlayerState, ns: , asm: Assembly-CSharp}
       data:
-        stateName: RotateToPlayerState
+        stateName: a
         rotateMode: 1

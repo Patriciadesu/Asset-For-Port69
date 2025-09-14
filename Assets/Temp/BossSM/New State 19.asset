@@ -15,28 +15,18 @@ MonoBehaviour:
   stateName: New State
   isInitialState: 0
   state:
-    rid: 3811229608015560788
+    rid: 3811229778377179211
   transitions:
   - {fileID: 11400000, guid: 40518c48f99950a4881a99ea1d701a25, type: 2}
   onStateChange:
     m_PersistentCalls:
       m_Calls: []
-  position: {x: 258, y: 490}
+  position: {x: -904, y: -130}
   references:
     version: 2
     RefIds:
-    - rid: 3811229608015560788
-      type: {class: ShootState, ns: , asm: Assembly-CSharp}
+    - rid: 3811229778377179211
+      type: {class: PatrolState, ns: , asm: Assembly-CSharp}
       data:
-        stateName: ShootState
-        projectilePrefab: {fileID: 4298002020313714194, guid: 29155573d3a147b4784158d8e88eee5a, type: 3}
-        firePoint: {fileID: 0}
-        projectileSpeed: 30
-        projectileDamage: 10
-        bulletLifetime: 2
-        bulletsPerBatch: 0
-        bulletInterval: 0
-        batchCooldown: 0
-        spreadDegrees: 0
-        resampleTargetEachShot: 0
-        timelinePlayable: {fileID: 0}
+        stateName: PatrolState
+        idleTime: 2

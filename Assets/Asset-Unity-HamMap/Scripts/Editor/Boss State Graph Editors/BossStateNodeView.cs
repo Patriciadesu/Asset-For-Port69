@@ -1,37 +1,29 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
 using UnityEditor;
-using UnityEditor.UIElements;
-using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
+using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.Timeline;
+using UnityEngine.UIElements;
 
 public class BossStateNodeView : Node
 {
+    public BossStateNode nodeData;
     public Port input;
     public Port output;
-    public BossStateNode nodeData;
 
     private readonly Action<BossStateNodeView> onSelected;
+    private readonly IEdgeConnectorListener edgeListener;
 
-    private SerializedObject soStateNode;
-    private PopupField<string> bossStateTypePopup;
-    private VisualElement bossStateFieldsRoot;
+    private Editor _cachedSOEditor;
+    private IMGUIContainer _inspectorIMGUI;
+    private Button _swapBtn;
 
-    // Custom-inspector area (for INodeInspectorContributor)
-    private VisualElement _inspectorRoot;
-    private Foldout _inspectorFoldout;
+    private bool _portsSwappedUI; // visual toggle state only
 
-    // Timeline UI (shows only when the state has a TimelineAsset field)
-    private VisualElement timelineDropZone;
-    private ObjectField timelineObjectField;
-
-    // Convenience property (null-safe)
-    private BossState State => nodeData != null ? nodeData.state : null;
+    private VisualElement inspectorRoot;
 
     public BossStateNodeView(BossStateNode nodeData,
                              Action<BossStateNodeView> onSelected = null,
@@ -39,26 +31,61 @@ public class BossStateNodeView : Node
     {
         this.nodeData = nodeData;
         this.onSelected = onSelected;
+        this.edgeListener = edgeListener;
 
-        title = nodeData.stateName;
-        style.width = 260;
+        title = nodeData != null ? (nodeData.stateName ?? nodeData.name ?? "State") : "State";
+        style.width = 320;
 
-        // Ports
-        input = InstantiatePort(Orientation.Vertical, Direction.Input, Port.Capacity.Multi, typeof(bool));
-        input.portName = "";
-        titleContainer.Add(input);
+        // Respect saved node position on create
+        var startPos = nodeData != null ? nodeData.position : Vector2.zero;
+        SetPosition(new Rect(startPos, new Vector2(320, 220)));
 
-        output = InstantiatePort(Orientation.Vertical, Direction.Output, Port.Capacity.Multi, typeof(bool));
-        output.portName = "";
-        extensionContainer.Add(output);
+        BuildTopSelectors(); // BossState type dropdown (auto-detects)
+        BuildPorts();
+        var spacerTop = new VisualElement();
+        spacerTop.style.height = 5;
+        mainContainer.Add(spacerTop);
 
-        if (edgeListener != null)
+        inspectorRoot = new VisualElement();
+        var fold = new Foldout { text = "Inspector", value = true };
+        fold.Add(inspectorRoot);
+        mainContainer.Add(fold);
+        BuildInspector();    // full inspector
+        RefreshNodeFromData();
+
+        RefreshExpandedState();
+        RefreshPorts();
+        var spacerBottom = new VisualElement();
+        spacerBottom.style.height = 15;
+        mainContainer.Add(spacerBottom);
+    }
+
+    public override void SetPosition(Rect newPos)
+    {
+        base.SetPosition(newPos);
+        if (nodeData != null)
         {
-            input.AddManipulator(new EdgeConnector<Edge>(edgeListener));
-            output.AddManipulator(new EdgeConnector<Edge>(edgeListener));
+            if (nodeData.position != newPos.position)
+            {
+                Undo.RecordObject(nodeData, "Move State Node");
+                nodeData.position = newPos.position;
+                EditorUtility.SetDirty(nodeData);
+            }
         }
+    }
 
-        // Name
+    public override void OnSelected()
+    {
+        base.OnSelected();
+        onSelected?.Invoke(this);
+    }
+
+    // ---------- BossState Type dropdown ----------
+    private void BuildTopSelectors()
+    {
+        var spacer = new VisualElement();
+        spacer.style.height = 20;  // 10 px tall blank space
+        mainContainer.Add(spacer);
         var nameField = new TextField("Name") { value = nodeData.stateName };
         nameField.RegisterValueChangedCallback(evt =>
         {
@@ -83,83 +110,12 @@ public class BossStateNodeView : Node
 
         // BossState type + auto fields
         BuildBossStateSection();
-
-        // Custom Inspector foldout (INodeInspectorContributor)
-        _inspectorFoldout = new Foldout { text = "Inspector", value = true };
-        _inspectorRoot = new VisualElement();
-        _inspectorRoot.style.marginTop = 4;
-        _inspectorRoot.style.marginBottom = 4;
-        _inspectorFoldout.Add(_inspectorRoot);
-        mainContainer.Add(_inspectorFoldout);
-
-
-
-        RefreshNodeFromData();
-
-        RefreshExpandedState();
-        RefreshPorts();
-
-        // Position
-        SetPosition(new Rect(UnityEngine.Random.Range(50, 400), UnityEngine.Random.Range(50, 400), 260, 200));
-        SetPosition(new Rect(nodeData.position, new Vector2(260, 200)));
-
-        // Save position on move
-        this.RegisterCallback<GeometryChangedEvent>(_ =>
-        {
-            var rect = GetPosition();
-            if (nodeData.position != rect.position)
-            {
-                Undo.RecordObject(nodeData, "Move State Node");
-                nodeData.position = rect.position;
-                EditorUtility.SetDirty(nodeData);
-            }
-        });
-
-        // Context menu
-        this.AddManipulator(new ContextualMenuManipulator(evt =>
-        {
-            var gv = this.GetFirstAncestorOfType<GraphView>() as StateMachineGraphView;
-            evt.menu.AppendAction("Disconnect", _ => gv?.DisconnectStateNode(this));
-            evt.menu.AppendSeparator();
-            evt.menu.AppendAction("Delete", _ => gv?.DeleteSelection());
-        }));
     }
-
-    public override void OnSelected()
-    {
-        base.OnSelected();
-        onSelected?.Invoke(this);
-    }
-
-    public void RefreshNodeFromData()
-    {
-        title = nodeData != null ? nodeData.stateName : "State";
-
-        if (soStateNode == null) soStateNode = new SerializedObject(nodeData);
-        else soStateNode.Update();
-
-        // Rebuild custom inspector UI (interface-based)
-        BuildInspector();
-
-        RefreshExpandedState();
-        RefreshPorts();
-    }
-
-    // ---------- BossState section ----------
-    private static List<Type> _cachedBossStateTypes;
-    private static List<Type> GetAllBossStateTypes()
-    {
-        if (_cachedBossStateTypes != null) return _cachedBossStateTypes;
-        _cachedBossStateTypes = UnityEditor.TypeCache.GetTypesDerivedFrom<BossState>()
-            .Where(t => t.IsClass && !t.IsAbstract)
-            .OrderBy(t => t.Name)
-            .ToList();
-        return _cachedBossStateTypes;
-    }
-
+    private PopupField<string> bossStateTypePopup;
+    private VisualElement bossStateFieldsRoot;
     private void BuildBossStateSection()
     {
-        soStateNode = new SerializedObject(nodeData);
+        var soStateNode = new SerializedObject(nodeData);
 
         var stateTypes = GetAllBossStateTypes();
         var display = stateTypes.Select(t => t.Name).ToList();
@@ -193,9 +149,6 @@ public class BossStateNodeView : Node
         });
         mainContainer.Add(bossStateTypePopup);
 
-        bossStateFieldsRoot = new VisualElement();
-        bossStateFieldsRoot.style.marginTop = 4;
-        bossStateFieldsRoot.style.marginBottom = 4;
         mainContainer.Add(bossStateFieldsRoot);
 
         // Ensure we have an instance by default
@@ -212,45 +165,209 @@ public class BossStateNodeView : Node
         }
 
     }
-
-    
-    private static List<string> GetDerivedSerializedFieldNames(Type type, Type baseType)
+    private static List<Type> _cachedBossStateTypes;
+    private static List<Type> GetAllBossStateTypes()
     {
-        const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
-        var fields = type.GetFields(flags)
-            .Where(f =>
-                !f.IsStatic &&
-                (f.IsPublic || f.GetCustomAttribute<SerializeField>() != null))
-            .Select(f => f.Name)
+        if (_cachedBossStateTypes != null) return _cachedBossStateTypes;
+        _cachedBossStateTypes = UnityEditor.TypeCache.GetTypesDerivedFrom<BossState>()
+            .Where(t => t.IsClass && !t.IsAbstract)
+            .OrderBy(t => t.Name)
             .ToList();
-
-        // exclude base fields
-        var baseFields = baseType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .Select(f => f.Name).ToHashSet();
-        fields.RemoveAll(baseFields.Contains);
-        return fields;
+        return _cachedBossStateTypes;
     }
 
-    // ---------- Custom inspector via interface ----------
+    private static SerializedProperty TryFindProp(SerializedObject so, params string[] names)
+    {
+        foreach (var n in names)
+        {
+            var p = so.FindProperty(n);
+            if (p != null) return p;
+        }
+        return null;
+    }
+
+    private PopupField<string> BuildTypeDropdown(string label,
+        string[] baseTypeCandidates, SerializedProperty backingStringProp)
+    {
+        var baseType = FindTypeByName(baseTypeCandidates);
+        if (baseType == null || backingStringProp == null || backingStringProp.propertyType != SerializedPropertyType.String)
+            return null;
+
+        var all = TypeCache.GetTypesDerivedFrom(baseType)
+                           .Where(t => !t.IsAbstract && !t.IsGenericType)
+                           .Select(t => t.FullName)
+                           .OrderBy(n => n).ToList();
+
+        if (all.Count == 0) return null;
+
+        var current = string.IsNullOrEmpty(backingStringProp.stringValue)
+            ? all[0] : (all.Contains(backingStringProp.stringValue) ? backingStringProp.stringValue : all[0]);
+
+        var popup = new PopupField<string>(label: "", choices: all, defaultIndex: all.IndexOf(current));
+        popup.tooltip = $"Select {label}";
+        popup.RegisterValueChangedCallback(evt =>
+        {
+            if (evt.newValue == backingStringProp.stringValue) return;
+            var so = backingStringProp.serializedObject;
+            so.Update();
+            backingStringProp.stringValue = evt.newValue;
+            so.ApplyModifiedProperties();
+            EditorUtility.SetDirty(so.targetObject);
+        });
+
+        return popup;
+    }
+
+    private static Type FindTypeByName(string[] simpleNames)
+    {
+        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            Type hit = null;
+            foreach (var name in simpleNames)
+            {
+                hit = asm.GetTypes().FirstOrDefault(t => t.Name == name);
+                if (hit != null) return hit;
+            }
+        }
+        return null;
+    }
+
+    // ---------- Ports + swap ----------
+    private void BuildPorts()
+    {
+        var inColor = new Color(0.35f, 0.7f, 1f);
+        var outColor = new Color(1f, 0.65f, 0.25f);
+
+        input = PortUI.Make(this, Direction.Input, Port.Capacity.Multi,
+                 "From Transition", "Transition → State", inColor, edgeListener);
+        output = PortUI.Make(this, Direction.Output, Port.Capacity.Multi,
+                 "To Transition", "State → Transition", outColor, edgeListener);
+
+        inputContainer.Add(input);
+        outputContainer.Add(output);
+
+        _swapBtn = new Button(() => DoSwap()) { text = "⇄" };
+        _swapBtn.tooltip = "Swap input/output sides AND roles";
+        _swapBtn.pickingMode = PickingMode.Position;
+        _swapBtn.style.flexShrink = 0;
+        _swapBtn.style.marginLeft = 6;
+        titleContainer.Add(_swapBtn);
+        _swapBtn.BringToFront();
+        PortUI.AlignToParentSide(input,  inputContainer);
+PortUI.AlignToParentSide(output, outputContainer);
+
+// Apply persisted side from asset on load
+if (nodeData != null && nodeData.outputOnLeft) // output should be on LEFT
+{
+    // if it's not currently on left, swap once to honor saved state
+    if (output.parent != inputContainer)
+    {
+        SwapPortsUtility.SwapSidesPersistent(
+            this, ref input, ref output,
+            inputContainer, outputContainer,
+            nodeData,
+            saveOutputOnLeft: val => nodeData.outputOnLeft = val
+        );
+    }
+}
+    }
+
+    private void DoSwap()
+{
+    SwapPortsUtility.SwapSidesPersistent(
+    this, ref input, ref output,
+    inputContainer, outputContainer,
+    nodeData,
+    saveOutputOnLeft: val => nodeData.outputOnLeft = val
+);
+
+PortUI.UpdateBadge(input);
+PortUI.UpdateBadge(output);
+}
+
+    // ---------- Embedded full inspector ----------
     private void BuildInspector()
     {
-        _inspectorRoot.Clear();
+        inspectorRoot.Clear();
 
-        if (State is INodeInspectorContributor contributor)
+        // Prefer your contributor hook if present
+        if (nodeData?.state is INodeInspectorContributor contributor)
         {
-            contributor.BuildInspectorUI(_inspectorRoot);
+            contributor.BuildInspectorUI(inspectorRoot);
+            return;
         }
-        else
+
+        if (nodeData == null)
         {
-            var label = new Label("No custom inspector for this state.");
-            _inspectorRoot.Add(label);
+            inspectorRoot.Add(new Label("No state asset."));
+            return;
         }
+
+        // 🔧 Bind to the ScriptableObject (UnityEngine.Object), not nodeData.state
+        var so = new SerializedObject(nodeData);
+
+        // Try common field names for the managed-reference BossState
+        SerializedProperty stateProp = null;
+        foreach (var name in new[] { "state", "bossState", "State", "BossState" })
+        {
+            stateProp = so.FindProperty(name);
+            if (stateProp != null) break;
+        }
+
+        if (stateProp == null)
+        {
+            inspectorRoot.Add(new Label("No BossState managed reference found on node."));
+            return;
+        }
+
+        static bool ShouldSkip(string n)
+        {
+            n = n?.ToLowerInvariant();
+            return n == "onstatechanged" || n == "transitions" || n == "nextstates";
+        }
+
+        // Iterate fields under the managed reference and draw them
+        var it = stateProp.Copy();
+        var end = it.GetEndProperty();
+        bool enterChildren = true;
+        int startDepth = -1;
+
+        while (it.NextVisible(enterChildren))
+        {
+            if (SerializedProperty.EqualContents(it, end)) break;
+
+            // stop once we leave the managed-reference subtree
+            if (startDepth < 0) startDepth = it.depth;
+            if (it.depth < startDepth) break;
+            if (!it.propertyPath.StartsWith(stateProp.propertyPath)) break;
+
+            if (it.propertyPath.EndsWith("m_Script") || ShouldSkip(it.name))
+            {
+                enterChildren = false;
+                continue;
+            }
+
+            var field = new PropertyField(it.Copy());
+            field.Bind(so);                  // ✅ bind to nodeData SerializedObject
+            inspectorRoot.Add(field);
+
+            enterChildren = false;
+        }
+
+        so.ApplyModifiedProperties();
     }
 
-    // Call this when something changes and you want the UI to update
-    public void RefreshInspector()
+
+    public void RefreshNodeFromData()
     {
-        if (State is INodeInspectorContributor contributor)
-            contributor.RefreshInspectorUI();
+        if (nodeData != null)
+            title = nodeData.stateName ?? nodeData.name ?? "State";
+
+        PortUI.UpdateBadge(input);
+        PortUI.UpdateBadge(output);
+
+        _inspectorIMGUI?.MarkDirtyRepaint();
+        RefreshExpandedState();
+        RefreshPorts();
     }
 }

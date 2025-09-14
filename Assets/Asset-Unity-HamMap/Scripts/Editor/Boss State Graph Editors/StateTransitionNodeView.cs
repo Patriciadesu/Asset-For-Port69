@@ -1,59 +1,136 @@
-// At top of the file (if not already present)
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using UnityEditor;            // Undo, EditorUtility, SerializedObject
-using UnityEditor.UIElements; // PopupField, PropertyField
+using System.Linq;
+using UnityEditor;
+using UnityEditor.Experimental.GraphView;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEditor.Experimental.GraphView;
 
 public class StateTransitionNodeView : Node
 {
+    public StateTransition transitionData;
     public Port input;
     public Port output;
-    public StateTransition transitionData;
-
-    private SerializedObject soTransition;
-    private Label conditionInfoLabel;
     private VisualElement conditionFieldsRoot;
+    private readonly IEdgeConnectorListener edgeListener;
     private PopupField<string> conditionTypePopup;
+    private Editor _cachedSOEditor;
+    private IMGUIContainer _inspectorIMGUI;
+    private Button _swapBtn;
+    private bool _portsSwappedUI;
 
-    private static List<Type> _cachedConditionTypes;
-    private static List<Type> GetAllConditionTypes()
+    public StateTransitionNodeView(StateTransition transitionData,
+                                   IEdgeConnectorListener edgeListener = null)
     {
-        if (_cachedConditionTypes != null) return _cachedConditionTypes;
-        _cachedConditionTypes = UnityEditor.TypeCache.GetTypesDerivedFrom<Condition>()
-            .Where(t => !t.IsAbstract && t.IsClass && t.GetConstructor(Type.EmptyTypes) != null)
-            .OrderBy(t => t.Name)
-            .ToList();
-        return _cachedConditionTypes;
+        this.transitionData = transitionData;
+        this.edgeListener = edgeListener;
+
+        title = transitionData != null ? (transitionData.name ?? "Transition") : "Transition";
+        style.width = 320;
+
+        // Respect saved node position on create
+        var startPos = transitionData != null ? transitionData.position : Vector2.zero;
+        SetPosition(new Rect(startPos, new Vector2(320, 220)));
+
+        BuildTopSelectors(); // Condition Type dropdown (auto-detects)
+        BuildPorts();
+        // Spacer before the foldout
+        var spacerTop = new VisualElement();
+        spacerTop.style.height = 5;
+        mainContainer.Add(spacerTop);
+
+        // Foldout with condition fields
+        conditionFieldsRoot = new VisualElement();
+        var fold = new Foldout { text = "Inspector", value = true };
+        fold.Add(conditionFieldsRoot);
+        mainContainer.Add(fold);
+
+        // Build the fields inside
+        RebuildConditionFields();
+        RefreshNodeFromData();
+        RefreshExpandedState();
+        RefreshPorts();
+
+        // Spacer after the foldout
+        var spacerBottom = new VisualElement();
+        spacerBottom.style.height = 15;
+        mainContainer.Add(spacerBottom);
+
     }
-
-    public StateTransitionNodeView(StateTransition transition, IEdgeConnectorListener edgeListener = null)
+    private void RebuildConditionFields()
     {
-        this.transitionData = transition;
-        title = "Transition";
-        style.width = 260;
-        style.backgroundColor = new Color(0.18f, 0.2f, 0.3f);
-
-        input = InstantiatePort(Orientation.Vertical, Direction.Input, Port.Capacity.Multi, typeof(bool));
-        input.portName = "";
-        titleContainer.Add(input);
-
-        output = InstantiatePort(Orientation.Vertical, Direction.Output, Port.Capacity.Multi, typeof(bool));
-        output.portName = "";
-        extensionContainer.Add(output);
-
-        if (edgeListener != null)
+        conditionFieldsRoot.Clear();
+        if (transitionData == null)
         {
-            input.AddManipulator(new EdgeConnector<Edge>(edgeListener));
-            output.AddManipulator(new EdgeConnector<Edge>(edgeListener));
+            conditionFieldsRoot.Add(new Label("No transition."));
+            return;
         }
 
-        soTransition = new SerializedObject(transitionData);
+        var so = new SerializedObject(transitionData);
+        var condProp = so.FindProperty("condition");
+        if (condProp == null)
+        {
+            conditionFieldsRoot.Add(new Label("No 'condition' property found."));
+            return;
+        }
 
-        // Dropdown
+        static bool ShouldSkip(string n)
+        {
+            n = n?.ToLowerInvariant();
+            return n == "onstatechanged" || n == "transitions" || n == "nextstates";
+        }
+
+        var it = condProp.Copy();
+        var end = it.GetEndProperty();
+        bool enterChildren = true;
+        int startDepth = -1;
+
+        while (it.NextVisible(enterChildren))
+        {
+            if (SerializedProperty.EqualContents(it, end)) break;
+            if (startDepth < 0) startDepth = it.depth;
+            if (it.depth < startDepth) break;
+            if (!it.propertyPath.StartsWith(condProp.propertyPath)) break;
+
+            if (it.propertyPath == "m_Script" || ShouldSkip(it.name))
+            {
+                enterChildren = false;
+                continue;
+            }
+
+            var copy = it.Copy();
+            var field = new PropertyField(copy);
+            field.Bind(so);
+            conditionFieldsRoot.Add(field);
+
+            enterChildren = false;
+        }
+
+        so.ApplyModifiedProperties();
+    }
+
+    public override void SetPosition(Rect newPos)
+    {
+        base.SetPosition(newPos);
+        if (transitionData != null)
+        {
+            if (transitionData.position != newPos.position)
+            {
+                Undo.RecordObject(transitionData, "Move Transition Node");
+                transitionData.position = newPos.position;
+                EditorUtility.SetDirty(transitionData);
+            }
+        }
+    }
+
+    // ---------- Condition Type dropdown ----------
+    private void BuildTopSelectors()
+    {
+        var spacer = new VisualElement();
+        spacer.style.height = 20;  // 10 px tall blank space
+        mainContainer.Add(spacer);
+        var soTransition = new SerializedObject(transitionData);
         var types = GetAllConditionTypes();
         var names = types.Select(t => t.Name).ToList();
         int currentIndex = -1;
@@ -83,114 +160,82 @@ public class StateTransitionNodeView : Node
             RebuildConditionFields();
         });
         mainContainer.Add(conditionTypePopup);
-
-        // Info
-        conditionInfoLabel = new Label();
-        conditionInfoLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
-        mainContainer.Add(conditionInfoLabel);
-
-        // Fields root
-        conditionFieldsRoot = new VisualElement();
-        conditionFieldsRoot.style.marginTop = 4;
-        conditionFieldsRoot.style.marginBottom = 4;
-        mainContainer.Add(conditionFieldsRoot);
-
-        // Default instance if none
-        if (transitionData.condition == null && types.Count > 0)
-        {
-            var t0 = types[currentIndex];
-            var inst = Activator.CreateInstance(t0) as Condition;
-            if (inst != null)
-            {
-                Undo.RecordObject(transitionData, "Set Default Condition");
-                transitionData.condition = inst;
-                EditorUtility.SetDirty(transitionData);
-                soTransition.Update();
-            }
-        }
-
-        RebuildConditionFields();
-
-        RefreshExpandedState();
-        RefreshPorts();
-        SetPosition(new Rect(UnityEngine.Random.Range(200, 650), UnityEngine.Random.Range(80, 450), 260, 160));
-        SetPosition(new Rect(transitionData.position, new Vector2(260, 160)));
-
-        this.RegisterCallback<GeometryChangedEvent>(_ =>
-        {
-            var rect = GetPosition();
-            if (transitionData.position != rect.position)
-            {
-                Undo.RecordObject(transitionData, "Move Transition Node");
-                transitionData.position = rect.position;
-                EditorUtility.SetDirty(transitionData);
-            }
-        });
-        this.AddManipulator(new ContextualMenuManipulator(evt =>
-        {
-            var gv = this.GetFirstAncestorOfType<GraphView>() as StateMachineGraphView;
-            evt.menu.AppendAction("Disconnect", _ => gv?.DisconnectTransitionNode(this));
-            evt.menu.AppendSeparator();
-            evt.menu.AppendAction("Delete", _ => gv?.DeleteSelection());
-        }));
+    }
+    private static List<Type> _cachedConditionTypes;
+    private static List<Type> GetAllConditionTypes()
+    {
+        if (_cachedConditionTypes != null) return _cachedConditionTypes;
+        _cachedConditionTypes = UnityEditor.TypeCache.GetTypesDerivedFrom<Condition>()
+            .Where(t => !t.IsAbstract && t.IsClass && t.GetConstructor(Type.EmptyTypes) != null)
+            .OrderBy(t => t.Name)
+            .ToList();
+        return _cachedConditionTypes;
     }
 
+
+
+    // ---------- Ports + swap ----------
+    private void BuildPorts()
+    {
+        var inColor = new Color(0.8f, 0.55f, 1f);
+        var outColor = new Color(0.5f, 1f, 0.6f);
+
+        input = PortUI.Make(this, Direction.Input, Port.Capacity.Multi,
+                 "From State", "State → Transition", inColor, edgeListener);
+        output = PortUI.Make(this, Direction.Output, Port.Capacity.Multi,
+                 "To State(s)", "Transition → State(s)", outColor, edgeListener);
+
+        inputContainer.Add(input);
+        outputContainer.Add(output);
+
+        _swapBtn = new Button(() => DoSwap()) { text = "⇄" };
+        _swapBtn.tooltip = "Swap input/output sides AND roles";
+        _swapBtn.pickingMode = PickingMode.Position;
+        _swapBtn.style.flexShrink = 0;
+        _swapBtn.style.marginLeft = 6;
+        titleContainer.Add(_swapBtn);
+        _swapBtn.BringToFront();
+        PortUI.AlignToParentSide(input,  inputContainer);
+        PortUI.AlignToParentSide(output, outputContainer);
+
+        if (transitionData != null && transitionData.outputOnLeft)
+        {
+            if (output.parent != inputContainer)
+            {
+                SwapPortsUtility.SwapSidesPersistent(
+                    this, ref input, ref output,
+                    inputContainer, outputContainer,
+                    transitionData,
+                    saveOutputOnLeft: val => transitionData.outputOnLeft = val
+                );
+            }
+        }
+    }
+
+    private void DoSwap()
+{
+    SwapPortsUtility.SwapSidesPersistent(
+    this, ref input, ref output,
+    inputContainer, outputContainer,
+    transitionData,
+    saveOutputOnLeft: val => transitionData.outputOnLeft = val
+);
+
+PortUI.UpdateBadge(input);
+PortUI.UpdateBadge(output);
+}
+
+    // ---------- Embedded full inspector ----------
     public void RefreshNodeFromData()
     {
-        if (soTransition == null) soTransition = new SerializedObject(transitionData);
-        else soTransition.Update();
+        if (transitionData != null && !string.IsNullOrEmpty(transitionData.name))
+            title = transitionData.name;
 
-        RebuildConditionFields();
+        PortUI.UpdateBadge(input);
+        PortUI.UpdateBadge(output);
 
+        _inspectorIMGUI?.MarkDirtyRepaint();
         RefreshExpandedState();
         RefreshPorts();
-    }
-
-
-
-    private void RebuildConditionFields()
-    {
-        conditionFieldsRoot.Clear();
-
-        if (transitionData.condition == null)
-        {
-            conditionFieldsRoot.Add(new Label("No condition selected."));
-            return;
-        }
-
-        var condProp = soTransition.FindProperty("condition");
-        if (condProp == null)
-        {
-            conditionFieldsRoot.Add(new Label("No 'condition' property found."));
-            return;
-        }
-
-        // Draw all serialized fields of the current condition instance
-        var iterator = condProp.Copy();
-        var end = iterator.GetEndProperty();
-        bool enterChildren = true;
-        int startDepth = -1;
-
-        while (iterator.NextVisible(enterChildren))
-        {
-            if (SerializedProperty.EqualContents(iterator, end))
-                break;
-
-            if (startDepth < 0) startDepth = iterator.depth;
-            if (iterator.depth < startDepth) break;
-            if (!iterator.propertyPath.StartsWith(condProp.propertyPath))
-                break;
-
-            if (iterator.name.StartsWith("managedReference")) { enterChildren = true; continue; }
-
-            var childCopy = iterator.Copy();
-            var field = new PropertyField(childCopy);
-            field.Bind(soTransition);
-            conditionFieldsRoot.Add(field);
-
-            enterChildren = false;
-        }
-
-        soTransition.ApplyModifiedProperties();
     }
 }

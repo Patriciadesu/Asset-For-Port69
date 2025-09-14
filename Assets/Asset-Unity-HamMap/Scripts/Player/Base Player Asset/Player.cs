@@ -1,12 +1,8 @@
 using NaughtyAttributes;
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Unity.Cinemachine;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
-using UnityEditor;
 
 [ExecuteAlways]
 public partial class Player : Singleton<Player>
