@@ -1,4 +1,3 @@
-using NaughtyAttributes;
 using UnityEngine;
 using System.Collections;
 [CreateAssetMenu(fileName = "ItemData", menuName = "ScriptableObjects/ItemDatainventory", order = 1)]

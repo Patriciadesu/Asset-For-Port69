@@ -1,4 +1,3 @@
-using NaughtyAttributes;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static NodeHelper.NodeUIHelpers;

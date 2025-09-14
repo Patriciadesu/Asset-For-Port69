@@ -1,7 +1,5 @@
-using System.Security.Cryptography;
 using NaughtyAttributes;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Dash : PlayerExtension, IUseStamina, IInteruptPlayerMovement
 {

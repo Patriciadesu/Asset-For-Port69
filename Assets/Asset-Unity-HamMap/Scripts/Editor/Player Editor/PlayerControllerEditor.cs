@@ -1,12 +1,9 @@
 ﻿using UnityEditor;
 using UnityEngine;
 using System;
-using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 using NaughtyAttributes.Editor;
-using NaughtyAttributes;
-using UnityEngine.UIElements;
 
 [CustomEditor(typeof(Player))]
 public class PlayerControllerEditor : NaughtyInspector

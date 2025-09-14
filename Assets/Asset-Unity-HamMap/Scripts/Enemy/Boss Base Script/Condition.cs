@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Timeline;
 
 /// <summary>
 /// Base class for all graph conditions. Inherit this and override StartTrackCondition / StopTrackCondition.

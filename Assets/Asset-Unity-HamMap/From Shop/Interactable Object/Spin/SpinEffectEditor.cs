@@ -1,5 +1,4 @@
 using UnityEditor;
-using UnityEngine;
 
 [CustomEditor(typeof(SpinEffect))]
 public class SpinEffectEditor : Editor

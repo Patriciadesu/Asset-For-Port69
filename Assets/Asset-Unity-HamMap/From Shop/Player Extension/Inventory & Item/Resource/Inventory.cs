@@ -1,7 +1,5 @@
 using UnityEngine.UI;
-using TMPro;
 using UnityEngine;
-using Unity.VisualScripting;
 
 public class Inventory : Singleton<Inventory>
 {

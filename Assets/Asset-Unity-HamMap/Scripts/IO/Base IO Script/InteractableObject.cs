@@ -1,4 +1,3 @@
-using Unity.VisualScripting;
 using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class InteractableObject : MonoBehaviour

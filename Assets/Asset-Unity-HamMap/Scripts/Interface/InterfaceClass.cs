@@ -1,9 +1,5 @@
-using UnityEngine;
-using System;
 using UnityEngine.UIElements;
-using NaughtyAttributes;
 using System.Collections;
-using System.Collections.Generic;
 
 public interface IUseStamina
 {

@@ -2,7 +2,6 @@ using NaughtyAttributes;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.Animations;
-using System;
 
 [ExecuteInEditMode]
 public class PlayerAnimation : MonoBehaviour
