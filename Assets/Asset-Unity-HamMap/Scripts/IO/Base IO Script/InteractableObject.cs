@@ -1,142 +1,26 @@
+using NaughtyAttributes;
 using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class InteractableObject : MonoBehaviour
 {
-    [SerializeField] bool usePhysic = true;
-    [SerializeField] bool useGravity = true;
     [SerializeField] bool isTrigger = false;
+    [SerializeField, HideIf("isTrigger")] bool usePhysic = true;
+    [SerializeField,HideIf("isTrigger")] bool useGravity = true;
+    
     private ObjectEffect[] effects;
     void Start()
     {
-        GetComponent<Rigidbody>().isKinematic = !usePhysic;
-        if (isTrigger) useGravity = false;
+        if (isTrigger)
+        {
+            useGravity = false;
+            usePhysic = false;
+        }
+        GetComponent<Rigidbody>().isKinematic = !usePhysic;   
         GetComponent<Rigidbody>().useGravity = useGravity;
         effects = GetComponents<ObjectEffect>();
         EnsureColliderExists();
         EnsureRigidbodyExists();
         EnsureIsTrigger();
-    }
-    void OnCollisionEnter(Collision collision)
-    {
-        // First try to get Player directly from the colliding object
-        Player player = collision.gameObject.GetComponent<Player>();
-        
-        if (player != null)
-        {
-            Debug.Log($"Player with Player Hit: {collision.gameObject.name}");
-            HandlePlayerCollision(collision, player);
-        }
-        else if (collision.gameObject.CompareTag("Player"))
-        {
-            // If it has Player tag but no Player, search in hierarchy
-            player = FindPlayerInHierarchy(collision.gameObject);
-            
-            if (player != null)
-            {
-                Debug.Log($"Player found in hierarchy: {player.gameObject.name}");
-                HandlePlayerCollision(collision, player);
-            }
-            else
-            {
-                Debug.LogWarning($"GameObject with 'Player' tag hit {gameObject.name} but has no Player component anywhere in hierarchy!");
-            }
-        }
-        else
-        {
-            // Debug: Log all collisions to help troubleshoot
-            Debug.Log($"Collision detected with: {collision.gameObject.name} (Tag: {collision.gameObject.tag})");
-        }
-    }
-    public void OnTriggerEnter(Collider other)
-    {
-        // First try to get Player directly from the colliding object
-        Player player = other.gameObject.GetComponent<Player>();
-        
-        if (player != null)
-        {
-            Debug.Log($"Player with Player Hit: {other.gameObject.name}");
-            foreach (ObjectEffect effect in effects)
-            {
-                effect.ApplyEffect(player);
-                effect.ApplyEffect(other, player);
-            }
-        }
-        else if (other.gameObject.CompareTag("Player"))
-        {
-            // If it has Player tag but no Player, search in hierarchy
-            player = FindPlayerInHierarchy(other.gameObject);
-            
-            if (player != null)
-            {
-                Debug.Log($"Player found in hierarchy: {player.gameObject.name}");
-                foreach (ObjectEffect effect in effects)
-                {
-                    effect.ApplyEffect(player);
-                    effect.ApplyEffect(other, player);
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"GameObject with 'Player' tag hit {gameObject.name} but has no Player component anywhere in hierarchy!");
-            }
-        }
-    }
-
-    private Player FindPlayerInHierarchy(GameObject obj)
-    {
-        // Search in parent hierarchy
-        Player parentPlayer = obj.GetComponentInParent<Player>();
-        if (parentPlayer != null)
-        {
-            return parentPlayer;
-        }
-
-        // Search in children hierarchy
-        Player childPlayer = obj.GetComponentInChildren<Player>();
-        if (childPlayer != null)
-        {
-            return childPlayer;
-        }
-
-        // Search in siblings
-        if (obj.transform.parent != null)
-        {
-            Player siblingPlayer = obj.transform.parent.GetComponentInChildren<Player>();
-            if (siblingPlayer != null && siblingPlayer.gameObject != obj)
-            {
-                return siblingPlayer;
-            }
-        }
-
-        return null;
-    }
-    protected virtual void HandlePlayerCollision(Collision playerCollision)
-    {
-        // Try to find Player from the collision
-        Player player = playerCollision.gameObject.GetComponent<Player>();
-        if (player == null && playerCollision.gameObject.CompareTag("Player"))
-        {
-            player = FindPlayerInHierarchy(playerCollision.gameObject);
-        }
-        
-        Debug.Log($"Handling player collision with {effects.Length} effects");
-        foreach (ObjectEffect effect in effects)
-        {
-            if (player != null)
-            {
-                effect.ApplyEffect(player);
-                effect.ApplyEffect(playerCollision, player);
-            }
-        }
-    }
-    protected virtual void HandlePlayerCollision(Collision collision, Player player)
-    {
-        Debug.Log($"Handling player collision with {effects.Length} effects for player: {player.gameObject.name}");
-        foreach (ObjectEffect effect in effects)
-        {
-            effect.ApplyEffect(player);
-            effect.ApplyEffect(collision, player);
-        }
     }
     private void EnsureColliderExists()
     {
@@ -226,7 +110,22 @@ public class InteractableObject : MonoBehaviour
 }
 public abstract class ObjectEffect : MonoBehaviour
 {
+
+    public void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.TryGetComponent<Player>(out Player player))
+        {
+            ApplyEffect(collision, player);
+        }
+    }
+    public void OnTriggerEnter(Collider other)
+    {
+        if (other.TryGetComponent<Player>(out Player player))
+        {
+            ApplyEffect(player);
+        }
+    }
+
     public virtual void ApplyEffect(Player player) { }
-    public virtual void ApplyEffect(Collision playerCollision, Player player) { }
-    public virtual void ApplyEffect(Collider playerCollider, Player player) { }
+    public virtual void ApplyEffect(Collision collision, Player player) => ApplyEffect(player);
 }
