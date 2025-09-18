@@ -22,6 +22,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   position: {x: -904, y: -130}
+  outputOnLeft: 0
   references:
     version: 2
     RefIds:

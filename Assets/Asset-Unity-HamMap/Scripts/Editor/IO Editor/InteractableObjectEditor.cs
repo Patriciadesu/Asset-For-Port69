@@ -4,9 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
+using NaughtyAttributes.Editor;
 
 [CustomEditor(typeof(InteractableObject))]
-public class InteractableObjectEditor : Editor
+public class InteractableObjectEditor : NaughtyInspector
 {
     private Dictionary<string, bool> effectToggles = new Dictionary<string, bool>();
     private List<Type> effectTypes = new List<Type>();
@@ -16,9 +17,10 @@ public class InteractableObjectEditor : Editor
 
     public override void OnInspectorGUI()
     {
+        base.OnInspectorGUI();
         InteractableObject interactable = (InteractableObject)target;
 
-        DrawDefaultInspector();
+        
         EditorGUILayout.Space(10);
 
         showEffects = EditorGUILayout.BeginFoldoutHeaderGroup(showEffects, "Manage Object Effects");

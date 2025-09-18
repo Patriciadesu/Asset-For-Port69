@@ -4,15 +4,11 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Playables;
 
-[RequireComponent(typeof(Animator))]
-public partial class Boss : MonoBehaviour
+public partial class Boss : MonoBehaviour,IEnemy
 {
     public BossStateGraph stateGraph;
 
-    private bool hasAttackState => stateGraph != null && stateGraph.transitionNodes != null &&
-                                   stateGraph.transitionNodes.Any(t => t.nextStates != null &&
-                                                                       t.nextStates.Any(s => s != null && s.state is AttackState));                                                             
-    [ShowIf("hasAttackState")] public Collider[] attackCollider;
+
     
 
     [HideInInspector] public UnityEvent onStateChanged;
@@ -46,7 +42,8 @@ public partial class Boss : MonoBehaviour
     [HideInInspector] public Quaternion initialRotation;
     private Vector3[] childrenInitialPositions;
     private Quaternion[] childrenInitialRotations;
-    private void Awake()
+
+    private void Start()
     {
         onStateChanged ??= new UnityEvent();
         onStateTimeChanged ??= new UnityEvent<float>();
@@ -68,21 +65,6 @@ public partial class Boss : MonoBehaviour
             rb.useGravity = false;
         }
 
-        // Weapon colliders: triggers, disabled by default (enabled in Attack state)
-        if (attackCollider != null)
-        {
-            for (int i = 0; i < attackCollider.Length; i++)
-            {
-                var c = attackCollider[i];
-                if (c == null) continue;
-                c.isTrigger = true;
-                c.enabled = false;
-            }
-        }
-    }
-
-    private void Start()
-    {
         SetInitialTransform();
         _player = Player.Instance.transform;
         if (TryGetComponent<PlayableDirector>(out PlayableDirector director))
@@ -195,18 +177,7 @@ public partial class Boss : MonoBehaviour
     }
 
     // --------- Attack-only trigger: weapon collider hits player's collider -> TakeDamage ----------
-    private void OnTriggerEnter(Collider other)
-    {
-        if (!IsInAttackState()) return;
-        if (!other.CompareTag(PlayerTag)) return;
-
-        float dmg = GetCurrentAttackDamage();
-        if (dmg <= 0f) return;
-
-        var targetGO = other.attachedRigidbody != null ? other.attachedRigidbody.gameObject : other.gameObject;
-        // Default simple signature; your Player can implement a different TakeDamage; SendMessage is flexible
-        targetGO.SendMessage("TakeDamage", dmg, SendMessageOptions.DontRequireReceiver);
-    }
+    
 
     // ---------------- Helpers ---------------
 
@@ -226,14 +197,7 @@ public partial class Boss : MonoBehaviour
         else onPlayerOutOfAttackRange.Invoke();
     }
 
-    private bool IsInAttackState()
-        => stateGraph != null && stateGraph.currentState != null && stateGraph.currentState.state is AttackState;
-
-    private float GetCurrentAttackDamage()
-        => stateGraph != null && stateGraph.currentState != null && stateGraph.currentState.state is AttackState a
-           ? a.Damage
-           : 0f;
-
+    
     // Signals to drive conditions from gameplay
     public void TakeDamage(float damage)
     {

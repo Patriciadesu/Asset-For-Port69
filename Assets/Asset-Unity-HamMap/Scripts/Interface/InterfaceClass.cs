@@ -42,5 +42,9 @@ public interface IUsableItem
 }
 public interface IPerformOnCollect
 {
-    public IEnumerator OnCollect() { yield return null; } 
+    public IEnumerator OnCollect() { yield return null; }
+}
+public interface IEnemy
+{
+    public void TakeDamage(float damage) { }
 }

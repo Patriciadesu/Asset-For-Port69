@@ -2,6 +2,7 @@ using NaughtyAttributes;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Cinemachine;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [ExecuteAlways]
@@ -35,7 +36,7 @@ public partial class Player : Singleton<Player>
     [HideInInspector] public Vector3 lastCheckpoint;
     [HideInInspector] public Vector3 spawnPoint;
 
-    
+
     [HideInInspector] public bool canRotateCamera = true;
 
     #region Player Delegates
@@ -77,96 +78,106 @@ public partial class Player : Singleton<Player>
 
     #region Unity Methods
     void Awake()
-{
-    // Cache components early
-    rigidbody       = GetComponent<Rigidbody>();
-    animator        = GetComponent<Animator>();
-    capsuleCollider = GetComponent<CapsuleCollider>();
+    {
+        rigidbody = GetComponent<Rigidbody>();
+        animator = GetComponent<Animator>();
+        capsuleCollider = GetComponent<CapsuleCollider>();
 
-    // Ensure modules exist before binding (bindings happen in Start)
-    Cam      ??= new CameraModule(this);
-    Movement ??= new MovementModule(this);
-    Stat     ??= new StatModule(this);
-}
+        if (Cam == null) Cam = new CameraModule(this);
+        if (Movement == null) Movement = new MovementModule(this);
+        if (Stat == null) Stat = new StatModule(this);
 
-void Start()
-{
-    if (!Application.isPlaying) return;
+        // 🔧 Bind immediately so modules can work even in Edit Mode previews
+        Cam.Bind(this);
+        Movement.Bind(this);
+        Stat.Bind(this);
+    }
 
-    // Gather extensions but defer their OnStart until after player/modules are ready
-    SetExtensions();
-    SetSpawnPoint(transform.position);
+    void Start()
+    {
+        if (!Application.isPlaying) return;
 
-    Cursor.lockState = CursorLockMode.Locked;
-    Cursor.visible   = false;
+        // Gather extensions but defer their OnStart until after player/modules are ready
+        SetExtensions();
+        SetSpawnPoint(transform.position);
 
-    // Bind modules once
-    Stat.Bind(this);
-    Cam.Bind(this);
-    Movement.Bind(this);
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
-    // Fire player start
-    onStart?.Invoke();
+        // Bind modules once
+        Stat.Bind(this);
+        Cam.Bind(this);
+        Movement.Bind(this);
 
-    // Let extensions know the player is fully initialized
-    foreach (var ext in extensions)
-        ext.OnStart(this);
+        // Fire player start
+        onStart?.Invoke();
 
-    // Populate interface-component lists
-    RefreshInterfaceComponents();
-}
+        // Let extensions know the player is fully initialized
+        foreach (var ext in extensions)
+        {
+            ext.OnStart(this);
+
+        }
+        if (Inventory.Instance == null)
+        {
+            this.AddComponent<Inventory>();
+        }
+        // Populate interface-component lists
+        RefreshInterfaceComponents();
+    }
 
 #if UNITY_EDITOR
 void OnValidate()
 {
     // Keep cached component refs fresh in Edit Mode
-    rigidbody       = GetComponent<Rigidbody>();
-    animator        = GetComponent<Animator>();
+    rigidbody = GetComponent<Rigidbody>();
+    animator = GetComponent<Animator>();
     capsuleCollider = GetComponent<CapsuleCollider>();
 
-    // Ensure modules so we can forward validation
-    Cam      ??= new CameraModule(this);
-    Movement ??= new MovementModule(this);
-    Stat     ??= new StatModule(this);
+    // Ensure modules exist
+    if (Cam == null)      Cam      = new CameraModule(this);
+    if (Movement == null) Movement = new MovementModule(this);
+    if (Stat == null)     Stat     = new StatModule(this);
 
-    // Forward OnValidate so inspector changes reflect immediately
+    // 🔧 IMPORTANT: Re-bind so 'player' back-reference is valid in Edit Mode
+    Cam.Bind(this);
+    Movement.Bind(this);
+    Stat.Bind(this);
+
+    // Forward validation
     Cam.OnValidate();
     Movement.OnValidate();
     Stat.OnValidate();
 }
 #endif
 
-void Update()
-{
-    onUpdate?.Invoke();
 
-    // Safety: if a module was nulled at runtime, recreate it
-    Cam      ??= new CameraModule(this);
-    Movement ??= new MovementModule(this);
-    Stat     ??= new StatModule(this);
-}
+    void Update()
+    {
+        onUpdate?.Invoke();
+    }
 
-void FixedUpdate() => onFixedUpdate?.Invoke();
+    void FixedUpdate() => onFixedUpdate?.Invoke();
 
-void OnCollisionEnter(Collision c) { if (Application.isPlaying) onCollisionEnter?.Invoke(c); }
-void OnCollisionStay (Collision c) { if (Application.isPlaying) onCollisionStay ?.Invoke(c); }
-void OnCollisionExit (Collision c) { if (Application.isPlaying) onCollisionExit ?.Invoke(c); }
-void OnTriggerEnter (Collider o)   { if (Application.isPlaying) onTriggerEnter ?.Invoke(o); }
-void OnTriggerStay  (Collider o)   { if (Application.isPlaying) onTriggerStay  ?.Invoke(o); }
-void OnTriggerExit  (Collider o)   { if (Application.isPlaying) onTriggerExit  ?.Invoke(o); }
+    void OnCollisionEnter(Collision c) { if (Application.isPlaying) onCollisionEnter?.Invoke(c); }
+    void OnCollisionStay(Collision c) { if (Application.isPlaying) onCollisionStay?.Invoke(c); }
+    void OnCollisionExit(Collision c) { if (Application.isPlaying) onCollisionExit?.Invoke(c); }
+    void OnTriggerEnter(Collider o) { if (Application.isPlaying) onTriggerEnter?.Invoke(o); }
+    void OnTriggerStay(Collider o) { if (Application.isPlaying) onTriggerStay?.Invoke(o); }
+    void OnTriggerExit(Collider o) { if (Application.isPlaying) onTriggerExit?.Invoke(o); }
 
-// ——— helpers ———
-void RefreshInterfaceComponents()
-{
-    interuptPlayerMovementComponents.Clear();
-    cancleGravityComponents.Clear();
-    staminaComponentStates.Clear();
+    // ——— helpers ———
+    void RefreshInterfaceComponents()
+    {
+        interuptPlayerMovementComponents.Clear();
+        cancleGravityComponents.Clear();
+        staminaComponentStates.Clear();
 
-    var all = GameObject.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
-    foreach (var x in all.OfType<IInteruptPlayerMovement>()) interuptPlayerMovementComponents.Add(x);
-    foreach (var x in all.OfType<ICancleGravity>())          cancleGravityComponents.Add(x);
-    foreach (var x in all.OfType<IUseStamina>())             staminaComponentStates.Add(x);
-}
+        var all = GameObject.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+        foreach (var x in all.OfType<IInteruptPlayerMovement>()) interuptPlayerMovementComponents.Add(x);
+        foreach (var x in all.OfType<ICancleGravity>()) cancleGravityComponents.Add(x);
+        foreach (var x in all.OfType<IUseStamina>()) staminaComponentStates.Add(x);
+    }
     #endregion
 
     #region Player Methods

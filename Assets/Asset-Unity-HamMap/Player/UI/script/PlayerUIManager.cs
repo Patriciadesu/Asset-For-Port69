@@ -23,12 +23,14 @@ public partial class PlayerUIManager : Singleton<PlayerUIManager>
     [Header("Enable/Disable UI Elements")]
     public bool enableStaminaBar = true;
     public bool enableHealthBar = true;
-    
+
     private Player player;
+    private StatModule stat;
 
     public void Start()
     {
         player = Player.Instance;
+        stat = Player.Instance.Stat;
         // Apply UI settings from Player
         enableHealthBar = player.enableHealthBar;
         enableStaminaBar = player.enableStaminaBar;
@@ -54,11 +56,11 @@ public partial class PlayerUIManager : Singleton<PlayerUIManager>
     {
         // Always update stamina bar if enabled
         if (enableStaminaBar)
-            staminaBar.value = player.Stat.currentstamina / player.Stat.maxstamina;
+            staminaBar.value = stat.currentstamina / stat.maxstamina;
 
         // Always update health bar if enabled
         if (enableHealthBar)
-            healthBar.value = player.Stat.currenthealth / player.Stat.maxhealth;
+            healthBar.value = stat.currenthealth / stat.maxhealth;
     }
 
     // Methods to update UI for each ability
