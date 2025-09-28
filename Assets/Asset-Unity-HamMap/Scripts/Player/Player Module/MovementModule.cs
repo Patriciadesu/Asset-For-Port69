@@ -16,8 +16,8 @@ public class MovementModule : PlayerModule
     #endregion
 
     #region Movement Buffer
-    [HideInInspector]public float coyoteTime = 0.1f;
-    [HideInInspector]public float jumpBufferTime = 0.1f;
+    public float coyoteTime => 0.1f;
+    public float jumpBufferTime => 0.1f;
     [HideInInspector]public float lastGroundedTime;
     [HideInInspector]public float lastJumpPressedTime;
     #endregion
@@ -36,8 +36,7 @@ public class MovementModule : PlayerModule
     {
         base.Update();
         if (!Application.isPlaying || player == null) return;
-
-        CheckGrounded();
+CheckGrounded();
         JumpHandler();
 
         if (isGrounded)
@@ -52,7 +51,9 @@ public class MovementModule : PlayerModule
         base.FixedUpdate();
         if (!Application.isPlaying || player == null) return;
 
+        
         ApplyGravity();
+        
         Move();
     }
 

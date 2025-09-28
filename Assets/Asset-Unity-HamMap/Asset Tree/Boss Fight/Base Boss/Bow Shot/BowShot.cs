@@ -55,6 +55,7 @@ public class BowShot : PlayerExtension
     public override void OnStart(Player player)
     {
         base.OnStart(player);
+        if (Player.Instance.Cam.cameraType == CameraType.FirstPerson) aimZooming = false;
         CacheClipLength();
 
         if (spawnPoint == null)
