@@ -8,6 +8,7 @@ TagManager:
   - Jumpscare
   - Hand
   - DialogCanvas
+  - Portal
   layers:
   - Default
   - TransparentFX
