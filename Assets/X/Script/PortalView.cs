@@ -1,3 +1,4 @@
+Ôªøusing System.Collections;
 using System.Linq;
 using UnityEngine;
 using Unity.Cinemachine;
@@ -15,62 +16,96 @@ public class PortalView : MonoBehaviour
     [Header("Player Camera Auto-Discovery")]
     [SerializeField] private Transform playerRootOverride;
     [SerializeField] private bool autoReacquire = true;
+    [Tooltip("‡∏´‡∏ô‡πà‡∏ß‡∏á‡∏Å‡πà‡∏≠‡∏ô rebind ‡πÄ‡∏°‡∏∑‡πà‡∏≠‡∏Å‡∏•‡πâ‡∏≠‡∏á‡∏ú‡∏π‡πâ‡πÄ‡∏•‡πà‡∏ô‡∏ñ‡∏π‡∏Å‡∏õ‡∏¥‡∏î‡∏ä‡∏±‡πà‡∏ß‡∏Ñ‡∏£‡∏≤‡∏ß (‡πÄ‡∏ä‡πà‡∏ô ‡∏ï‡∏≠‡∏ô‡∏™‡∏•‡∏±‡∏ö vcam)")]
+    [SerializeField] private int reacquireGraceFrames = 6;
+    [Tooltip("‡∏û‡∏¢‡∏≤‡∏¢‡∏≤‡∏°‡πÉ‡∏ä‡πâ Player.Instance.camera ‡∏Å‡πà‡∏≠‡∏ô‡∏ß‡∏¥‡∏ò‡∏µ‡∏≠‡∏∑‡πà‡∏ô")]
+    [SerializeField] private bool preferPlayerInstanceCamera = true;
 
-    // === Tuning (‡¥‘¡) ===
     [Header("Tuning")]
-    [Range(0.1f, 2f)][SerializeField] private float distanceScale = 0.1f;
+    [Range(0.1f, 2f)][SerializeField] private float distanceScale = 1f;
     [SerializeField] private float forwardBias = 0f;
     [SerializeField] private Vector3 localOffset = Vector3.zero;
 
-    // === RT Sizing ===
     [Header("RenderTexture Sizing")]
-    [Tooltip("§«“¡≈–‡Õ’¬¥¥È“π∑’Ë —Èπ°«Ë“ (Õ’°¥È“π®–§”π«≥®“°Õ—µ√“ Ë«π¢Õß°√Õ∫æÕ√Ï∑—≈)")]
     [SerializeField] private int rtShortSide = 1024;
-    [Tooltip("rebuild RT ‡¡◊ËÕ —¥ Ë«π°√Õ∫‡ª≈’Ë¬π‡°‘π§Ë“π’È")]
     [SerializeField] private float aspectEpsilon = 0.005f;
+
+    [Header("Safety")]
+    [Tooltip("‡∏ï‡∏±‡∏î‡∏Å‡∏•‡πâ‡∏≠‡∏á‡∏ó‡∏µ‡πà‡∏≠‡∏¢‡∏π‡πà‡πÉ‡∏ï‡πâ PortalView ‡∏´‡∏£‡∏∑‡∏≠‡∏°‡∏µ‡∏Å‡∏≥‡∏´‡∏ô‡∏î targetTexture (‡∏Å‡∏•‡πâ‡∏≠‡∏á‡∏û‡∏≠‡∏£‡πå‡∏ó‡∏±‡∏•)")]
+    [SerializeField] private bool excludePortalCameras = true;
+    [Tooltip("Rebind RT ‡∏≠‡∏±‡∏ï‡πÇ‡∏ô‡∏°‡∏±‡∏ï‡∏¥‡πÄ‡∏°‡∏∑‡πà‡∏≠ otherPortal ‡πÄ‡∏õ‡∏•‡∏µ‡πà‡∏¢‡∏ô")]
+    [SerializeField] private bool autoRebindOnOtherChange = true;
 
     [HideInInspector] public Camera playercam;
 
     private Material portalMaterial;
     private RenderTexture otherRT;
-
-    // cache  ”À√—∫ rebuild
     private float lastPortalAspect = -1f;
+
+    // track state ‡πÄ‡∏û‡∏∑‡πà‡∏≠ rebind/‡∏Å‡∏±‡∏ô‡πÅ‡∏Å‡∏ß‡πà‡∏á
+    private int lostUsableFrames = 0;
+    private PortalView _lastOther;
 
     void Awake()
     {
         if (!portalView)
-        {
             portalView = GetComponentInChildren<Camera>(true);
-            if (!portalView)
-                Debug.LogError("[PortalView] portalView missing.");
-        }
+        if (!portalView)
+            Debug.LogError("[PortalView] portalView missing.");
     }
 
     void Start()
     {
-        BuildRTAndMaterial();      //  √È“ß RT „ÀÈ ìæÕ¥’°√Õ∫î
+        BuildRTAndMaterial();
+        // ‡∏´‡∏ô‡πà‡∏ß‡∏á‡πÉ‡∏´‡πâ‡∏£‡∏∞‡∏ö‡∏ö‡∏Å‡∏•‡πâ‡∏≠‡∏á‡∏ô‡∏¥‡πà‡∏á‡∏Å‡πà‡∏≠‡∏ô‡∏Ñ‡πà‡∏≠‡∏¢ bind
+        StartCoroutine(BindLate());
+    }
+
+    IEnumerator BindLate()
+    {
+        // ‡∏£‡∏≠‡∏≠‡∏¢‡πà‡∏≤‡∏á‡∏ô‡πâ‡∏≠‡∏¢ 1 frame + 1 fixed ‡πÄ‡∏û‡∏∑‡πà‡∏≠‡πÉ‡∏´‡πâ Cinemachine/‡πÇ‡∏°‡∏î‡∏π‡∏•‡∏Å‡∏•‡πâ‡∏≠‡∏á‡∏Ç‡∏≠‡∏á Player set ‡πÄ‡∏™‡∏£‡πá‡∏à
+        yield return null;
+        yield return new WaitForFixedUpdate();
+
         TryAcquirePlayerCamera(true);
-        SyncProjectionFromPlayer(); // sync FOV/aspect §√—Èß·√°
+        SyncProjectionFromPlayer();
+        ForceRebindRT();
     }
 
     void OnEnable()
     {
-        if (!playercam) TryAcquirePlayerCamera(false);
-        EnsureRTUpToDate(); // ‡º◊ËÕ‡ª‘¥/ª‘¥æ√’·ø∫·≈È« ‡°≈‡ª≈’Ë¬π
+        if (playercam == null)
+            StartCoroutine(BindLate());
+        else
+            ForceRebindRT();
     }
 
     void Update()
     {
-        if (autoReacquire && (!playercam || !playercam.isActiveAndEnabled))
-            TryAcquirePlayerCamera(false);
+        EnsureRTUpToDate();
 
-        EnsureRTUpToDate();    // rebuild RT ∂È“ —¥ Ë«π°√Õ∫‡ª≈’Ë¬π
-        SyncProjectionFromPlayer();
+        // Rebind RT ‡∏≠‡∏±‡∏ï‡πÇ‡∏ô‡∏°‡∏±‡∏ï‡∏¥‡πÄ‡∏°‡∏∑‡πà‡∏≠‡∏õ‡∏•‡∏≤‡∏¢‡∏ó‡∏≤‡∏á‡πÄ‡∏õ‡∏•‡∏µ‡πà‡∏¢‡∏ô
+        if (autoRebindOnOtherChange && otherPortal != _lastOther)
+            ForceRebindRT();
+
+        // Reacquire ‡πÅ‡∏ö‡∏ö‡∏°‡∏µ grace ‡πÄ‡∏°‡∏∑‡πà‡∏≠‡∏Å‡∏•‡πâ‡∏≠‡∏á‡∏ú‡∏π‡πâ‡πÄ‡∏•‡πà‡∏ô ‚Äú‡πÑ‡∏°‡πà‡∏û‡∏£‡πâ‡∏≠‡∏°‡πÉ‡∏ä‡πâ‡∏á‡∏≤‡∏ô‚Äù ‡∏ä‡∏±‡πà‡∏ß‡∏Ñ‡∏£‡∏≤‡∏ß
+        if (autoReacquire)
+        {
+            if (!IsUsablePlayerCamera(playercam))
+            {
+                lostUsableFrames++;
+                if (lostUsableFrames >= reacquireGraceFrames)
+                {
+                    TryAcquirePlayerCamera(false);
+                    lostUsableFrames = 0;
+                }
+            }
+            else lostUsableFrames = 0;
+        }
 
         if (!playercam || !otherPortal || !portalView) return;
 
-        // === Transform Mirror ===
+        // === Mirror transform ===
         Vector3 lp = otherPortal.transform.worldToLocalMatrix.MultiplyPoint3x4(playercam.transform.position);
         Vector3 mirrored = new Vector3(-lp.x, lp.y, -lp.z);
 
@@ -88,34 +123,20 @@ public class PortalView : MonoBehaviour
         portalView.nearClipPlane = Mathf.Clamp(dist - 0.02f, 0.03f, 0.3f);
     }
 
-    // ---------- Core: Build RT that matches the portal frame ----------
+    // ---------- RT build/rebind ----------
     void BuildRTAndMaterial()
     {
-        float portalAspect = ComputePortalPlaneAspect();   // °«È“ß/ Ÿß¢Õß ì°√Õ∫æÕ√Ï∑—≈î ®√‘ß„π´’π
+        float portalAspect = ComputePortalPlaneAspect();
         lastPortalAspect = portalAspect;
 
         int w, h;
-        if (portalAspect >= 1f)
-        {      // °«È“ß°«Ë“ Ÿß
-            h = rtShortSide;
-            w = Mathf.Max(64, Mathf.RoundToInt(h * portalAspect));
-        }
-        else
-        {                        //  Ÿß°«Ë“°«È“ß
-            w = rtShortSide;
-            h = Mathf.Max(64, Mathf.RoundToInt(w / portalAspect));
-        }
+        if (portalAspect >= 1f) { h = rtShortSide; w = Mathf.Max(64, Mathf.RoundToInt(h * portalAspect)); }
+        else { w = rtShortSide; h = Mathf.Max(64, Mathf.RoundToInt(w / portalAspect)); }
 
-        //  √È“ß RT „À¡Ë„ÀÈµ√ß —¥ Ë«π°√Õ∫
         if (otherRT) { otherRT.Release(); Destroy(otherRT); }
         otherRT = new RenderTexture(w, h, 24, RenderTextureFormat.Default);
         otherRT.name = $"PortalRT_{name}_From_{otherPortal?.name}";
 
-        // °≈ÈÕß¢Õß "Õ’°Ω—Ëß" µÈÕß‡√π‡¥Õ√Ï„ Ë RT π’È
-        if (otherPortal && otherPortal.portalView)
-            otherPortal.portalView.targetTexture = otherRT;
-
-        // «— ¥ÿ¢Õß°√Õ∫π’È„™È RT π’È
         if (portalMaterial == null)
         {
             portalMaterial = new Material(portalShader);
@@ -123,9 +144,25 @@ public class PortalView : MonoBehaviour
         }
         portalMaterial.mainTexture = otherRT;
 
-        // °≈ÈÕßΩ—Ëß‡√“„ÀÈ aspect µ“¡ RT ( Õ¥§≈ÈÕß°—∫°√Õ∫)
-        if (portalView)
-            portalView.aspect = (float)w / h;
+        if (portalView) portalView.aspect = (float)w / h;
+
+        // ‡πÉ‡∏´‡πâ‡πÅ‡∏ô‡πà‡πÉ‡∏à‡∏ß‡πà‡∏≤ targetTexture ‡∏Ç‡∏≠‡∏á "‡∏Å‡∏•‡πâ‡∏≠‡∏á‡∏≠‡∏µ‡∏Å‡∏ù‡∏±‡πà‡∏á" ‡∏ñ‡∏π‡∏Å‡∏ä‡∏µ‡πâ‡πÄ‡∏Ç‡πâ‡∏≤‡∏°‡∏≤‡∏ó‡∏µ‡πà RT ‡πÉ‡∏´‡∏°‡πà‡∏ô‡∏µ‡πâ
+        ForceRebindRT();
+    }
+
+    public void ForceRebindRT()
+    {
+        if (otherRT == null) BuildRTAndMaterial();
+
+        // ‡∏ñ‡∏≠‡∏î‡∏Ç‡∏≠‡∏á‡πÄ‡∏Å‡πà‡∏≤‡∏ó‡∏µ‡πà‡∏ä‡∏µ‡πâ‡∏≠‡∏¢‡∏π‡πà
+        if (_lastOther && _lastOther.portalView && _lastOther.portalView.targetTexture == otherRT)
+            _lastOther.portalView.targetTexture = null;
+
+        // ‡∏ú‡∏π‡∏Å‡∏Ç‡∏≠‡∏á‡πÉ‡∏´‡∏°‡πà
+        if (otherPortal && otherPortal.portalView)
+            otherPortal.portalView.targetTexture = otherRT;
+
+        _lastOther = otherPortal;
     }
 
     void EnsureRTUpToDate()
@@ -135,20 +172,16 @@ public class PortalView : MonoBehaviour
             BuildRTAndMaterial();
     }
 
-    // §”π«≥Õ—µ√“ Ë«π°√Õ∫®“° Mesh ®√‘ß (√Õß√—∫ ‡°≈/À¡ÿπ)
     float ComputePortalPlaneAspect()
     {
         if (!portalMesh) return 1f;
-
         var mf = portalMesh.GetComponent<MeshFilter>();
         if (!mf || !mf.sharedMesh) return 1f;
 
         var b = mf.sharedMesh.bounds;
         var t = portalMesh.transform;
 
-        //  √È“ß 8 ¡ÿ¡ ·≈È« project ≈ß·°π right/up ¢Õß°√Õ∫
-        Vector3 c = b.center;
-        Vector3 e = b.extents;
+        Vector3 c = b.center, e = b.extents;
         Vector3[] corners = new Vector3[8];
         int i = 0;
         for (int xi = -1; xi <= 1; xi += 2)
@@ -156,11 +189,10 @@ public class PortalView : MonoBehaviour
                 for (int zi = -1; zi <= 1; zi += 2)
                     corners[i++] = t.TransformPoint(c + Vector3.Scale(e, new Vector3(xi, yi, zi)));
 
-        Vector3 right = t.right;
-        Vector3 up = t.up;
-
+        Vector3 right = t.right, up = t.up;
         float minR = float.PositiveInfinity, maxR = float.NegativeInfinity;
         float minU = float.PositiveInfinity, maxU = float.NegativeInfinity;
+
         foreach (var p in corners)
         {
             float r = Vector3.Dot(p, right);
@@ -168,7 +200,6 @@ public class PortalView : MonoBehaviour
             if (r < minR) minR = r; if (r > maxR) maxR = r;
             if (u < minU) minU = u; if (u > maxU) maxU = u;
         }
-
         float width = Mathf.Max(0.0001f, maxR - minR);
         float height = Mathf.Max(0.0001f, maxU - minU);
         return width / height;
@@ -177,65 +208,91 @@ public class PortalView : MonoBehaviour
     // ---------- Camera discovery ----------
     void TryAcquirePlayerCamera(bool verboseLog)
     {
-        Transform root = playerRootOverride;
-        if (!root)
+        Camera pick = null;
+
+        // A) ‡πÉ‡∏ä‡πâ Player.Instance.camera ‡∏ñ‡πâ‡∏≤‡∏°‡∏µ‡πÅ‡∏•‡∏∞ usable
+        if (preferPlayerInstanceCamera && Player.Instance && IsUsablePlayerCamera(Player.Instance.camera))
+            pick = Player.Instance.camera;
+
+        // B) ‡∏´‡∏≤‡πÉ‡∏ô‡∏£‡∏≤‡∏Å‡∏ú‡∏π‡πâ‡πÄ‡∏•‡πà‡∏ô
+        if (!pick)
         {
-            var playerInst = Player.Instance;
-            if (playerInst) root = playerInst.transform;
-        }
-        if (!root)
-        {
-            var tagged = GameObject.FindGameObjectWithTag("Player");
-            if (tagged) root = tagged.transform;
-        }
-        if (!root)
-        {
-            if (verboseLog) Debug.LogWarning("[PortalView] Player root not found.");
-            return;
+            Transform root = playerRootOverride;
+            if (!root && Player.Instance) root = Player.Instance.transform;
+            if (!root)
+            {
+                var tagged = GameObject.FindGameObjectWithTag("Player");
+                if (tagged) root = tagged.transform;
+            }
+
+            if (root)
+            {
+                var cams = root.GetComponentsInChildren<Camera>(true)
+                               .Where(IsUsablePlayerCamera).ToList();
+                // Priority: ‡∏°‡∏µ CinemachineBrain ‚Üí ‡πÄ‡∏•‡∏∑‡∏≠‡∏Å‡∏ï‡∏±‡∏ß‡∏ô‡∏±‡πâ‡∏ô
+                pick = cams.FirstOrDefault(c => c.GetComponent<CinemachineBrain>() != null && c.isActiveAndEnabled)
+                    ?? cams.FirstOrDefault(c => c.GetComponent<CinemachineBrain>() != null)
+                    ?? cams.OrderBy(c => c.depth).LastOrDefault();
+            }
         }
 
-        var allPlayerCams = root.GetComponentsInChildren<Camera>(true)
-            .Where(c => c && c != portalView && (otherPortal == null || c != otherPortal.portalView))
-            .ToList();
-
-        if (allPlayerCams.Count == 0)
+        // C) Fallback: ‡∏Å‡∏•‡πâ‡∏≠‡∏á‡πÉ‡∏î‡πÜ ‡πÉ‡∏ô‡∏ã‡∏µ‡∏ô‡∏ó‡∏µ‡πà‡πÄ‡∏õ‡πá‡∏ô "usable" ‡πÅ‡∏•‡∏∞‡∏°‡∏µ CinemachineBrain
+        if (!pick)
         {
-            if (verboseLog) Debug.LogWarning("[PortalView] No cameras under Player.");
-            return;
+            var all = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)
+                            .Where(IsUsablePlayerCamera).ToList();
+            pick = all.FirstOrDefault(c => c.GetComponent<CinemachineBrain>() != null && c.isActiveAndEnabled)
+                ?? all.FirstOrDefault(c => c.GetComponent<CinemachineBrain>() != null);
         }
 
-        Camera pick = allPlayerCams.FirstOrDefault(c => c.GetComponent<CinemachineBrain>() != null && c.isActiveAndEnabled)
-                   ?? allPlayerCams.FirstOrDefault(c => c.GetComponent<CinemachineBrain>() != null)
-                   ?? allPlayerCams.Where(c => c.isActiveAndEnabled).OrderBy(c => c.depth).LastOrDefault()
-                   ?? allPlayerCams[0];
+        // D) ‡∏ü‡∏≤‡∏á‡πÄ‡∏™‡πâ‡∏ô‡∏™‡∏∏‡∏î‡∏ó‡πâ‡∏≤‡∏¢: usable camera ‡∏ï‡∏±‡∏ß‡πÅ‡∏£‡∏Å (‡∏¢‡∏±‡∏á‡∏Ñ‡∏á‡πÑ‡∏°‡πà‡πÄ‡∏≠‡∏≤‡∏Å‡∏•‡πâ‡∏≠‡∏á‡∏û‡∏≠‡∏£‡πå‡∏ó‡∏±‡∏•)
+        if (!pick)
+        {
+            pick = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)
+                         .FirstOrDefault(IsUsablePlayerCamera);
+        }
 
-        playercam = pick;
-        if (verboseLog && playercam)
-            Debug.Log($"[PortalView] Bound player camera => {playercam.name} (depth={playercam.depth})", playercam);
+        if (pick)
+        {
+            playercam = pick;
+            if (verboseLog)
+                Debug.Log($"[PortalView] Bound player camera => {playercam.name}", playercam);
+        }
+        else if (verboseLog)
+        {
+            Debug.LogWarning("[PortalView] Cannot find a usable player camera.");
+        }
     }
 
-    // „ÀÈ¡ÿ¡¡Õß‡∑Ë“°≈ÈÕßºŸÈ‡≈Ëπ (°—πÕ“°“√ ì´Ÿ¡/∫“πª≈“¬î)
+    bool IsUsablePlayerCamera(Camera c)
+    {
+        if (!c) return false;
+        if (!c.isActiveAndEnabled) return false;
+
+        if (!excludePortalCameras) return true;
+
+        // ‡∏Å‡∏•‡πâ‡∏≠‡∏á‡∏û‡∏≠‡∏£‡πå‡∏ó‡∏±‡∏•‡∏°‡∏±‡∏Å‡∏à‡∏∞‡∏°‡∏µ targetTexture ‡∏´‡∏£‡∏∑‡∏≠‡∏≠‡∏¢‡∏π‡πà‡πÉ‡∏ï‡πâ PortalView
+        bool isPortalCam = (c.targetTexture != null) ||
+                           (c.GetComponentInParent<PortalView>(true) != null && c != playercam);
+        return !isPortalCam;
+    }
+
+    // ---------- Projection sync ----------
     void SyncProjectionFromPlayer()
     {
         if (!playercam || !portalView) return;
 
         portalView.orthographic = playercam.orthographic;
-        if (playercam.orthographic)
-            portalView.orthographicSize = playercam.orthographicSize;
-        else
-            portalView.fieldOfView = playercam.fieldOfView;
-
-        // aspect ¢Õß portalView ∂Ÿ°µ—ÈßµÕπ BuildRT ·≈È«„ÀÈµ√ß°√Õ∫
-        // À“°Õ¬“°∫—ß§—∫„ÀÈµ“¡ºŸÈ‡≈Ëπ·∑π „ÀÈ„™È:
-        // portalView.aspect = playercam.aspect;
+        if (playercam.orthographic) portalView.orthographicSize = playercam.orthographicSize;
+        else portalView.fieldOfView = playercam.fieldOfView;
     }
 
     void OnDestroy()
     {
         if (otherRT)
         {
-            if (otherPortal && otherPortal.portalView && otherPortal.portalView.targetTexture == otherRT)
-                otherPortal.portalView.targetTexture = null;
+            if (_lastOther && _lastOther.portalView && _lastOther.portalView.targetTexture == otherRT)
+                _lastOther.portalView.targetTexture = null;
             otherRT.Release();
             Destroy(otherRT);
         }
