@@ -149,13 +149,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af397f04e7a2c4f1f862a7580d805a42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shootInterval: -999
-  stateGraph: {fileID: 11400000, guid: 7e3ba720111029345b7a29571e704a76, type: 2}
   attackCollider: []
+  shootInterval: -999
   waypoints:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  stateGraph: {fileID: 11400000, guid: 7e3ba720111029345b7a29571e704a76, type: 2}
   onStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -227,9 +227,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf7090b56a9dee34fb508cb8751457e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isTrigger: 0
   usePhysic: 1
   useGravity: 1
-  isTrigger: 0
 --- !u!114 &8858061985308799563
 MonoBehaviour:
   m_ObjectHideFlags: 0
