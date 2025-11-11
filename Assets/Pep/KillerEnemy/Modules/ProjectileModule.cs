@@ -37,7 +37,7 @@ public class ProjectileModule : EnemyModule
         var rb = go.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            rb.velocity = spawnXf.forward * MuzzleVelocity;
+            rb.linearVelocity = spawnXf.forward * MuzzleVelocity;
         }
     }
 }
