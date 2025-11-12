@@ -41,13 +41,12 @@ public class KillerAIProjectile : MonoBehaviour
     private void HandleHit(GameObject hitObject)
     {
         // Check if we hit the player
-        Player player = hitObject.GetComponent<Player>();
+        Player player = Player.Instance;
         if (player != null && player.Stat != null)
         {
             // Deal damage to the player
-            float newHealth = player.Stat.currenthealth - Damage;
-            player.Stat.currenthealth = Mathf.Max(0, newHealth);
-            Debug.Log($"[KillerAIProjectile] Hit player for {Damage} damage! Player health: {player.Stat.currenthealth}/{player.Stat.maxhealth}");
+            player.Stat.TakeDamage(Damage);
+            Debug.Log($"[KillerAIProjectile] Hit player for {Damage} damage!");
         }
 
         // Destroy projectile if configured

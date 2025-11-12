@@ -126,6 +126,9 @@ public class KillerAI : MonoBehaviour
     [Tooltip("Cooldown between attacks")]
     public float AttackCooldown = 2f;
 
+    [Tooltip("Amount of damage dealt by the basic attack")]
+    public float AttackDamage = 10f;
+
     private float attackTimer = 0f;
     #endregion
 
@@ -143,7 +146,6 @@ public class KillerAI : MonoBehaviour
     #region Unity Lifecycle
     private void Awake()
     {
-        // Get required component
         agent = GetComponent<NavMeshAgent>();
 
         if (agent != null)
@@ -515,8 +517,13 @@ public class KillerAI : MonoBehaviour
             attackTimer = -AttackCooldown; // Negative timer for cooldown
             ChangeState(EnemyState.Chase);
 
-            // Here you would trigger damage to the target
-            Debug.Log("[KillerAI] Attack executed!");
+            // Trigger damage to the target
+            Player player = Player.Instance;
+            if (player != null && player.Stat != null)
+            {
+                player.Stat.TakeDamage(AttackDamage);
+                Debug.Log($"[KillerAI] Attack executed! Dealt {AttackDamage} damage!");
+            }
         }
     }
 
@@ -671,16 +678,15 @@ public class KillerAI : MonoBehaviour
     /// <returns>True if damage was applied successfully</returns>
     public bool DamagePlayer(float damageAmount)
     {
-        if (TargetPlayer != null && TargetPlayer.Stat != null)
+        Player player = Player.Instance;
+        if (player != null && player.Stat != null)
         {
-            float newHealth = TargetPlayer.Stat.currenthealth - damageAmount;
-            TargetPlayer.Stat.currenthealth = Mathf.Max(0, newHealth);
-            Debug.Log($"[KillerAI] Dealt {damageAmount} damage to player. Player health: {TargetPlayer.Stat.currenthealth}/{TargetPlayer.Stat.maxhealth}");
+            player.Stat.TakeDamage(damageAmount);
             return true;
         }
         else
         {
-            Debug.LogWarning("[KillerAI] Cannot damage player - TargetPlayer or Stat is null!");
+            Debug.LogWarning("[KillerAI] Cannot damage player - Player or Stat is null!");
             return false;
         }
     }

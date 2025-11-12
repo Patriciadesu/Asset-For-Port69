@@ -19,8 +19,10 @@ public class SlashModule : EnemyModule
             float d = Vector3.Distance(transform.position, killer.Target.position);
             if (d <= DamageRange)
             {
-                if (DamagePlayer(SlashDamage))
+                Player player = Player.Instance;
+                if (player != null && player.Stat != null)
                 {
+                    player.Stat.TakeDamage(SlashDamage);
                     Debug.Log($"[SlashModule] Slash hit target for {SlashDamage} damage!");
                 }
                 else

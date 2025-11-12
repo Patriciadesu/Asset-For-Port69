@@ -43,15 +43,17 @@ public abstract class EnemyModule : MonoBehaviour
     public virtual void OnStateExit(EnemyState oldState) { }
 
     /// <summary>
-    /// Helper method to damage the player through the KillerAI controller
+    /// Helper method to damage the player using the standard TakeDamage method
     /// </summary>
     /// <param name="damageAmount">Amount of damage to apply</param>
     /// <returns>True if damage was applied successfully</returns>
     protected bool DamagePlayer(float damageAmount)
     {
-        if (killer != null)
+        Player player = Player.Instance;
+        if (player != null && player.Stat != null)
         {
-            return killer.DamagePlayer(damageAmount);
+            player.Stat.TakeDamage(damageAmount);
+            return true;
         }
         return false;
     }

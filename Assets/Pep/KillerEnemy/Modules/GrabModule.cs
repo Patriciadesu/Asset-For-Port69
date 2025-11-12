@@ -19,8 +19,10 @@ public class GrabModule : EnemyModule
             float d = Vector3.Distance(transform.position, killer.Target.position);
             if (d <= GrabRange)
             {
-                if (DamagePlayer(GrabDamage))
+                Player player = Player.Instance;
+                if (player != null && player.Stat != null)
                 {
+                    player.Stat.TakeDamage(GrabDamage);
                     Debug.Log($"[GrabModule] Target grabbed for {GrabDamage} damage!");
                     // Hook: constraint/animation can be added here
                 }

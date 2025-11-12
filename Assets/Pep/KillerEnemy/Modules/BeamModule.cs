@@ -37,17 +37,15 @@ public class BeamModule : EnemyModule
         if (Physics.Raycast(origin, dir, out RaycastHit hit, Range, HitLayers))
         {
             // Check if we hit the player
-            Player hitPlayer = hit.collider.GetComponent<Player>();
-            if (hitPlayer != null)
+            Player player = Player.Instance;
+            if (player != null && player.Stat != null)
             {
-                if (DamagePlayer(BeamDamage))
-                {
-                    Debug.Log($"[BeamModule] Beam hit player for {BeamDamage} damage!");
-                }
+                player.Stat.TakeDamage(BeamDamage);
+                Debug.Log($"[BeamModule] Beam hit player for {BeamDamage} damage!");
             }
             else
             {
-                Debug.Log($"[BeamModule] Beam hit {hit.collider.name} (not player)");
+                Debug.Log($"[BeamModule] Beam hit but no player or stat found");
             }
         }
         else
