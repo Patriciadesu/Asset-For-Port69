@@ -158,20 +158,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   otherPortal: {fileID: 0}
-  portalView: {fileID: 8782981273986924676}
-  portalShader: {fileID: 4800000, guid: d4cd24e2dd6e4da41b10247514a297ab, type: 3}
-  portalMesh: {fileID: 3494501957221447513}
-  playerRootOverride: {fileID: 0}
-  autoReacquire: 1
-  reacquireGraceFrames: 6
-  preferPlayerInstanceCamera: 1
-  distanceScale: 0.1
-  forwardBias: 0
-  localOffset: {x: 0, y: 0, z: 1}
-  rtShortSide: 1024
-  aspectEpsilon: 0.005
-  excludePortalCameras: 1
-  autoRebindOnOtherChange: 1
   playercam: {fileID: 0}
 --- !u!114 &2667442366098620718
 MonoBehaviour:
@@ -469,7 +455,7 @@ GameObject:
   - component: {fileID: 3494501957221447513}
   m_Layer: 0
   m_Name: Portal
-  m_TagString: Untagged
+  m_TagString: PortalMesh
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

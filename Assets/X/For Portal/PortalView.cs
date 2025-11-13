@@ -6,35 +6,35 @@ using Unity.Cinemachine;
 public class PortalView : MonoBehaviour
 {
     [Header("Portal Links")]
-    public PortalView otherPortal;
-    public Camera portalView;
+    [HideInInspector]public PortalView otherPortal;
+    private Camera portalView;
 
     [Header("Visuals")]
-    public Shader portalShader;
-    [SerializeField] private MeshRenderer portalMesh;
+    private Shader portalShader;
+    private MeshRenderer portalMesh;
 
     [Header("Player Camera Auto-Discovery")]
-    [SerializeField] private Transform playerRootOverride;
-    [SerializeField] private bool autoReacquire = true;
+    private Transform playerRootOverride;
+    private bool autoReacquire = true;
     [Tooltip("หน่วงก่อน rebind เมื่อกล้องผู้เล่นถูกปิดชั่วคราว (เช่น ตอนสลับ vcam)")]
-    [SerializeField] private int reacquireGraceFrames = 6;
+    private int reacquireGraceFrames = 6;
     [Tooltip("พยายามใช้ Player.Instance.camera ก่อนวิธีอื่น")]
-    [SerializeField] private bool preferPlayerInstanceCamera = true;
+    private bool preferPlayerInstanceCamera = true;
 
     [Header("Tuning")]
-    [Range(0.1f, 2f)][SerializeField] private float distanceScale = 1f;
-    [SerializeField] private float forwardBias = 0f;
-    [SerializeField] private Vector3 localOffset = Vector3.zero;
+    private float distanceScale = 1f;
+    private float forwardBias = 0f;
+    private Vector3 localOffset = Vector3.zero;
 
     [Header("RenderTexture Sizing")]
-    [SerializeField] private int rtShortSide = 1024;
-    [SerializeField] private float aspectEpsilon = 0.005f;
+    private int rtShortSide = 1024;
+    private float aspectEpsilon = 0.005f;
 
     [Header("Safety")]
     [Tooltip("ตัดกล้องที่อยู่ใต้ PortalView หรือมีกำหนด targetTexture (กล้องพอร์ทัล)")]
-    [SerializeField] private bool excludePortalCameras = true;
+    private bool excludePortalCameras = true;
     [Tooltip("Rebind RT อัตโนมัติเมื่อ otherPortal เปลี่ยน")]
-    [SerializeField] private bool autoRebindOnOtherChange = true;
+    private bool autoRebindOnOtherChange = true;
 
     [HideInInspector] public Camera playercam;
 
@@ -52,6 +52,8 @@ public class PortalView : MonoBehaviour
             portalView = GetComponentInChildren<Camera>(true);
         if (!portalView)
             Debug.LogError("[PortalView] portalView missing.");
+        portalMesh = transform.GetComponentsInChildren<GameObject>(true).Where(child => child.tag == "PortalMesh").FirstOrDefault().GetComponent<MeshRenderer>();
+        
     }
 
     void Start()
