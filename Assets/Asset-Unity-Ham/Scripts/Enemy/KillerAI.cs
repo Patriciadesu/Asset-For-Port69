@@ -113,6 +113,7 @@ public class KillerAI : MonoBehaviour
 
     [Header("Chase Difficulty Mode")]
     [SerializeField] private ChaseDifficulty difficulty = ChaseDifficulty.Medium;
+    private ChaseDifficulty lastAppliedDifficulty = ChaseDifficulty.Medium;
 
     // Custom values - shown only when difficulty == Custom
     [SerializeField] private float customChaseSpeed = 5f;
@@ -202,7 +203,12 @@ public class KillerAI : MonoBehaviour
     {
         // Keep module list in sync in the editor for accurate inspector display
         DiscoverModules();
-        ApplyDifficultySettings();
+        // Only apply difficulty settings if the difficulty mode changed
+        if (difficulty != lastAppliedDifficulty)
+        {
+            ApplyDifficultySettings();
+            lastAppliedDifficulty = difficulty;
+        }
     }
 #endif
 
@@ -981,6 +987,7 @@ public class KillerAI : MonoBehaviour
     /// </summary>
     private void ApplyDifficultySettings()
     {
+        lastAppliedDifficulty = difficulty;
         switch (difficulty)
         {
             case ChaseDifficulty.Easy:
