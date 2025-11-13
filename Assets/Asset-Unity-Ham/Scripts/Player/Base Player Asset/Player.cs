@@ -72,9 +72,14 @@ public partial class Player : Singleton<Player>
     [HideInInspector] public List<ICancleGravity> cancleGravityComponents = new List<ICancleGravity>();
     [HideInInspector] public bool canApplyGravity => cancleGravityComponents.TrueForAll(x => x.canApplyGravity);
     [HideInInspector] public List<IInteruptPlayerMovement> interuptPlayerMovementComponents = new List<IInteruptPlayerMovement>();
-    [HideInInspector] public bool canMove => !interuptPlayerMovementComponents.Any(x => x.isPerforming);
+    [HideInInspector] public bool canMove => !interuptPlayerMovementComponents.Any(x => x.isPerforming) && !isStunned;
     [HideInInspector] public List<IUseStamina> staminaComponentStates = new List<IUseStamina>();
     [HideInInspector] public bool canGenerateStamina => staminaComponentStates.TrueForAll(x => !x.isUsingStamina);
+    #endregion
+    
+    #region Stun System
+    [HideInInspector] public bool isStunned { get; private set; }
+    private Coroutine stunCoroutine;
     #endregion
 
     #region Unity Methods
@@ -229,6 +234,47 @@ void OnValidate()
             }
         }
         return 0f;
+    }
+    
+    /// <summary>
+    /// Applies a stun effect for the specified duration
+    /// </summary>
+    /// <param name="duration">Duration of the stun in seconds</param>
+    public void ApplyStun(float duration)
+    {
+        // If already stunned, restart the stun
+        if (stunCoroutine != null)
+        {
+            StopCoroutine(stunCoroutine);
+        }
+        
+        stunCoroutine = StartCoroutine(StunCoroutine(duration));
+    }
+    
+    private IEnumerator StunCoroutine(float duration)
+    {
+        isStunned = true;
+        Debug.Log($"[Player] Stunned for {duration} seconds");
+        
+        yield return new WaitForSeconds(duration);
+        
+        isStunned = false;
+        stunCoroutine = null;
+        Debug.Log("[Player] Stun ended");
+    }
+    
+    /// <summary>
+    /// Manually end the stun early
+    /// </summary>
+    public void EndStun()
+    {
+        if (stunCoroutine != null)
+        {
+            StopCoroutine(stunCoroutine);
+            stunCoroutine = null;
+        }
+        
+        isStunned = false;
     }
 
     #endregion

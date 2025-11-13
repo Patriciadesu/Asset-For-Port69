@@ -1,6 +1,9 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Reflection;
+using UnityEngine;
 using UnityEngine.AI;
+using static Unity.Burst.Intrinsics.Arm;
+//using static Unity.Cinemachine.InputAxisControllerBase<T>;
 
 /// <summary>
 /// Main AI controller using a state machine pattern with modular capabilities.
@@ -55,6 +58,9 @@ public class KillerAI : MonoBehaviour
     [Header("NavMesh/Chase (Imperfect)")]
     [Tooltip("Reference to NavMeshAgent used for pathfinding")]
     [SerializeField] private NavMeshAgent agent;
+    
+    [Tooltip("Reference to Animator component for calculating animation durations")]
+    [SerializeField] private Animator animator;
 
     [Tooltip("How often to pick a new destination while chasing")]
     [SerializeField] private float repathInterval = 1.2f;
@@ -115,7 +121,7 @@ public class KillerAI : MonoBehaviour
     [SerializeField] private float customAgentAngularSpeed = 200f;
     [SerializeField] private float customAgentAcceleration = 8f;
     [SerializeField] private ObstacleAvoidanceType customAvoidance = ObstacleAvoidanceType.MedQualityObstacleAvoidance;
-    [Range(0, 99)] [SerializeField] private int customAvoidancePriority = 50;
+    [Range(0, 99)][SerializeField] private int customAvoidancePriority = 50;
     #endregion
 
     #region Attack
@@ -147,6 +153,13 @@ public class KillerAI : MonoBehaviour
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
+        animator = GetComponent<Animator>();
+        
+        // Try to find animator in children if not on this GameObject
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
 
         if (agent != null)
         {
@@ -517,12 +530,15 @@ public class KillerAI : MonoBehaviour
             attackTimer = -AttackCooldown; // Negative timer for cooldown
             ChangeState(EnemyState.Chase);
 
-            // Trigger damage to the target
+            // Trigger damage and stun to the target
             Player player = Player.Instance;
             if (player != null && player.Stat != null)
             {
                 player.Stat.TakeDamage(AttackDamage);
                 Debug.Log($"[KillerAI] Attack executed! Dealt {AttackDamage} damage!");
+                
+                // Apply stun to player (uses AttackDuration or animation length if available)
+                ApplyStunToPlayer();
             }
         }
     }
@@ -648,7 +664,7 @@ public class KillerAI : MonoBehaviour
     public void FindPlayer()
     {
         Player player = Player.Instance;
-        
+
         // Validate that the player instance is actually valid and in the scene
         if (player != null && player.gameObject != null && player.gameObject.scene.IsValid())
         {
@@ -692,11 +708,89 @@ public class KillerAI : MonoBehaviour
     }
 
     /// <summary>
+    /// Applies a stun effect to the player based on attack animation duration.
+    /// Automatically calculates duration from animator and checks all modules for custom stun settings.
+    /// </summary>
+    /// <param name="attackAnimationName">Optional: Name of the attack animation clip. If null, uses AttackDuration field.</param>
+    /// <returns>True if stun was applied successfully</returns>
+    public bool ApplyStunToPlayer(string attackAnimationName = null)
+    {
+        Player player = Player.Instance;
+        if (player == null)
+        {
+            Debug.LogWarning("[KillerAI] Cannot stun player - Player is null!");
+            return false;
+        }
+        
+        // Calculate base animation duration
+        float baseAnimDuration = AttackDuration; // Fallback to manual duration
+        
+        if (animator != null && !string.IsNullOrEmpty(attackAnimationName))
+        {
+            float animLength = GetAnimationLength(attackAnimationName);
+            if (animLength > 0)
+            {
+                baseAnimDuration = animLength;
+            }
+        }
+        
+        // Check all modules for custom stun duration
+        float finalStunDuration = baseAnimDuration;
+        foreach (var module in modules)
+        {
+            if (module != null && module.IsActive)
+            {
+                float? customDuration = module.GetStunDuration(baseAnimDuration);
+                if (customDuration.HasValue)
+                {
+                    finalStunDuration = customDuration.Value;
+                    Debug.Log($"[KillerAI] Module {module.GetType().Name} overrode stun duration to {finalStunDuration}s");
+                    break; // Use first module that provides custom duration
+                }
+            }
+        }
+        
+        // Apply the stun
+        player.ApplyStun(finalStunDuration);
+        Debug.Log($"[KillerAI] Applied {finalStunDuration}s stun to player (base anim: {baseAnimDuration}s)");
+        return true;
+    }
+
+    /// <summary>
     /// Gets the NavMeshAgent component (for modules that need direct access)
     /// </summary>
     public NavMeshAgent GetAgent()
     {
         return agent;
+    }
+    
+    /// <summary>
+    /// Gets the Animator component (for modules that need direct access)
+    /// </summary>
+    public Animator GetAnimator()
+    {
+        return animator;
+    }
+    
+    /// <summary>
+    /// Gets the length of an animation clip by name from the Animator
+    /// </summary>
+    /// <param name="animationName">Name of the animation clip</param>
+    /// <returns>Duration in seconds, or 0 if not found</returns>
+    public float GetAnimationLength(string animationName)
+    {
+        if (animator == null || animator.runtimeAnimatorController == null)
+            return 0f;
+            
+        foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips)
+        {
+            if (clip.name == animationName)
+            {
+                return clip.length;
+            }
+        }
+        
+        return 0f;
     }
 
     /// <summary>

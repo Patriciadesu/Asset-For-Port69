@@ -66,4 +66,15 @@ public abstract class EnemyModule : MonoBehaviour
     {
         return killer?.TargetPlayer;
     }
+    
+    /// <summary>
+    /// Override this to provide custom stun duration when this module attacks.
+    /// Return null to use default animation-based duration.
+    /// </summary>
+    /// <param name="baseAnimationDuration">The duration of the attack animation</param>
+    /// <returns>Custom stun duration, or null to use default</returns>
+    public virtual float? GetStunDuration(float baseAnimationDuration)
+    {
+        return null; // Default: use animation duration
+    }
 }
