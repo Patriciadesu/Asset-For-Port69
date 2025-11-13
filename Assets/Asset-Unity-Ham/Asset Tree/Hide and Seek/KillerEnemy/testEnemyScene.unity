@@ -193,13 +193,13 @@ PrefabInstance:
       addedObject: {fileID: 1756492393}
     - targetCorrespondingSourceObject: {fileID: 6568706143511174688, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 1756492401}
+    - targetCorrespondingSourceObject: {fileID: 6568706143511174688, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 1756492394}
     - targetCorrespondingSourceObject: {fileID: 6568706143511174688, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1756492400}
-    - targetCorrespondingSourceObject: {fileID: 6568706143511174688, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1756492401}
   m_SourcePrefab: {fileID: 100100000, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
 --- !u!1 &147006960
 GameObject:
@@ -1018,11 +1018,11 @@ MonoBehaviour:
   customAvoidance: 2
   customAvoidancePriority: 50
   AttackDuration: 1
-  AttackCooldown: 2
+  AttackCooldown: 5
   AttackDamage: 10
   modules:
-  - {fileID: 1756492400}
   - {fileID: 1756492401}
+  - {fileID: 1756492400}
 --- !u!195 &1756492395
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -1414,6 +1414,8 @@ GameObject:
   - component: {fileID: 2120648539}
   - component: {fileID: 2120648538}
   - component: {fileID: 2120648549}
+  - component: {fileID: 2120648552}
+  - component: {fileID: 2120648551}
   m_Layer: 0
   m_Name: EnemyAi
   m_TagString: Untagged
@@ -1664,6 +1666,42 @@ MonoBehaviour:
   - {fileID: 2120648539}
   - {fileID: 2120648538}
   - {fileID: 2120648549}
+  - {fileID: 2120648552}
+--- !u!114 &2120648551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2120648537}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18c07f5569b6b834ebd99286ae2aee53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animator: {fileID: 0}
+  killerAI: {fileID: 0}
+  transitionTime: 0.15
+  randomizeIdle: 1
+  randomizeAttack: 1
+  useSpeedBlending: 1
+  runSpeedThreshold: 4
+  autoLoopAnimations: 1
+  loopCheckInterval: 0.1
+--- !u!114 &2120648552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2120648537}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 528e59831f36ae742ae19548ac217931, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  IsActive: 1
+  animationController: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

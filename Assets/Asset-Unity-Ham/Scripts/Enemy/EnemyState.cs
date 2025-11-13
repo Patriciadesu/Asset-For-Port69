@@ -6,5 +6,6 @@ public enum EnemyState
     Idle,      // Standing still, waiting for input/trigger
     Patrol,    // Moving between predefined waypoints
     Chase,     // Actively pursuing a target
-    Attack     // Executing an attack routine (brief, transitional state)
+    Attack,    // Executing an attack routine (brief, transitional state)
+    Stunned    // Enemy is stunned and cannot act (placeholder for future expansion)
 }

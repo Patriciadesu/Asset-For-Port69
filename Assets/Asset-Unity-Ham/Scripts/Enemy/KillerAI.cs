@@ -11,6 +11,10 @@ using static Unity.Burst.Intrinsics.Arm;
 /// Uses NavMeshAgent for all movement.
 /// </summary>
 [RequireComponent(typeof(NavMeshAgent))]
+[RequireComponent(typeof(DemonAnimationModule))]
+[RequireComponent(typeof(DemonAnimationController))]
+
+
 public class KillerAI : MonoBehaviour
 {
     #region State Machine
@@ -129,13 +133,14 @@ public class KillerAI : MonoBehaviour
     [Tooltip("Duration of the attack animation/state")]
     public float AttackDuration = 1f;
 
-    [Tooltip("Cooldown between attacks")]
-    public float AttackCooldown = 2f;
+    [Tooltip("Cooldown between attacks (in seconds)")]
+    public float AttackCooldown = 3f;
 
     [Tooltip("Amount of damage dealt by the basic attack")]
     public float AttackDamage = 10f;
 
     private float attackTimer = 0f;
+    private bool hasAppliedStunThisAttack = false;
     #endregion
 
     #region Modules
@@ -339,6 +344,9 @@ public class KillerAI : MonoBehaviour
             case EnemyState.Attack:
                 AttackUpdate();
                 break;
+            case EnemyState.Stunned:
+                StunnedUpdate();
+                break;
         }
     }
     #endregion
@@ -403,8 +411,8 @@ public class KillerAI : MonoBehaviour
             return;
         }
 
-        // Check if within attack range
-        if (distanceToTarget <= AttackRange && attackTimer <= 0f)
+        // Check if within attack range and cooldown has finished
+        if (distanceToTarget <= AttackRange && attackTimer >= 0f)
         {
             ChangeState(EnemyState.Attack);
             return;
@@ -489,10 +497,14 @@ public class KillerAI : MonoBehaviour
             }
         }
 
-        // Update attack cooldown
-        if (attackTimer > 0f)
+        // Update attack cooldown (count up from negative towards 0)
+        if (attackTimer < 0f)
         {
-            attackTimer -= Time.deltaTime;
+            attackTimer += Time.deltaTime;
+            if (attackTimer > 0f)
+            {
+                attackTimer = 0f; // Clamp at 0 when cooldown finishes
+            }
         }
     }
 
@@ -509,7 +521,28 @@ public class KillerAI : MonoBehaviour
         if (Target == null)
         {
             ChangeState(EnemyState.Idle);
+            hasAppliedStunThisAttack = false;
             return;
+        }
+
+        // Apply stun immediately at the start of attack (only once)
+        if (!hasAppliedStunThisAttack)
+        {
+            // Reset attack timer to 0 at the start of attack
+            attackTimer = 0f;
+            
+            // Get the current attack animation length
+            float stunDuration = GetCurrentAttackAnimationLength();
+            
+            // Apply stun to player for the duration of the attack animation
+            Player player = Player.Instance;
+            if (player != null)
+            {
+                player.ApplyStun(stunDuration);
+                Debug.Log($"[KillerAI] Applied {stunDuration}s stun to player (attack animation length)");
+            }
+            
+            hasAppliedStunThisAttack = true;
         }
 
         // Face the target during attack
@@ -521,26 +554,67 @@ public class KillerAI : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
         }
 
-        // Execute attack (placeholder - add animation triggers here)
+        // Wait for attack animation to finish
         attackTimer += Time.deltaTime;
 
-        if (attackTimer >= AttackDuration)
+        // Check if attack animation has finished playing
+        bool animationFinished = false;
+        if (animator != null)
+        {
+            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+            
+            // Check if we're in an attack animation (Punch, Shoot, etc.)
+            bool isInAttackAnimation = stateInfo.IsName("Demon|Punch1") || 
+                                       stateInfo.IsName("Demon|Punch2") || 
+                                       stateInfo.IsName("Demon|Punch3") ||
+                                       stateInfo.IsName("Demon|punchl") ||
+                                       stateInfo.IsName("Demon|Shoot1") ||
+                                       stateInfo.IsName("Demon|Shoot2") ||
+                                       stateInfo.IsName("Demon|ShootI");
+            
+            // Only check for completion if:
+            // 1. We're in an attack animation
+            // 2. At least 0.2 seconds have passed (animation has had time to start)
+            // 3. Animation normalized time is near completion
+            if (isInAttackAnimation && attackTimer >= 0.2f)
+            {
+                animationFinished = stateInfo.normalizedTime >= 0.95f;
+            }
+            else if (!isInAttackAnimation && attackTimer >= 0.5f)
+            {
+                // If not in attack animation after 0.5s, something went wrong - use timer fallback
+                animationFinished = attackTimer >= AttackDuration;
+            }
+        }
+        else
+        {
+            // Fallback to timer if no animator
+            animationFinished = attackTimer >= AttackDuration;
+        }
+
+        // When animation finishes, deal damage and transition
+        if (animationFinished)
         {
             // Attack finished, set cooldown and return to chase
             attackTimer = -AttackCooldown; // Negative timer for cooldown
-            ChangeState(EnemyState.Chase);
-
-            // Trigger damage and stun to the target
+            hasAppliedStunThisAttack = false; // Reset for next attack
+            
+            // Deal damage
             Player player = Player.Instance;
             if (player != null && player.Stat != null)
             {
                 player.Stat.TakeDamage(AttackDamage);
-                Debug.Log($"[KillerAI] Attack executed! Dealt {AttackDamage} damage!");
-                
-                // Apply stun to player (uses AttackDuration or animation length if available)
-                ApplyStunToPlayer();
+                Debug.Log($"[KillerAI] Attack animation finished! Dealt {AttackDamage} damage!");
             }
+            
+            ChangeState(EnemyState.Chase);
         }
+    }
+    
+    private void StunnedUpdate()
+    {
+        // Placeholder for future stunned state behavior
+        // Currently not used but available for expansion
     }
 
     // Helper methods for imperfect chase using NavMesh
@@ -791,6 +865,41 @@ public class KillerAI : MonoBehaviour
         }
         
         return 0f;
+    }
+    
+    /// <summary>
+    /// Gets the length of the currently playing attack animation
+    /// </summary>
+    /// <returns>Duration in seconds, or AttackDuration if animation not found</returns>
+    private float GetCurrentAttackAnimationLength()
+    {
+        if (animator == null)
+            return AttackDuration;
+        
+        // Get current animation state info
+        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+        
+        // Get all animation clips and find the one currently playing
+        if (animator.runtimeAnimatorController != null)
+        {
+            foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips)
+            {
+                // Check if this clip matches the current state
+                if (stateInfo.IsName(clip.name) || stateInfo.IsName("Demon|" + clip.name))
+                {
+                    return clip.length;
+                }
+            }
+        }
+        
+        // Fallback: use the state length from animator
+        if (stateInfo.length > 0)
+        {
+            return stateInfo.length;
+        }
+        
+        // Final fallback to manual duration
+        return AttackDuration;
     }
 
     /// <summary>
