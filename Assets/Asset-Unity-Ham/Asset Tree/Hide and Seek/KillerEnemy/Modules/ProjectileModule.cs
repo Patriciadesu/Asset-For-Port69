@@ -114,7 +114,7 @@ public class ProjectileModule : EnemyModule
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            rb.velocity = directionToTarget * projectileSpeed;
+            rb.linearVelocity = directionToTarget * projectileSpeed;
         }
 
         // Rotate projectile to face direction of travel

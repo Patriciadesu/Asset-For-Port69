@@ -7,5 +7,6 @@ public enum EnemyState
     Patrol,    // Moving between predefined waypoints
     Chase,     // Actively pursuing a target
     Attack,    // Executing an attack routine (brief, transitional state)
+    Check,     // Investigating a locker or point of interest
     Stunned    // Enemy is stunned and cannot act (placeholder for future expansion)
 }

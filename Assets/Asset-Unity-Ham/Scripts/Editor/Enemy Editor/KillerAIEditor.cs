@@ -37,6 +37,11 @@ public class KillerAIEditor : Editor
     private SerializedProperty customAvoidanceProp;
     private SerializedProperty customAvoidancePriorityProp;
 
+    // Locker investigation properties (optional)
+    private SerializedProperty lockerCheckRadiusProp;
+    private SerializedProperty lockerPointToleranceProp;
+    private SerializedProperty lockerPauseDurationProp;
+
     private bool showModulesList = true;
     private bool showStateControls = true;
     private bool showChaseDifficulty = true;
@@ -69,6 +74,11 @@ public class KillerAIEditor : Editor
         customAgentAccelerationProp = serializedObject.FindProperty("customAgentAcceleration");
         customAvoidanceProp = serializedObject.FindProperty("customAvoidance");
         customAvoidancePriorityProp = serializedObject.FindProperty("customAvoidancePriority");
+
+        // Optional locker fields (only available when locker partial is included)
+        lockerCheckRadiusProp = serializedObject.FindProperty("lockerCheckRadius");
+        lockerPointToleranceProp = serializedObject.FindProperty("lockerPointTolerance");
+        lockerPauseDurationProp = serializedObject.FindProperty("lockerPauseDuration");
     }
 
     public override void OnInspectorGUI()
@@ -110,6 +120,10 @@ public class KillerAIEditor : Editor
 
         // Attack Section
         DrawAttackSection();
+        EditorGUILayout.Space(10);
+
+        // Locker Investigation Section (optional)
+        DrawLockerSection();
         EditorGUILayout.Space(10);
 
         // Modules Section
@@ -232,6 +246,32 @@ public class KillerAIEditor : Editor
 
         EditorGUILayout.PropertyField(attackDurationProp, new GUIContent("Attack Duration"));
         EditorGUILayout.PropertyField(attackCooldownProp, new GUIContent("Attack Cooldown"));
+
+        EditorGUILayout.EndVertical();
+    }
+
+    private void DrawLockerSection()
+    {
+        // Only show when locker properties are available (locker partial present)
+        if (lockerCheckRadiusProp == null)
+            return;
+
+        EditorGUILayout.BeginVertical("box");
+        EditorGUILayout.LabelField("LOCKER INVESTIGATION (Optional)", EditorStyles.boldLabel);
+        EditorGUILayout.Space(5);
+
+        EditorGUILayout.PropertyField(
+            lockerCheckRadiusProp,
+            new GUIContent("Check Radius", "Radius used when placing investigation points around the locker.")
+        );
+        EditorGUILayout.PropertyField(
+            lockerPointToleranceProp,
+            new GUIContent("Point Tolerance", "How close the agent must get to consider a point reached.")
+        );
+        EditorGUILayout.PropertyField(
+            lockerPauseDurationProp,
+            new GUIContent("Point Pause Duration", "Time spent waiting at each locker point before moving on.")
+        );
 
         EditorGUILayout.EndVertical();
     }

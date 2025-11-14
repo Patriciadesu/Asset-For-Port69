@@ -9,6 +9,7 @@ TagManager:
   - Hand
   - DialogCanvas
   - Portal
+  - PortalMesh
   layers:
   - Default
   - TransparentFX

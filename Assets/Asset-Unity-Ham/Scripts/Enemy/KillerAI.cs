@@ -15,7 +15,7 @@ using static Unity.Burst.Intrinsics.Arm;
 [RequireComponent(typeof(DemonAnimationController))]
 
 
-public class KillerAI : MonoBehaviour
+public partial class KillerAI : MonoBehaviour
 {
     #region State Machine
     [Header("State Machine")]
@@ -350,6 +350,9 @@ public class KillerAI : MonoBehaviour
             case EnemyState.Attack:
                 AttackUpdate();
                 break;
+            case EnemyState.Check:
+                CheckUpdate();
+                break;
             case EnemyState.Stunned:
                 StunnedUpdate();
                 break;
@@ -357,7 +360,6 @@ public class KillerAI : MonoBehaviour
     }
     #endregion
 
-    #region State Logic
     private void IdleUpdate()
     {
         // Stop agent while idle
@@ -366,6 +368,10 @@ public class KillerAI : MonoBehaviour
             agent.isStopped = true;
             agent.ResetPath();
         }
+
+        bool handled = false;
+        LockerIdleOverride(ref handled);
+        if (handled) return;
 
         // If target is within chase range, begin chasing
         if (Target != null)
@@ -384,6 +390,10 @@ public class KillerAI : MonoBehaviour
     {
         // Enable agent for patrol movement (PatrolModule manages it via NavMesh)
         // Don't stop the agent here - let PatrolModule control it
+
+        bool handled = false;
+        LockerPatrolOverride(ref handled);
+        if (handled) return;
 
         // Allow core AI to transition to Chase when player enters ChaseRange
         if (Target != null)
@@ -406,6 +416,10 @@ public class KillerAI : MonoBehaviour
             ChangeState(EnemyState.Patrol);
             return;
         }
+
+        bool handled = false;
+        LockerChaseOverride(ref handled);
+        if (handled) return;
 
         // Calculate distance to target
         float distanceToTarget = Vector3.Distance(transform.position, Target.position);
@@ -531,6 +545,14 @@ public class KillerAI : MonoBehaviour
             return;
         }
 
+        bool handled = false;
+        LockerAttackOverride(ref handled);
+        if (handled)
+        {
+            hasAppliedStunThisAttack = false;
+            return;
+        }
+
         // Apply stun immediately at the start of attack (only once)
         if (!hasAppliedStunThisAttack)
         {
@@ -622,6 +644,22 @@ public class KillerAI : MonoBehaviour
         // Placeholder for future stunned state behavior
         // Currently not used but available for expansion
     }
+
+    private void CheckUpdate()
+    {
+        bool handled = false;
+        LockerCheckOverride(ref handled);
+        if (!handled)
+        {
+            ChangeState(EnemyState.Patrol);
+        }
+    }
+
+    partial void LockerIdleOverride(ref bool handled);
+    partial void LockerPatrolOverride(ref bool handled);
+    partial void LockerChaseOverride(ref bool handled);
+    partial void LockerAttackOverride(ref bool handled);
+    partial void LockerCheckOverride(ref bool handled);
 
     // Helper methods for imperfect chase using NavMesh
     private void SetNoisyDestination()
@@ -735,7 +773,6 @@ public class KillerAI : MonoBehaviour
         float jitter = Random.Range(repathJitter.x, repathJitter.y);
         nextRepathAt = Time.time + repathInterval + jitter;
     }
-    #endregion
 
     #region Public API for Modules
     /// <summary>
