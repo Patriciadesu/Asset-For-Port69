@@ -11,29 +11,51 @@ public class SlashModule : EnemyModule
     [Tooltip("Amount of damage dealt by the slash")]
     public float SlashDamage = 15f;
 
+    [Header("Override Settings")]
+    [Tooltip("If true, the slash fully replaces the KillerAI base attack logic.")]
+    public bool OverrideDefaultAttack = true;
+
     public override void OnStateEnter(EnemyState newState)
     {
         if (!IsActive || killer == null) return;
-        if (newState == EnemyState.Attack && killer.Target != null)
+        if (!OverrideDefaultAttack && newState == EnemyState.Attack)
         {
-            float d = Vector3.Distance(transform.position, killer.Target.position);
-            if (d <= DamageRange)
+            ExecuteSlash();
+        }
+    }
+
+    public override bool TryHandleAttackOverride()
+    {
+        if (!IsActive || killer == null || !OverrideDefaultAttack)
+            return false;
+
+        return ExecuteSlash();
+    }
+
+    private bool ExecuteSlash()
+    {
+        if (killer.Target == null)
+            return false;
+
+        float distance = Vector3.Distance(transform.position, killer.Target.position);
+        bool inRange = distance <= DamageRange;
+
+        if (inRange)
+        {
+            if (DamagePlayer(SlashDamage))
             {
-                Player player = Player.Instance;
-                if (player != null && player.Stat != null)
-                {
-                    player.Stat.TakeDamage(SlashDamage);
-                    Debug.Log($"[SlashModule] Slash hit target for {SlashDamage} damage!");
-                }
-                else
-                {
-                    Debug.LogWarning("[SlashModule] Slash hit but couldn't apply damage!");
-                }
+                Debug.Log($"[SlashModule] Slash override dealt {SlashDamage} damage.");
             }
             else
             {
-                Debug.Log("[SlashModule] Slash missed");
+                Debug.LogWarning("[SlashModule] Slash override failed to apply damage!");
             }
         }
+        else
+        {
+            Debug.Log("[SlashModule] Slash override triggered but target was out of range.");
+        }
+
+        return true;
     }
 }

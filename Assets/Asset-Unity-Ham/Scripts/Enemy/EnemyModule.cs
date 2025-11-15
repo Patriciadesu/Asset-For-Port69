@@ -37,6 +37,13 @@ public abstract class EnemyModule : MonoBehaviour
     public virtual void OnStateUpdate(EnemyState currentState) { }
 
     /// <summary>
+    /// Allows modules to completely override the default KillerAI attack workflow.
+    /// Return true if the module performed its own attack behavior and no further
+    /// default attack handling should occur for the current attack cycle.
+    /// </summary>
+    public virtual bool TryHandleAttackOverride() => false;
+
+    /// <summary>
     /// Called immediately when the AI exits a state.
     /// </summary>
     /// <param name="oldState">The state being exited</param>

@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
-using DoorScript;
 using NaughtyAttributes;
 
 public partial class PortalTeleport
@@ -10,41 +12,47 @@ public partial class PortalTeleport
         randomModuleAvailable = true;
     }
 
-    [Header("Network / Grouping")]
-    [ShowIf(nameof(IsRandomMode))]
-    [HideInInspector] [SerializeField] private string group = "Default";
-    [ShowIf(nameof(IsRandomMode))]
-    [HideInInspector] [SerializeField] private bool randomizeOnStart = true;
-    [ShowIf(nameof(IsRandomMode))]
+    private const string GroupFoldout = "Network / Grouping";
+    private const string OptionalFoldout = "Optional Components";
+    private const string RuntimeFoldout = "Runtime Preview";
+
+    [Foldout(GroupFoldout), ShowIf(nameof(IsRandomMode))]
+    [SerializeField] private string group = "Default";
+    [Foldout(GroupFoldout), ShowIf(nameof(IsRandomMode))]
+    [SerializeField] private bool randomizeOnStart = true;
+    [Foldout(GroupFoldout), ShowIf(nameof(IsRandomMode))]
     [SerializeField] private bool randomizeEveryOpen = true;
-    [ShowIf(nameof(IsRandomMode))]
-    [Min(0)]
-    [HideInInspector] [SerializeField] private int avoidImmediateRepeat = 1;
+    [Foldout(GroupFoldout), ShowIf(nameof(IsRandomMode)), Min(0)]
+    [SerializeField] private int avoidImmediateRepeat = 1;
 
-    [Header("Optional Components (auto-resolve when empty)")]
-    [ShowIf(nameof(IsRandomMode))]
-    [HideInInspector] [SerializeField] private Door door;
-    [ShowIf(nameof(IsRandomMode))]
-    [HideInInspector] [SerializeField] private PortalView portalView;
+    [Foldout(OptionalFoldout), ShowIf(nameof(IsRandomMode))]
+    [SerializeField] private MonoBehaviour doorBehaviour;
+    [Foldout(OptionalFoldout), ShowIf(nameof(IsRandomMode))]
+    [SerializeField] private PortalView portalView;
 
-    [Header("Runtime (read-only)")]
-    [ShowIf(nameof(IsRandomMode))]
-    [ReadOnly]
+    [Foldout(RuntimeFoldout), ShowIf(nameof(IsRandomMode)), ReadOnly]
     [SerializeField] private PortalTeleport currentTarget;
-    [HideInInspector]
+    [Foldout(RuntimeFoldout), ShowIf(nameof(IsRandomMode))]
     [SerializeField] private List<PortalTeleport> poolPreview = new();
 
     private bool lastOpen = false;
+    private Func<bool> doorOpenGetter;
 
     private static readonly Dictionary<string, List<PortalTeleport>> registry
         = new Dictionary<string, List<PortalTeleport>>();
 
     partial void ResolveAdditionalReferences()
     {
-        if (targetMode != TargetMode.RandomGroup) return;
+        if (!portalView)
+        {
+            portalView = GetComponentInChildren<PortalView>(true) ?? GetComponentInParent<PortalView>();
+        }
 
-        if (!door) door = GetComponentInChildren<Door>(true) ?? GetComponentInParent<Door>();
-        if (!portalView) portalView = GetComponentInChildren<PortalView>(true) ?? GetComponentInParent<PortalView>();
+        if (targetMode != TargetMode.RandomGroup)
+            return;
+
+        if (!doorBehaviour) doorBehaviour = FindDoorBehaviour();
+        ConfigureDoorAccessor();
     }
 
     partial void OnEnablePartial()
@@ -53,7 +61,7 @@ public partial class PortalTeleport
         {
             RegisterIntoGroup();
 
-            lastOpen = door ? door.open : false;
+            lastOpen = GetDoorOpenState();
             if (randomizeOnStart) PickNewTarget();
         }
         else
@@ -74,12 +82,13 @@ public partial class PortalTeleport
     {
         if (targetMode == TargetMode.RandomGroup)
         {
-            if (randomizeEveryOpen && door && door.open && !lastOpen)
+            bool currentOpen = GetDoorOpenState();
+            if (randomizeEveryOpen && currentOpen && !lastOpen)
             {
                 PickNewTarget();
             }
 
-            lastOpen = door ? door.open : lastOpen;
+            lastOpen = currentOpen;
         }
         else
         {
@@ -146,13 +155,13 @@ public partial class PortalTeleport
             return;
         }
 
-        PortalTeleport pick = candidates[Random.Range(0, candidates.Count)];
+        PortalTeleport pick = candidates[UnityEngine.Random.Range(0, candidates.Count)];
         if (avoidImmediateRepeat > 0 && currentTarget && candidates.Count > 1)
         {
             int tries = 8;
             while (pick == currentTarget && tries-- > 0)
             {
-                pick = candidates[Random.Range(0, candidates.Count)];
+                pick = candidates[UnityEngine.Random.Range(0, candidates.Count)];
             }
         }
 
@@ -172,6 +181,67 @@ public partial class PortalTeleport
             myPV.otherPortal = targetPV;
             myPV.ForceRebindRT();
         }
+    }
+
+    private MonoBehaviour FindDoorBehaviour()
+    {
+        MonoBehaviour result = null;
+        result = GetComponentsInChildren<MonoBehaviour>(true)
+            .FirstOrDefault(IsDoorLikeComponent);
+        if (result) return result;
+        result = GetComponentsInParent<MonoBehaviour>(true)
+            .FirstOrDefault(IsDoorLikeComponent);
+        return result;
+    }
+
+    private bool IsDoorLikeComponent(MonoBehaviour component)
+    {
+        if (!component) return false;
+        var type = component.GetType();
+        string name = type.Name;
+        string full = type.FullName ?? name;
+        return string.Equals(name, "Door", StringComparison.OrdinalIgnoreCase)
+               || full.Contains(".Door", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void ConfigureDoorAccessor()
+    {
+        doorOpenGetter = CreateDoorOpenGetter(doorBehaviour);
+    }
+
+    private Func<bool> CreateDoorOpenGetter(Component component)
+    {
+        if (!component) return null;
+        var type = component.GetType();
+
+        var prop = type.GetProperty("open", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (prop != null && prop.PropertyType == typeof(bool))
+        {
+            return () => component ? (bool)prop.GetValue(component) : false;
+        }
+
+        var field = type.GetField("open", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (field != null && field.FieldType == typeof(bool))
+        {
+            return () => component ? (bool)field.GetValue(component) : false;
+        }
+
+        var method = type.GetMethod("IsOpen", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
+        if (method != null && method.ReturnType == typeof(bool))
+        {
+            return () => component ? (bool)method.Invoke(component, null) : false;
+        }
+
+        return null;
+    }
+
+    private bool GetDoorOpenState()
+    {
+        if (doorOpenGetter == null && doorBehaviour)
+        {
+            ConfigureDoorAccessor();
+        }
+        return doorOpenGetter?.Invoke() ?? false;
     }
 }
 

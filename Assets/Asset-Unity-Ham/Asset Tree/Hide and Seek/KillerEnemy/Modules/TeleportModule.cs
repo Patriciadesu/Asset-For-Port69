@@ -8,6 +8,10 @@ public class TeleportModule : EnemyModule
     [Header("Teleport Settings")]
     public float TeleportBehindDistance = 2.5f;
     public bool TeleportBehindTargetOnAttack = false;
+    [Tooltip("Enable automatic chase teleports triggered by chance rolls.")]
+    public bool EnableChaseTeleport = true;
+    [Tooltip("Extra cooldown after a successful teleport (seconds).")]
+    public float PostTeleportCooldown = 4f;
 
     [Header("NavMesh Validation")]
     [Tooltip("Radius to search for valid NavMesh position")]
@@ -19,12 +23,21 @@ public class TeleportModule : EnemyModule
     [Tooltip("Show debug info for teleport attempts")]
     public bool DebugTeleport = true;
 
+    [Header("Chase Trigger")]
+    [SerializeField] private RandomTriggerSettings chaseTrigger = new RandomTriggerSettings
+    {
+        TriggerChance = 0.35f,
+        Interval = new Vector2(3f, 6f),
+        InitialDelay = new Vector2(0.5f, 1.5f)
+    };
+
     private NavMeshAgent agent;
 
     public override void Initialize(KillerAI killer)
     {
         base.Initialize(killer);
         agent = GetComponent<NavMeshAgent>();
+        chaseTrigger?.Prime();
         Debug.Log($"[TeleportModule] Initialized. NavMesh validation: {ValidateNavMesh}");
     }
 
@@ -46,6 +59,45 @@ public class TeleportModule : EnemyModule
                 Debug.LogWarning($"[TeleportModule] Failed to teleport behind target - no valid NavMesh position found!");
             }
         }
+    }
+
+    public override void OnStateUpdate(EnemyState currentState)
+    {
+        if (!IsActive || killer == null || killer.Target == null)
+            return;
+
+        if (!EnableChaseTeleport || currentState != EnemyState.Chase)
+            return;
+
+        chaseTrigger?.PrimeIfNeeded();
+        if (chaseTrigger != null && chaseTrigger.TryConsumeTrigger())
+        {
+            bool success = TeleportBehindTarget();
+            float cooldown = success ? Mathf.Max(0.5f, PostTeleportCooldown) : 1.5f;
+            chaseTrigger.BlockFor(cooldown);
+        }
+    }
+
+    private bool TeleportBehindTarget()
+    {
+        if (killer?.Target == null)
+            return false;
+
+        Vector3 dir = (killer.Target.position - transform.position).normalized;
+        dir.y = 0f;
+        Vector3 targetPos = killer.Target.position - dir * TeleportBehindDistance;
+        bool result = TeleportTo(targetPos);
+
+        if (result)
+        {
+            Debug.Log("[TeleportModule] Chase teleport succeeded.");
+        }
+        else
+        {
+            Debug.LogWarning("[TeleportModule] Chase teleport failed.");
+        }
+
+        return result;
     }
 
     /// <summary>

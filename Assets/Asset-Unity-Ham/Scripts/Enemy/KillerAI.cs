@@ -142,6 +142,7 @@ public partial class KillerAI : MonoBehaviour
 
     private float attackTimer = 0f;
     private bool hasAppliedStunThisAttack = false;
+    private bool attackOverrideCheckedThisAttack = false;
     #endregion
 
     #region Modules
@@ -317,6 +318,17 @@ public partial class KillerAI : MonoBehaviour
 
         // Change state
         CurrentState = newState;
+
+        if (newState == EnemyState.Attack)
+        {
+            attackOverrideCheckedThisAttack = false;
+            hasAppliedStunThisAttack = false;
+        }
+        else if (oldState == EnemyState.Attack)
+        {
+            attackOverrideCheckedThisAttack = false;
+            hasAppliedStunThisAttack = false;
+        }
 
         // Debug output
         Debug.Log($"[KillerAI] State changed: {oldState} → {newState}");
@@ -553,6 +565,15 @@ public partial class KillerAI : MonoBehaviour
             return;
         }
 
+        if (!attackOverrideCheckedThisAttack)
+        {
+            attackOverrideCheckedThisAttack = true;
+            if (TryExecuteAttackOverrideModules())
+            {
+                return;
+            }
+        }
+
         // Apply stun immediately at the start of attack (only once)
         if (!hasAppliedStunThisAttack)
         {
@@ -637,6 +658,27 @@ public partial class KillerAI : MonoBehaviour
             
             ChangeState(EnemyState.Chase);
         }
+    }
+
+    private bool TryExecuteAttackOverrideModules()
+    {
+        foreach (var module in modules)
+        {
+            if (module != null && module.IsActive && module.TryHandleAttackOverride())
+            {
+                FinalizeAttackOverride();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void FinalizeAttackOverride()
+    {
+        attackTimer = -AttackCooldown;
+        hasAppliedStunThisAttack = false;
+        ChangeState(EnemyState.Chase);
     }
     
     private void StunnedUpdate()

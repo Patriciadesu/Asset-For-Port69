@@ -7,6 +7,16 @@ public class DashModule : EnemyModule
     [Header("Dash Settings")]
     public float DashDistance = 5f;
     public float DashCooldown = 3f;
+    [Tooltip("Allow the module to automatically dash during chase using random rolls.")]
+    public bool EnableChaseDash = true;
+
+    [Header("Chance Settings")]
+    [SerializeField] private RandomTriggerSettings chaseTrigger = new RandomTriggerSettings
+    {
+        TriggerChance = 0.3f,
+        Interval = new Vector2(2f, 4f),
+        InitialDelay = new Vector2(0.5f, 1.2f)
+    };
 
     private float cooldownTimer = 0f;
     private CharacterController controller;
@@ -15,12 +25,35 @@ public class DashModule : EnemyModule
     {
         base.Initialize(killer);
         controller = GetComponent<CharacterController>();
+        chaseTrigger?.Prime();
     }
 
     public override void OnStateUpdate(EnemyState currentState)
     {
         if (cooldownTimer > 0f)
             cooldownTimer -= Time.deltaTime;
+
+        if (!IsActive || !EnableChaseDash || killer == null)
+            return;
+
+        if (currentState != EnemyState.Chase)
+            return;
+
+        if (cooldownTimer > 0f)
+            return;
+
+        chaseTrigger?.PrimeIfNeeded();
+        if (chaseTrigger != null && chaseTrigger.TryConsumeTrigger())
+        {
+            if (TryDashTowardsTarget())
+            {
+                chaseTrigger.BlockFor(DashCooldown);
+            }
+            else
+            {
+                chaseTrigger.BlockFor(1f);
+            }
+        }
     }
 
     public bool TryDashTowardsTarget()
