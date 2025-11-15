@@ -173,6 +173,11 @@ public class DemonAnimationController : MonoBehaviour
             case EnemyState.Attack:
                 PlayAttackAnimation();
                 break;
+
+            case EnemyState.Shooting:
+                // Use the first shoot animation (Demon|Shoot1 / Demon|ShootI) when AI enters Shooting state
+                PlayShootAnimation(1);
+                break;
         }
     }
 

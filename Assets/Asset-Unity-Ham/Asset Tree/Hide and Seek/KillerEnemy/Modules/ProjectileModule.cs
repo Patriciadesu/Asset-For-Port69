@@ -1,5 +1,4 @@
 using UnityEngine;
-using NaughtyAttributes;
 
 /// <summary>
 /// Projectile attack module for the Killer AI.
@@ -9,14 +8,14 @@ using NaughtyAttributes;
 public class ProjectileModule : EnemyModule
 {
     [Header("Projectile Settings")]
+    [Tooltip("The projectile prefab to instantiate")]
+    [SerializeField] private GameObject projectilePrefab;
+
     [Tooltip("Transform where projectiles spawn from (e.g., hand or weapon point)")]
     [SerializeField] private Transform firePoint;
 
-    [Tooltip("Launch speed applied to every projectile (m/s).")]
-    [SerializeField] private float projectileSpeed = 12f;
-
-    [Tooltip("Enable ballistic arcs that rely on gravity. Disable for hitscan-like shots.")]
-    [SerializeField] private bool useGravity = false;
+    [Tooltip("Initial velocity of the projectile")]
+    [SerializeField] private float projectileSpeed = 15f;
 
     [Tooltip("Range at which this module will attempt to fire (uses killer.AttackRange if 0)")]
     [SerializeField] private float firingRange = 0f;
@@ -27,39 +26,20 @@ public class ProjectileModule : EnemyModule
     [Tooltip("Minimum time between projectile shots")]
     [SerializeField] private float shootCooldown = 1.5f;
 
-    [Header("Chance Settings")]
-    [Tooltip("Projectiles trigger from the chase state using these random rolls.")]
-    [SerializeField]
-    private RandomTriggerSettings chaseTrigger = new RandomTriggerSettings
-    {
-        TriggerChance = 0.4f,
-        Interval = new Vector2(1.5f, 3.5f),
-        InitialDelay = new Vector2(0.25f, 0.75f)
-    };
-
-    [Header("Visuals")]
-    [ShowAssetPreview]
-    [SerializeField] private Material projectileMaterial;
-
-    [Tooltip("Diameter of the generated projectile sphere (meters).")]
+    [Tooltip("Spawn the projectile near the end of the animation (0-1)")]
     [Range(0.1f, 1f)]
-    [SerializeField] private float projectileDiameter = 0.5f;
-
-    [Tooltip("If true, the module waits for the shoot animation to fully finish before resuming movement.")]
-    [SerializeField] private bool waitForAnimationEnd = true;
+    [SerializeField] private float spawnTimePercent = 1f;
 
     private Animator animator;
-    private static Material fallbackProjectileMaterial;
     private float lastShotTime = -10f;
-    private bool isFiringAnimationPlaying = false;
-    private float fireAnimationEndTime = 0f;
-    private string shootAnimationShortName;
-    private EnemyState? stateToRestore;
+    private bool isShooting = false;      // true while performing a projectile attack in Shooting state
+    private Vector3 pendingTargetPosition;
+    private Coroutine shootingCoroutine;
+
     public override void Initialize(KillerAI killer)
     {
         base.Initialize(killer);
         animator = killer.GetAnimator();
-        shootAnimationShortName = ExtractClipShortName(shootAnimationName);
 
         // If firePoint not assigned, use killer's transform
         if (firePoint == null)
@@ -67,35 +47,23 @@ public class ProjectileModule : EnemyModule
             firePoint = killer.transform;
         }
 
-        AutoAssignHandFirePoint();
-
-        chaseTrigger?.Prime();
         Debug.Log("[ProjectileModule] Initialized with firing range: " + (firingRange > 0 ? firingRange.ToString() : killer.AttackRange.ToString()));
     }
 
-#if UNITY_EDITOR
-    private void OnValidate()
+    private void OnDisable()
     {
-        if (!Application.isPlaying)
+        if (shootingCoroutine != null)
         {
-            AutoAssignHandFirePoint();
+            StopCoroutine(shootingCoroutine);
+            shootingCoroutine = null;
         }
 
-        shootAnimationShortName = ExtractClipShortName(shootAnimationName);
+        isShooting = false;
     }
-#endif
 
     public override void OnStateUpdate(EnemyState currentState)
     {
-        HandleFireAnimationLock(currentState);
-        if (isFiringAnimationPlaying)
-            return;
-
-        // Only attempt to shoot during Chase state (not Attack state, as that's reserved for melee)
-        if (currentState != EnemyState.Chase)
-            return;
-
-        if (Time.time < lastShotTime + shootCooldown)
+        if (!IsActive || killer == null)
             return;
 
         Player target = GetTargetPlayer();
@@ -108,138 +76,206 @@ public class ProjectileModule : EnemyModule
         // Determine effective firing range
         float effectiveFiringRange = firingRange > 0 ? firingRange : killer.AttackRange;
 
-        // Check if target is in range and cooldown has passed
-        chaseTrigger?.PrimeIfNeeded();
-        bool shouldFire = chaseTrigger != null && chaseTrigger.TryConsumeTrigger();
-
-        if (shouldFire && distanceToTarget <= effectiveFiringRange)
+        if (currentState == EnemyState.Chase)
         {
-            FireProjectile(target.transform.position);
-            lastShotTime = Time.time;
-            chaseTrigger.BlockFor(shootCooldown);
+            // Only start a new projectile attack if not already in the middle of one
+            if (!isShooting &&
+                distanceToTarget <= effectiveFiringRange &&
+                Time.time >= lastShotTime + shootCooldown)
+            {
+                // Remember where we want to shoot and ask the main AI to switch to Shooting state
+                pendingTargetPosition = target.transform.position;
+                isShooting = true;
+
+                killer.ChangeState(EnemyState.Shooting);
+            }
+
+            return;
+        }
+
+        // While in Shooting state, keep looking at the target (optional)
+        if (currentState == EnemyState.Shooting && isShooting)
+        {
+            Vector3 dir = (target.transform.position - killer.transform.position).normalized;
+            dir.y = 0f;
+            if (dir != Vector3.zero)
+            {
+                Quaternion targetRot = Quaternion.LookRotation(dir);
+                killer.transform.rotation = Quaternion.Slerp(killer.transform.rotation, targetRot, Time.deltaTime * 5f);
+            }
+        }
+    }
+
+    public override void OnStateEnter(EnemyState newState)
+    {
+        if (!IsActive || killer == null)
+            return;
+
+        // When we enter Shooting state because of this module, start the shoot animation.
+        if (newState == EnemyState.Shooting && isShooting)
+        {
+            BeginShoot(pendingTargetPosition);
+        }
+    }
+
+    public override void OnStateExit(EnemyState oldState)
+    {
+        if (oldState == EnemyState.Shooting)
+        {
+            // If leaving Shooting early (e.g., interrupted), stop any pending shot.
+            if (shootingCoroutine != null)
+            {
+                StopCoroutine(shootingCoroutine);
+                shootingCoroutine = null;
+            }
+
+            isShooting = false;
         }
     }
 
     /// <summary>
-    /// Fires a projectile towards the target position
+    /// Starts the shoot process: plays animation; projectile is spawned when animation finishes.
     /// </summary>
-    private void FireProjectile(Vector3 targetPosition)
+    private void BeginShoot(Vector3 targetPosition)
     {
-        // Trigger shoot animation with proper verification
-        if (animator != null)
+        if (projectilePrefab == null)
         {
-            if (animator.parameters != null && animator.parameters.Length > 0)
+            Debug.LogWarning("[ProjectileModule] Projectile prefab not assigned!");
+            isShooting = false;
+
+            if (killer != null && killer.CurrentState == EnemyState.Shooting)
             {
-                bool hasShootTrigger = System.Array.Exists(animator.parameters, p => p.name == "Shoot" && p.type == AnimatorControllerParameterType.Trigger);
-                if (hasShootTrigger)
-                {
-                    animator.SetTrigger("Shoot");
-                    Debug.Log($"[ProjectileModule] Playing animation: {shootAnimationName}");
-                }
-                else
-                {
-                    Debug.LogWarning($"[ProjectileModule] Animator does not have 'Shoot' trigger parameter!");
-                }
+                killer.ChangeState(EnemyState.Chase);
             }
-            else
+            return;
+        }
+
+        if (animator == null)
+        {
+            Debug.LogWarning("[ProjectileModule] Animator reference is null, firing immediately without animation.");
+            SpawnProjectile(targetPosition);
+            lastShotTime = Time.time;
+            isShooting = false;
+
+            if (killer != null && killer.CurrentState == EnemyState.Shooting)
             {
-                Debug.LogWarning("[ProjectileModule] Animator has no parameters!");
+                killer.ChangeState(EnemyState.Chase);
             }
+            return;
+        }
+
+        // Stop movement while we perform the shooting animation
+        killer.StopMovement();
+
+        // Verify that we have a "Shoot" trigger parameter before using it
+        bool hasShootTrigger = false;
+        if (animator.parameters != null && animator.parameters.Length > 0)
+        {
+            hasShootTrigger = System.Array.Exists(
+                animator.parameters,
+                p => p.name == "Shoot" && p.type == AnimatorControllerParameterType.Trigger);
+        }
+
+        if (hasShootTrigger)
+        {
+            animator.SetTrigger("Shoot");
+            Debug.Log($"[ProjectileModule] Playing shoot animation: {shootAnimationName}");
         }
         else
         {
-            Debug.LogWarning("[ProjectileModule] Animator reference is null!");
+            Debug.LogWarning("[ProjectileModule] Animator does not have 'Shoot' trigger parameter! Projectile will still be spawned.");
         }
 
-        GameObject projectile = CreateProjectileSphere();
+        // Cache the position we were aiming at when we started the throw
+        pendingTargetPosition = targetPosition;
 
-        if (!projectile) return;
+        // Start coroutine that waits for the animation, then spawns the projectile
+        if (shootingCoroutine != null)
+        {
+            StopCoroutine(shootingCoroutine);
+        }
+        shootingCoroutine = StartCoroutine(ShootAfterAnimation());
+    }
 
-        Vector3 aimPoint = GetAimPoint(targetPosition);
+    /// <summary>
+    /// Waits for the throw animation to finish, then spawns the projectile and returns to Chase.
+    /// </summary>
+    private System.Collections.IEnumerator ShootAfterAnimation()
+    {
+        // Get animation duration; fall back to a small delay if not found
+        float animDuration = GetAnimationDuration(shootAnimationName);
+        if (animDuration <= 0f)
+        {
+            animDuration = 0.5f;
+        }
 
-        // Calculate launch velocity to reach the player
-        Vector3 launchVelocity = ComputeLaunchVelocity(aimPoint);
-        Vector3 launchDirection = launchVelocity.sqrMagnitude > 0.0001f
-            ? launchVelocity.normalized
-            : (aimPoint - firePoint.position).normalized;
+        float waitTime = animDuration * spawnTimePercent;
+        yield return new WaitForSeconds(waitTime);
 
-        // Apply velocity to projectile (if it has a Rigidbody)
+        // If state changed while waiting, abort
+        if (!isShooting || killer == null || killer.CurrentState != EnemyState.Shooting)
+        {
+            shootingCoroutine = null;
+            yield break;
+        }
+
+        SpawnProjectile(pendingTargetPosition);
+
+        lastShotTime = Time.time;
+        isShooting = false;
+        shootingCoroutine = null;
+
+        if (killer != null && killer.CurrentState == EnemyState.Shooting)
+        {
+            killer.ChangeState(EnemyState.Chase);
+        }
+    }
+
+    /// <summary>
+    /// Actually spawns the projectile and sends it towards the cached target position.
+    /// </summary>
+    private void SpawnProjectile(Vector3 targetPosition)
+    {
+        if (projectilePrefab == null)
+        {
+            Debug.LogWarning("[ProjectileModule] Cannot spawn projectile - prefab is null.");
+            return;
+        }
+
+        if (firePoint == null)
+        {
+            firePoint = killer != null ? killer.transform : transform;
+        }
+
+        // Instantiate projectile at fire point
+        GameObject projectile = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
+
+        // Calculate direction to target, but keep it horizontal so shots travel in a straight (parallel) line
+        Vector3 flatTarget = targetPosition;
+        flatTarget.y = firePoint.position.y; // ignore player feet height and aim straight from fire point
+        Vector3 directionToTarget = (flatTarget - firePoint.position).normalized;
+
+        // Apply velocity to projectile - ensure it has a Rigidbody
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
         if (rb == null)
         {
             rb = projectile.AddComponent<Rigidbody>();
+            rb.useGravity = false;
+            rb.isKinematic = false;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
         }
-        rb.useGravity = useGravity;
-#if UNITY_6000_0_OR_NEWER
-        rb.linearVelocity = Vector3.zero;
-        rb.AddForce(launchVelocity, ForceMode.VelocityChange);
-#else
-        rb.velocity = Vector3.zero;
-        rb.AddForce(launchVelocity, ForceMode.VelocityChange);
-#endif
+
+        rb.linearVelocity = directionToTarget * projectileSpeed;
 
         // Rotate projectile to face direction of travel
-        projectile.transform.rotation = Quaternion.LookRotation(launchDirection);
-
-        // Get animation duration for stun timing
-        float animDuration = Mathf.Max(0.1f, GetAnimationDuration(shootAnimationName));
-        BeginFireAnimationLock(animDuration);
-        Debug.Log($"[ProjectileModule] Fired projectile at target. Distance: {Vector3.Distance(killer.transform.position, aimPoint)}, Animation duration: {animDuration}s");
-    }
-    private Vector3 GetAimPoint(Vector3 fallbackTargetPosition)
-    {
-        Player player = Player.Instance;
-        if (player == null)
+        if (directionToTarget != Vector3.zero)
         {
-            return fallbackTargetPosition + Vector3.up * 0.9f;
+            projectile.transform.rotation = Quaternion.LookRotation(directionToTarget);
         }
 
-        Collider coll = player.GetComponentInChildren<Collider>();
-        if (coll == null)
-        {
-            return player.transform.position + Vector3.up * 0.9f;
-        }
-
-        return coll.bounds.center;
-    }
-
-
-    private GameObject CreateProjectileSphere()
-    {
-        var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        sphere.name = "ProjectileModule_Sphere";
-        sphere.transform.position = firePoint ? firePoint.position : transform.position;
-        sphere.transform.localScale = Vector3.one * Mathf.Clamp(projectileDiameter, 0.05f, 2f);
-
-        var renderer = sphere.GetComponent<Renderer>();
-        if (renderer)
-        {
-            Material matToApply = projectileMaterial;
-
-            if (matToApply == null)
-            {
-                if (fallbackProjectileMaterial == null)
-                {
-                    fallbackProjectileMaterial = new Material(Shader.Find("Standard"))
-                    {
-                        color = Color.magenta
-                    };
-                    fallbackProjectileMaterial.EnableKeyword("_EMISSION");
-                    fallbackProjectileMaterial.SetColor("_EmissionColor", Color.magenta * 0.6f);
-                }
-
-                matToApply = fallbackProjectileMaterial;
-            }
-
-            renderer.sharedMaterial = matToApply;
-        }
-
-        var collider = sphere.GetComponent<Collider>();
-        collider.isTrigger = true;
-
-        var damage = sphere.AddComponent<FallbackProjectileDamage>();
-        damage.Initialize(killer ? killer.AttackDamage : 10f, 8f);
-        return sphere;
+        float animDuration = GetAnimationDuration(shootAnimationName);
+        Debug.Log($"[ProjectileModule] Spawned projectile towards target. Distance: {Vector3.Distance(killer.transform.position, targetPosition)}, Animation duration: {animDuration}s");
     }
 
     /// <summary>
@@ -280,171 +316,34 @@ public class ProjectileModule : EnemyModule
         return firingRange > 0 ? firingRange : killer.AttackRange;
     }
 
-    private Vector3 ComputeLaunchVelocity(Vector3 targetPosition)
-    {
-        Vector3 origin = firePoint ? firePoint.position : transform.position;
-        Vector3 toTarget = targetPosition - origin;
-
-        if (!useGravity)
-        {
-            return toTarget.normalized * projectileSpeed;
-        }
-
-        Vector3 horizontal = new Vector3(toTarget.x, 0f, toTarget.z);
-        float distance = horizontal.magnitude;
-        float height = toTarget.y;
-
-        if (distance < 0.001f)
-        {
-            // Target is almost directly above/below – just shoot straight
-            return toTarget.normalized * projectileSpeed;
-        }
-
-        float g = Mathf.Abs(Physics.gravity.y);
-        float v2 = projectileSpeed * projectileSpeed;
-        float underRoot = v2 * v2 - g * (g * distance * distance + 2f * height * v2);
-
-        if (underRoot <= 0f)
-        {
-            // Not enough speed to hit target under gravity – fallback to straight shot
-            return toTarget.normalized * projectileSpeed;
-        }
-
-        float root = Mathf.Sqrt(underRoot);
-        float angle = Mathf.Atan((v2 + root) / (g * distance)); // high arc
-
-        Vector3 dir = horizontal.normalized;
-        Vector3 velocity = dir * projectileSpeed * Mathf.Cos(angle);
-        velocity.y = projectileSpeed * Mathf.Sin(angle);
-        return velocity;
-    }
-
-    private void BeginFireAnimationLock(float duration)
-    {
-        if (killer == null)
-            return;
-
-        stateToRestore = killer.CurrentState;
-        if (killer.CurrentState != EnemyState.Idle)
-        {
-            killer.ChangeState(EnemyState.Idle);
-        }
-
-        killer.StopMovement();
-        isFiringAnimationPlaying = true;
-        fireAnimationEndTime = Time.time + duration;
-    }
-
-    private void HandleFireAnimationLock(EnemyState currentState)
-    {
-        if (!isFiringAnimationPlaying)
-            return;
-
-        if (HasAnimationFinished() && Time.time >= fireAnimationEndTime)
-        {
-            isFiringAnimationPlaying = false;
-            if (killer != null)
-            {
-                float resumeSpeed = currentState == EnemyState.Chase ? killer.ChaseSpeed : killer.PatrolSpeed;
-                killer.ResumeMovement(resumeSpeed);
-                if (stateToRestore.HasValue && killer.CurrentState == EnemyState.Idle)
-                {
-                    killer.ChangeState(stateToRestore.Value);
-                }
-            }
-            stateToRestore = null;
-        }
-    }
-
-    private bool HasAnimationFinished()
-    {
-        if (!waitForAnimationEnd || animator == null)
-        {
-            return true;
-        }
-
-        AnimatorStateInfo info = animator.GetCurrentAnimatorStateInfo(0);
-        bool isInShootState =
-            info.IsName(shootAnimationName) ||
-            (!string.IsNullOrEmpty(shootAnimationShortName) && info.IsName(shootAnimationShortName));
-
-        if (!isInShootState)
-        {
-            // Animation already switched out.
-            return true;
-        }
-
-        return info.normalizedTime >= 0.98f;
-    }
-
-    private string ExtractClipShortName(string clipName)
-    {
-        if (string.IsNullOrEmpty(clipName))
-            return null;
-
-        return clipName.Contains("|") ? clipName.Split('|')[1] : clipName;
-    }
-
-    private void AutoAssignHandFirePoint()
-    {
-        if (firePoint != null && firePoint.CompareTag("Hand"))
-            return;
-
-        Transform[] transforms = GetComponentsInChildren<Transform>(true);
-        foreach (var child in transforms)
-        {
-            if (child == transform)
-                continue;
-
-            if (child.CompareTag("Hand"))
-            {
-                firePoint = child;
-                break;
-            }
-        }
-    }
-
+#if UNITY_EDITOR
+    /// <summary>
+    /// Draws the projectile firing range as a gizmo in the Scene view.
+    /// </summary>
     private void OnDrawGizmosSelected()
     {
-        float range = firingRange > 0 ? firingRange : (killer != null ? killer.AttackRange : 2f);
-        Gizmos.color = new Color(0.1f, 0.7f, 1f, 0.65f);
-        Vector3 origin = firePoint != null ? firePoint.position : transform.position;
-        Gizmos.DrawWireSphere(origin, range);
-    }
-
-    [DisallowMultipleComponent]
-    private sealed class FallbackProjectileDamage : MonoBehaviour
-    {
-        private float damageAmount;
-
-        public void Initialize(float damage, float lifetime)
+        // Use killer's attack range as fallback when running in editor and not initialized yet
+        float range = firingRange;
+        if (killer != null && range <= 0f)
         {
-            damageAmount = damage;
-            if (lifetime > 0f)
-            {
-                Destroy(gameObject, lifetime);
-            }
+            range = killer.AttackRange;
         }
 
-        private void OnCollisionEnter(Collision collision)
-        {
-            if(collision.gameObject.tag == "Player")
-                DealDamage();
-        }
-        private void OnTriggerEnter(Collider other)
-        {
-            if (other.tag == "Player")
-                DealDamage();
-        }
+        if (range <= 0f)
+            return;
 
-        private void DealDamage()
+        // Center the gizmo on the killer if available, otherwise on this transform
+        Vector3 center = killer != null ? killer.transform.position : transform.position;
+
+        Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.4f); // light cyan
+        Gizmos.DrawWireSphere(center, range);
+
+        // Also draw a line from the firePoint if set
+        if (firePoint != null)
         {
-            var player = Player.Instance;
-            if (player != null && player.Stat != null)
-            {
-                player.Stat.TakeDamage(damageAmount);
-            }
-            Destroy(gameObject);
+            Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.8f);
+            Gizmos.DrawLine(firePoint.position, center + (firePoint.forward * range));
         }
     }
+#endif
 }

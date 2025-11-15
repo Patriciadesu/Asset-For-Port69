@@ -1,47 +1,41 @@
 ﻿using System.Collections;
 using System.Linq;
-using DoorScript;
 using UnityEngine;
 using Unity.Cinemachine;
+using NaughtyAttributes;
 
 public class PortalView : MonoBehaviour
 {
     [Header("Portal Links")]
-    [HideInInspector] public PortalView otherPortal;
-    private Camera portalView;
+    public PortalView otherPortal;
+    public Camera portalView;
 
-    [Header("Visuals")]
-    [SerializeField] private Shader portalShader;
-    private MeshRenderer portalMesh;
+    
+    [Foldout("Visuals")]public Shader portalShader;
+    [Foldout("Visuals")][SerializeField] private MeshRenderer portalMesh;
 
-    [Header("Player Camera Auto-Discovery")]
-    private Transform playerRootOverride => Player.Instance ? Player.Instance.transform : null;
-    private bool autoReacquire = true;
-    [Tooltip("หน่วงก่อน rebind เมื่อกล้องผู้เล่นถูกปิดชั่วคราว (เช่น ตอนสลับ vcam)")]
-    private int reacquireGraceFrames = 6;
-    [Tooltip("พยายามใช้ Player.Instance.camera ก่อนวิธีอื่น")]
-    private bool preferPlayerInstanceCamera = true;
+    
+    [Foldout("Player Camera")][SerializeField] private Transform playerRootOverride;
+    [Foldout("Player Camera")][SerializeField] private bool autoReacquire = true;
+    [Foldout("Player Camera")][Tooltip("หน่วงก่อน rebind เมื่อกล้องผู้เล่นถูกปิดชั่วคราว (เช่น ตอนสลับ vcam)")]
+    [SerializeField] private int reacquireGraceFrames = 6;
+    [Foldout("Player Camera")][Tooltip("พยายามใช้ Player.Instance.camera ก่อนวิธีอื่น")]
+    [SerializeField] private bool preferPlayerInstanceCamera = true;
 
-    [Header("Tuning")]
-    private float distanceScale = 1f;
-    private float forwardBias = 0f;
-    private Vector3 localOffset = Vector3.zero;
-    [SerializeField, Tooltip("If true, remote view sticks to the destination portal's arrival anchor.")]
-    private bool lockCameraToArrivalAnchor = true;
-    [SerializeField, Tooltip("When false, copy camera pose instead of mirror.")]
-    private bool mirrorWhenUnlocked = false;
-    [SerializeField, Tooltip("Keep the partner door open/closed in sync with this door.")]
-    private bool syncDoorStates = true;
+    
+    [Foldout("Tuning")][Range(0.1f, 2f)][SerializeField] private float distanceScale = 1f;
+    [Foldout("Tuning")][SerializeField] private float forwardBias = 0f;
+    [Foldout("Tuning")][SerializeField] private Vector3 localOffset = Vector3.zero;
 
-    [Header("RenderTexture Sizing")]
-    private int rtShortSide = 1024;
-    private float aspectEpsilon = 0.005f;
+    
+    [Foldout("RenderTexture Sizing")][SerializeField] private int rtShortSide = 1024;
+    [Foldout("RenderTexture Sizing")][SerializeField] private float aspectEpsilon = 0.005f;
 
-    [Header("Safety")]
-    [Tooltip("ตัดกล้องที่อยู่ใต้ PortalView หรือมีกำหนด targetTexture (กล้องพอร์ทัล)")]
-    private bool excludePortalCameras = true;
-    [Tooltip("Rebind RT อัตโนมัติเมื่อ otherPortal เปลี่ยน")]
-    private bool autoRebindOnOtherChange = true;
+    
+    [Foldout("Safety")][Tooltip("ตัดกล้องที่อยู่ใต้ PortalView หรือมีกำหนด targetTexture (กล้องพอร์ทัล)")]
+    [SerializeField] private bool excludePortalCameras = true;
+    [Foldout("Safety")][Tooltip("Rebind RT อัตโนมัติเมื่อ otherPortal เปลี่ยน")]
+    [SerializeField] private bool autoRebindOnOtherChange = true;
 
     [HideInInspector] public Camera playercam;
 
@@ -52,49 +46,13 @@ public class PortalView : MonoBehaviour
     // track state เพื่อ rebind/กันแกว่ง
     private int lostUsableFrames = 0;
     private PortalView _lastOther;
-    private PortalTeleport cachedOtherTeleport;
-    private Transform cachedArrivalAnchor;
-    private Door cachedOwnDoor;
-    private Door cachedOtherDoor;
 
     void Awake()
     {
         if (!portalView)
             portalView = GetComponentInChildren<Camera>(true);
-        portalMesh = FindPortalMesh();
-        EnsurePortalShader();
-        cachedOwnDoor = GetComponentInParent<Door>(true);
-    }
-
-    private MeshRenderer FindPortalMesh()
-    {
-        MeshRenderer result = null;
-        var tagged = this.gameObject.GetComponentsInChildren<Transform>(true)
-                     .Select(t => t.gameObject)
-                     .FirstOrDefault(child => child.CompareTag("PortalMesh"));
-        if (tagged)
-        {
-            result = tagged.GetComponent<MeshRenderer>();
-        }
-        if (!result)
-        {
-            result = GetComponentInChildren<MeshRenderer>(true);
-        }
-        return result;
-    }
-
-    private void EnsurePortalShader()
-    {
-        if (portalShader) return;
-        portalShader = Shader.Find("Unlit/PortalShader");
-        if (!portalShader)
-        {
-            portalShader = Shader.Find("Unlit/Texture");
-            if (!portalShader)
-            {
-                Debug.LogWarning("[PortalView] Unable to find fallback portal shader. Portal preview will be blank.");
-            }
-        }
+        if (!portalView)
+            Debug.LogError("[PortalView] portalView missing.");
     }
 
     void Start()
@@ -146,27 +104,9 @@ public class PortalView : MonoBehaviour
             else lostUsableFrames = 0;
         }
 
-        if (!playercam || !portalView) return;
+        if (!playercam || !otherPortal || !portalView) return;
 
-        if (lockCameraToArrivalAnchor && cachedArrivalAnchor)
-        {
-            portalView.transform.SetPositionAndRotation(cachedArrivalAnchor.position, cachedArrivalAnchor.rotation);
-            portalView.nearClipPlane = 0.05f;
-        }
-        else
-        {
-            if (!otherPortal) return;
-            if (mirrorWhenUnlocked)
-                UpdateMirrorCamera();
-            else
-                UpdateAlignedCamera();
-        }
-
-        SyncDoorState();
-    }
-
-    private void UpdateMirrorCamera()
-    {
+        // === Mirror transform ===
         Vector3 lp = otherPortal.transform.worldToLocalMatrix.MultiplyPoint3x4(playercam.transform.position);
         Vector3 mirrored = new Vector3(-lp.x, lp.y, -lp.z);
 
@@ -184,42 +124,6 @@ public class PortalView : MonoBehaviour
         portalView.nearClipPlane = Mathf.Clamp(dist - 0.02f, 0.03f, 0.3f);
     }
 
-    private void UpdateAlignedCamera()
-    {
-        Vector3 lp = otherPortal.transform.worldToLocalMatrix.MultiplyPoint3x4(playercam.transform.position);
-        Vector3 adjusted = lp * distanceScale
-                         + Vector3.forward * forwardBias
-                         + localOffset;
-
-        portalView.transform.localPosition = adjusted;
-
-        Quaternion difference =
-            transform.rotation * Quaternion.Inverse(otherPortal.transform.rotation);
-        portalView.transform.rotation = difference * playercam.transform.rotation;
-
-        float dist = adjusted.magnitude;
-        portalView.nearClipPlane = Mathf.Clamp(dist - 0.02f, 0.03f, 0.3f);
-    }
-
-    private void SyncDoorState()
-    {
-        if (!syncDoorStates || !cachedOwnDoor) return;
-
-        if (!cachedOtherDoor && cachedOtherTeleport)
-        {
-            cachedOtherDoor = cachedOtherTeleport.AssociatedDoor;
-        }
-        if (!cachedOtherDoor && otherPortal)
-        {
-            cachedOtherDoor = otherPortal.GetComponentInParent<Door>();
-        }
-
-        if (cachedOtherDoor)
-        {
-            cachedOtherDoor.open = cachedOwnDoor.open;
-        }
-    }
-
     // ---------- RT build/rebind ----------
     void BuildRTAndMaterial()
     {
@@ -234,11 +138,12 @@ public class PortalView : MonoBehaviour
         otherRT = new RenderTexture(w, h, 24, RenderTextureFormat.Default);
         otherRT.name = $"PortalRT_{name}_From_{otherPortal?.name}";
 
-        EnsurePortalMaterial();
-        if (portalMaterial)
+        if (portalMaterial == null)
         {
-            portalMaterial.mainTexture = otherRT;
+            portalMaterial = new Material(portalShader);
+            portalMesh.material = portalMaterial;
         }
+        portalMaterial.mainTexture = otherRT;
 
         if (portalView) portalView.aspect = (float)w / h;
 
@@ -259,37 +164,6 @@ public class PortalView : MonoBehaviour
             otherPortal.portalView.targetTexture = otherRT;
 
         _lastOther = otherPortal;
-        CacheOtherPortalData();
-    }
-
-    private void EnsurePortalMaterial()
-    {
-        if (!portalMesh) return;
-
-        if (portalMaterial == null)
-        {
-            portalMaterial = portalMesh.material;
-        }
-
-        if (portalMaterial != null && portalMaterial.HasProperty("_MainTex"))
-        {
-            portalMesh.material = portalMaterial;
-            return;
-        }
-
-        EnsurePortalShader();
-        if (!portalShader) return;
-
-        portalMaterial = new Material(portalShader);
-        portalMesh.material = portalMaterial;
-    }
-
-    private void CacheOtherPortalData()
-    {
-        cachedOtherTeleport = otherPortal ? otherPortal.GetComponentInParent<PortalTeleport>() : null;
-        cachedArrivalAnchor = cachedOtherTeleport ? cachedOtherTeleport.ArrivalAnchor : null;
-        cachedOtherDoor = cachedOtherTeleport ? cachedOtherTeleport.AssociatedDoor
-            : otherPortal ? otherPortal.GetComponentInParent<Door>() : null;
     }
 
     void EnsureRTUpToDate()

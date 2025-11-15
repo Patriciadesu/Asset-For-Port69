@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.AI;
 using static Unity.Burst.Intrinsics.Arm;
@@ -15,7 +14,7 @@ using static Unity.Burst.Intrinsics.Arm;
 [RequireComponent(typeof(DemonAnimationController))]
 
 
-public partial class KillerAI : MonoBehaviour
+public class KillerAI : MonoBehaviour
 {
     #region State Machine
     [Header("State Machine")]
@@ -56,6 +55,26 @@ public partial class KillerAI : MonoBehaviour
 
     [Tooltip("Movement speed during chase")]
     public float ChaseSpeed = 6f;
+    #endregion
+
+    #region Locker Investigation
+    [Header("Locker Investigation")]
+    [Tooltip("Radius used when placing investigation points around a locker")]
+    [SerializeField] private float lockerCheckRadius = 11f;
+
+    [Tooltip("How close the agent must get to consider a locker point reached")]
+    [SerializeField] private float lockerPointTolerance = 0.5f;
+
+    [Tooltip("Time to pause at each locker point before moving to the next")]
+    [SerializeField] private float lockerPauseDuration = 1.5f;
+
+    private readonly List<Vector3> lockerPatrolPoints = new List<Vector3>();
+    private int lockerPatrolIndex;
+    private bool lockerWaiting;
+    private float lockerResumeTime;
+    private Transform lockerUnderInvestigation;
+
+    private bool PlayerHiddenInLocker => LockerState.IsHiding && LockerState.CurrentLocker != null;
     #endregion
 
     #region NavMesh and Imperfect Chase
@@ -142,7 +161,6 @@ public partial class KillerAI : MonoBehaviour
 
     private float attackTimer = 0f;
     private bool hasAppliedStunThisAttack = false;
-    private bool attackOverrideCheckedThisAttack = false;
     #endregion
 
     #region Modules
@@ -316,19 +334,13 @@ public partial class KillerAI : MonoBehaviour
             }
         }
 
+        if (oldState == EnemyState.Check && newState != EnemyState.Check && lockerUnderInvestigation != null)
+        {
+            ExitLockerInvestigation();
+        }
+
         // Change state
         CurrentState = newState;
-
-        if (newState == EnemyState.Attack)
-        {
-            attackOverrideCheckedThisAttack = false;
-            hasAppliedStunThisAttack = false;
-        }
-        else if (oldState == EnemyState.Attack)
-        {
-            attackOverrideCheckedThisAttack = false;
-            hasAppliedStunThisAttack = false;
-        }
 
         // Debug output
         Debug.Log($"[KillerAI] State changed: {oldState} → {newState}");
@@ -356,14 +368,17 @@ public partial class KillerAI : MonoBehaviour
             case EnemyState.Patrol:
                 PatrolUpdate();
                 break;
+            case EnemyState.Check:
+                LockerCheckUpdate();
+                break;
             case EnemyState.Chase:
                 ChaseUpdate();
                 break;
             case EnemyState.Attack:
                 AttackUpdate();
                 break;
-            case EnemyState.Check:
-                CheckUpdate();
+            case EnemyState.Shooting:
+                ShootingUpdate();
                 break;
             case EnemyState.Stunned:
                 StunnedUpdate();
@@ -372,18 +387,18 @@ public partial class KillerAI : MonoBehaviour
     }
     #endregion
 
+    #region State Logic
     private void IdleUpdate()
     {
+        if (TryStartLockerInvestigation())
+            return;
+
         // Stop agent while idle
         if (agent != null)
         {
             agent.isStopped = true;
             agent.ResetPath();
         }
-
-        bool handled = false;
-        LockerIdleOverride(ref handled);
-        if (handled) return;
 
         // If target is within chase range, begin chasing
         if (Target != null)
@@ -400,12 +415,11 @@ public partial class KillerAI : MonoBehaviour
 
     private void PatrolUpdate()
     {
+        if (TryStartLockerInvestigation())
+            return;
+
         // Enable agent for patrol movement (PatrolModule manages it via NavMesh)
         // Don't stop the agent here - let PatrolModule control it
-
-        bool handled = false;
-        LockerPatrolOverride(ref handled);
-        if (handled) return;
 
         // Allow core AI to transition to Chase when player enters ChaseRange
         if (Target != null)
@@ -422,16 +436,15 @@ public partial class KillerAI : MonoBehaviour
 
     private void ChaseUpdate()
     {
+        if (TryStartLockerInvestigation())
+            return;
+
         // Validate target
         if (Target == null)
         {
             ChangeState(EnemyState.Patrol);
             return;
         }
-
-        bool handled = false;
-        LockerChaseOverride(ref handled);
-        if (handled) return;
 
         // Calculate distance to target
         float distanceToTarget = Vector3.Distance(transform.position, Target.position);
@@ -542,6 +555,9 @@ public partial class KillerAI : MonoBehaviour
 
     private void AttackUpdate()
     {
+        if (TryStartLockerInvestigation())
+            return;
+
         // Stop while attacking
         if (agent != null)
         {
@@ -555,23 +571,6 @@ public partial class KillerAI : MonoBehaviour
             ChangeState(EnemyState.Idle);
             hasAppliedStunThisAttack = false;
             return;
-        }
-
-        bool handled = false;
-        LockerAttackOverride(ref handled);
-        if (handled)
-        {
-            hasAppliedStunThisAttack = false;
-            return;
-        }
-
-        if (!attackOverrideCheckedThisAttack)
-        {
-            attackOverrideCheckedThisAttack = true;
-            if (TryExecuteAttackOverrideModules())
-            {
-                return;
-            }
         }
 
         // Apply stun immediately at the start of attack (only once)
@@ -660,25 +659,64 @@ public partial class KillerAI : MonoBehaviour
         }
     }
 
-    private bool TryExecuteAttackOverrideModules()
+    private void LockerCheckUpdate()
     {
-        foreach (var module in modules)
+        if (CurrentState != EnemyState.Check)
+            return;
+
+        if (!PlayerHiddenInLocker)
         {
-            if (module != null && module.IsActive && module.TryHandleAttackOverride())
+            ExitLockerInvestigation();
+            ChangeState(EnemyState.Chase);
+            return;
+        }
+
+        if (lockerUnderInvestigation == null)
+        {
+            ExitLockerInvestigation();
+            ChangeState(EnemyState.Patrol);
+            return;
+        }
+
+        if (agent == null)
+            return;
+
+        if (lockerPatrolPoints.Count == 0)
+        {
+            BuildLockerCheckPoints(lockerUnderInvestigation);
+            if (lockerPatrolPoints.Count == 0)
             {
-                FinalizeAttackOverride();
-                return true;
+                ExitLockerInvestigation();
+                ChangeState(EnemyState.Patrol);
+                return;
             }
         }
 
-        return false;
-    }
+        if (lockerWaiting)
+        {
+            if (Time.time >= lockerResumeTime)
+            {
+                lockerWaiting = false;
+                AdvanceLockerPoint();
+            }
+            return;
+        }
 
-    private void FinalizeAttackOverride()
-    {
-        attackTimer = -AttackCooldown;
-        hasAppliedStunThisAttack = false;
-        ChangeState(EnemyState.Chase);
+        Vector3 currentDestination = lockerPatrolPoints[lockerPatrolIndex];
+        float distance = Vector3.Distance(transform.position, currentDestination);
+
+        if (distance <= lockerPointTolerance)
+        {
+            lockerWaiting = true;
+            lockerResumeTime = Time.time + lockerPauseDuration;
+            agent.isStopped = true;
+            return;
+        }
+
+        if (!agent.hasPath || Vector3.Distance(agent.destination, currentDestination) > 0.25f)
+        {
+            MoveToLockerPoint(lockerPatrolIndex);
+        }
     }
     
     private void StunnedUpdate()
@@ -687,21 +725,147 @@ public partial class KillerAI : MonoBehaviour
         // Currently not used but available for expansion
     }
 
-    private void CheckUpdate()
+    private void ShootingUpdate()
     {
-        bool handled = false;
-        LockerCheckOverride(ref handled);
-        if (!handled)
+        // Stop while performing a ranged projectile attack.
+        if (agent != null)
         {
-            ChangeState(EnemyState.Patrol);
+            agent.isStopped = true;
+            agent.ResetPath();
+        }
+
+        // Face the target so the throw animation looks correct.
+        if (Target != null)
+        {
+            Vector3 directionToTarget = (Target.position - transform.position).normalized;
+            directionToTarget.y = 0f; // Keep rotation on horizontal plane
+            if (directionToTarget != Vector3.zero)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
+            }
         }
     }
 
-    partial void LockerIdleOverride(ref bool handled);
-    partial void LockerPatrolOverride(ref bool handled);
-    partial void LockerChaseOverride(ref bool handled);
-    partial void LockerAttackOverride(ref bool handled);
-    partial void LockerCheckOverride(ref bool handled);
+    #region Locker Investigation Logic
+    private bool TryStartLockerInvestigation()
+    {
+        if (!PlayerHiddenInLocker)
+            return false;
+
+        Transform locker = LockerState.CurrentLocker;
+        if (locker == null)
+            return false;
+
+        if (CurrentState == EnemyState.Check && lockerUnderInvestigation == locker)
+            return true;
+
+        StartLockerInvestigation(locker);
+        return lockerUnderInvestigation != null && CurrentState == EnemyState.Check;
+    }
+
+    private void StartLockerInvestigation(Transform locker)
+    {
+        if (locker == null || agent == null)
+            return;
+
+        if (lockerUnderInvestigation == locker && lockerPatrolPoints.Count > 0)
+            return;
+
+        lockerUnderInvestigation = locker;
+        BuildLockerCheckPoints(lockerUnderInvestigation);
+
+        if (lockerPatrolPoints.Count == 0)
+        {
+            lockerUnderInvestigation = null;
+            return;
+        }
+
+        lockerPatrolIndex = 0;
+        lockerWaiting = false;
+        lockerResumeTime = 0f;
+        MoveToLockerPoint(lockerPatrolIndex);
+
+        if (CurrentState != EnemyState.Check)
+        {
+            ChangeState(EnemyState.Check);
+        }
+    }
+
+    private void ExitLockerInvestigation()
+    {
+        lockerPatrolPoints.Clear();
+        lockerUnderInvestigation = null;
+        lockerWaiting = false;
+
+        if (agent != null)
+        {
+            agent.isStopped = false;
+            agent.stoppingDistance = stopDistance;
+        }
+    }
+
+    private void BuildLockerCheckPoints(Transform locker)
+    {
+        lockerPatrolPoints.Clear();
+        if (locker == null)
+            return;
+
+        Vector3 center = locker.position;
+        Vector3 forward = locker.forward;
+        Vector3 right = locker.right;
+
+        Vector3[] directions =
+        {
+            forward,
+            -forward,
+            right,
+            -right
+        };
+
+        foreach (var dir in directions)
+        {
+            if (dir == Vector3.zero)
+                continue;
+
+            Vector3 candidate = center + dir.normalized * lockerCheckRadius;
+            candidate.y = center.y;
+
+            if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, sampleRadius, NavMesh.AllAreas))
+            {
+                lockerPatrolPoints.Add(hit.position);
+            }
+            else
+            {
+                lockerPatrolPoints.Add(candidate);
+            }
+        }
+    }
+
+    private void MoveToLockerPoint(int index)
+    {
+        if (agent == null || lockerPatrolPoints.Count == 0)
+            return;
+
+        index = Mathf.Clamp(index, 0, lockerPatrolPoints.Count - 1);
+        Vector3 destination = lockerPatrolPoints[index];
+
+        lockerWaiting = false;
+        agent.isStopped = false;
+        agent.speed = PatrolSpeed;
+        agent.stoppingDistance = Mathf.Max(0.05f, lockerPointTolerance * 0.5f);
+        agent.SetDestination(destination);
+    }
+
+    private void AdvanceLockerPoint()
+    {
+        if (lockerPatrolPoints.Count == 0)
+            return;
+
+        lockerPatrolIndex = (lockerPatrolIndex + 1) % lockerPatrolPoints.Count;
+        MoveToLockerPoint(lockerPatrolIndex);
+    }
+    #endregion
 
     // Helper methods for imperfect chase using NavMesh
     private void SetNoisyDestination()
@@ -815,6 +979,7 @@ public partial class KillerAI : MonoBehaviour
         float jitter = Random.Range(repathJitter.x, repathJitter.y);
         nextRepathAt = Time.time + repathInterval + jitter;
     }
+    #endregion
 
     #region Public API for Modules
     /// <summary>

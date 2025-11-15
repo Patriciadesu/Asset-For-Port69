@@ -22,9 +22,19 @@ public partial class Locker : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private KeyCode toggleHideKey = KeyCode.E;
 
-    public static bool IsHiding { get; private set; }
+    public static bool IsHiding
+    {
+        get => LockerState.IsHiding;
+        private set => LockerState.IsHiding = value;
+    }
+
     public static bool isHiding => IsHiding;
-    public static Transform CurrentLocker { get; private set; }
+
+    public static Transform CurrentLocker
+    {
+        get => LockerState.CurrentLocker;
+        private set => LockerState.CurrentLocker = value;
+    }
 
     private void Reset()
     {
@@ -98,8 +108,6 @@ public partial class Locker : MonoBehaviour
 
         IsHiding = true;
         CurrentLocker = transform;
-        LockerState.IsHiding = true;
-        LockerState.CurrentLocker = transform;
 
         player.SetActive(false);
 
@@ -123,11 +131,6 @@ public partial class Locker : MonoBehaviour
         if (CurrentLocker == transform)
         {
             CurrentLocker = null;
-        }
-        LockerState.IsHiding = false;
-        if (LockerState.CurrentLocker == transform)
-        {
-            LockerState.CurrentLocker = null;
         }
 
         if (exitPoint)
@@ -162,13 +165,9 @@ public partial class Locker : MonoBehaviour
         {
             ExitLocker();
         }
-        else
+        else if (CurrentLocker == transform)
         {
-            LockerState.IsHiding = false;
-            if (LockerState.CurrentLocker == transform)
-            {
-                LockerState.CurrentLocker = null;
-            }
+            CurrentLocker = null;
         }
 
         OnDisableExtra();

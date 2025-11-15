@@ -5,8 +5,9 @@ public enum EnemyState
 {
     Idle,      // Standing still, waiting for input/trigger
     Patrol,    // Moving between predefined waypoints
+    Check,     // Investigating lockers when the player is hiding
     Chase,     // Actively pursuing a target
-    Attack,    // Executing an attack routine (brief, transitional state)
-    Check,     // Investigating a locker or point of interest
-    Stunned    // Enemy is stunned and cannot act (placeholder for future expansion)
+    Attack,    // Executing a melee attack routine (brief, transitional state)
+    Stunned,   // Enemy is stunned and cannot act (placeholder for future expansion)
+    Shooting   // Performing a ranged attack (projectile throw)
 }
