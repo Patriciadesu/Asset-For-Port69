@@ -30,6 +30,15 @@ public class ProjectileModule : EnemyModule
     [Range(0.1f, 1f)]
     [SerializeField] private float spawnTimePercent = 1f;
 
+    /// <summary>
+    /// Public accessor for the fire point so helper scripts (e.g., EnemyHand) can assign it.
+    /// </summary>
+    public Transform FirePoint
+    {
+        get => firePoint;
+        set => firePoint = value;
+    }
+
     private Animator animator;
     private float lastShotTime = -10f;
     private bool isShooting = false;      // true while performing a projectile attack in Shooting state
@@ -41,10 +50,18 @@ public class ProjectileModule : EnemyModule
         base.Initialize(killer);
         animator = killer.GetAnimator();
 
-        // If firePoint not assigned, use killer's transform
-        if (firePoint == null)
+        // If firePoint not assigned, try to use EnemyHand marker; otherwise fall back to killer transform
+        if (firePoint == null && killer != null)
         {
-            firePoint = killer.transform;
+            EnemyHand hand = killer.GetComponentInChildren<EnemyHand>();
+            if (hand != null)
+            {
+                firePoint = hand.transform;
+            }
+            else
+            {
+                firePoint = killer.transform;
+            }
         }
 
         Debug.Log("[ProjectileModule] Initialized with firing range: " + (firingRange > 0 ? firingRange.ToString() : killer.AttackRange.ToString()));
@@ -266,7 +283,7 @@ public class ProjectileModule : EnemyModule
             rb.interpolation = RigidbodyInterpolation.Interpolate;
         }
 
-        rb.linearVelocity = directionToTarget * projectileSpeed;
+        rb.velocity = directionToTarget * projectileSpeed;
 
         // Rotate projectile to face direction of travel
         if (directionToTarget != Vector3.zero)

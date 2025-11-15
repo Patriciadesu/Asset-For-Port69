@@ -6,164 +6,394 @@ using UnityEngine;
 public class BeamModule : EnemyModule
 {
     [Header("Beam Settings")]
-    [Tooltip("Maximum range of the beam")]
+    [Tooltip("Maximum range of the beam (uses KillerAI.AttackRange if 0)")]
     public float Range = 20f;
 
     [Tooltip("Amount of damage dealt by the beam")]
     public float BeamDamage = 20f;
 
-    [Tooltip("Fire beam when entering attack state")]
-    public bool FireOnAttackEnter = false;
-    [Tooltip("Allow beams to randomly fire while the AI is in the Chase state.")]
-    public bool FireDuringChase = true;
-    [Tooltip("Seconds of cooldown after each beam fire.")]
+    [Tooltip("Minimum time between beam shots")]
     public float BeamCooldown = 3f;
 
+    [Tooltip("Transform from which the beam originates (e.g., hand or head). If null, uses killer transform.")]
+    public Transform BeamOrigin;
+
     [Tooltip("Layer mask for beam raycasting")]
-    public LayerMask HitLayers = -1; // All layers by default
+    public LayerMask HitLayers = ~0; // All layers by default
 
-    [Header("Visuals")]
-    [Tooltip("Optional line renderer to visualize the beam. If empty, one will be created automatically.")]
-    [SerializeField] private LineRenderer beamRenderer;
-    [SerializeField, Tooltip("How long the beam visual stays visible after firing.")]
-    private float beamFlashDuration = 0.12f;
+    [Header("Beam Visuals")]
+    [Tooltip("Optional beam effect prefab (e.g., blue line). If null, a LineRenderer will be created.")]
+    public GameObject BeamEffectPrefab;
 
-    [Header("Chance Settings")]
-    [SerializeField] private RandomTriggerSettings chaseTrigger = new RandomTriggerSettings
-    {
-        TriggerChance = 0.25f,
-        Interval = new Vector2(2.5f, 4.5f),
-        InitialDelay = new Vector2(0.5f, 1.5f)
-    };
+    [Tooltip("Beam color when using built-in LineRenderer effect")]
+    public Color BeamColor = Color.cyan;
 
-    private Coroutine hideBeamRoutine;
-    private bool ownsRenderer;
-    private static Material defaultBeamMaterial;
-    private float nextBeamTime;
+    [Tooltip("Base line width for the built-in LineRenderer effect")]
+    public float BeamWidth = 0.05f;
+
+    [Tooltip("Duration in seconds that the beam visual stays visible")]
+    public float BeamEffectDuration = 0.15f;
+
+    [Header("Bolt/Zigzag Style")]
+    [Tooltip("If true, the fallback line effect will use a zigzag lightning-style bolt instead of a straight beam.")]
+    public bool UseZigZag = false;
+
+    [Tooltip("Number of segments used for the zigzag bolt (higher = smoother)")]
+    [Range(2, 64)] public int ZigZagSegments = 12;
+
+    [Tooltip("Maximum sideways offset for the zigzag (world units)")]
+    public float ZigZagAmplitude = 0.25f;
+
+    [Header("Animation")]
+    [Tooltip("Animation state name used for the beam attack timing")]
+    public string BeamAnimationName = "Demon|Shoot2";
+
+    [Tooltip("Fraction (0-1) of the animation after which the beam fires")]
+    [Range(0.1f, 1f)]
+    public float FireTimePercent = 1f;
+
+    private Animator animator;
+    private float lastBeamTime = -10f;
+    private bool isBeaming = false;      // true while performing a beam attack in Shooting state
+    private Vector3 pendingTargetPosition;
+    private Coroutine beamCoroutine;
 
     public override void Initialize(KillerAI killer)
     {
         base.Initialize(killer);
-        EnsureBeamRenderer();
-        chaseTrigger?.Prime();
+        animator = killer.GetAnimator();
+
+        if (BeamOrigin == null && killer != null)
+        {
+            // Prefer EnemyHand marker if present; otherwise use the killer's transform
+            EnemyHand hand = killer.GetComponentInChildren<EnemyHand>();
+            if (hand != null)
+            {
+                BeamOrigin = hand.transform;
+            }
+            else
+            {
+                BeamOrigin = killer.transform;
+            }
+        }
     }
 
-    public override void OnStateEnter(EnemyState newState)
+    private void OnDisable()
     {
-        if (!IsActive) return;
-        if (FireOnAttackEnter && newState == EnemyState.Attack)
+        if (beamCoroutine != null)
         {
-            FireBeam();
+            StopCoroutine(beamCoroutine);
+            beamCoroutine = null;
         }
+        isBeaming = false;
     }
 
     public override void OnStateUpdate(EnemyState currentState)
     {
-        if (!IsActive || !FireDuringChase || killer == null)
+        if (!IsActive || killer == null)
             return;
 
-        if (currentState != EnemyState.Chase)
+        Player target = GetTargetPlayer();
+        if (target == null)
             return;
 
-        if (Time.time < nextBeamTime)
-            return;
+        // Distance to target
+        float distanceToTarget = Vector3.Distance(killer.transform.position, target.transform.position);
 
-        chaseTrigger?.PrimeIfNeeded();
-        if (chaseTrigger != null && chaseTrigger.TryConsumeTrigger())
+        // Effective range (fallback to KillerAI.AttackRange if Range <= 0)
+        float effectiveRange = Range > 0 ? Range : killer.AttackRange;
+
+        if (currentState == EnemyState.Chase)
         {
-            FireBeam();
-            chaseTrigger.BlockFor(BeamCooldown);
+            // Start a new beam attack from Chase, just like the projectile module
+            if (!isBeaming &&
+                distanceToTarget <= effectiveRange &&
+                Time.time >= lastBeamTime + BeamCooldown)
+            {
+                pendingTargetPosition = target.transform.position;
+                isBeaming = true;
+
+                // Enter the Shooting state used for ranged attacks
+                killer.ChangeState(EnemyState.Shooting);
+            }
+
+            return;
+        }
+
+        // While in Shooting state, keep looking at the target for better visuals
+        if (currentState == EnemyState.Shooting && isBeaming)
+        {
+            Vector3 dir = (target.transform.position - killer.transform.position).normalized;
+            dir.y = 0f;
+            if (dir != Vector3.zero)
+            {
+                Quaternion targetRot = Quaternion.LookRotation(dir);
+                killer.transform.rotation = Quaternion.Slerp(killer.transform.rotation, targetRot, Time.deltaTime * 5f);
+            }
         }
     }
 
-    public void FireBeam()
+    public override void OnStateEnter(EnemyState newState)
     {
-        Vector3 origin = transform.position + Vector3.up * 1.5f;
-        Vector3 dir = transform.forward;
-        Vector3 hitPoint = origin + dir * Range;
+        if (!IsActive || killer == null)
+            return;
+
+        // When we enter Shooting because of this module, start the beam animation
+        if (newState == EnemyState.Shooting && isBeaming)
+        {
+            BeginBeam(pendingTargetPosition);
+        }
+    }
+
+    public override void OnStateExit(EnemyState oldState)
+    {
+        if (oldState == EnemyState.Shooting)
+        {
+            if (beamCoroutine != null)
+            {
+                StopCoroutine(beamCoroutine);
+                beamCoroutine = null;
+            }
+
+            isBeaming = false;
+        }
+    }
+
+    /// <summary>
+    /// Starts the beam process: play animation; beam is fired at the end of the animation.
+    /// </summary>
+    private void BeginBeam(Vector3 targetPosition)
+    {
+        if (animator == null)
+        {
+            Debug.LogWarning("[BeamModule] Animator reference is null, firing beam immediately without animation.");
+            FireBeam(targetPosition);
+            lastBeamTime = Time.time;
+            isBeaming = false;
+
+            if (killer != null && killer.CurrentState == EnemyState.Shooting)
+            {
+                killer.ChangeState(EnemyState.Chase);
+            }
+            return;
+        }
+
+        // Stop movement while we perform the beam animation
+        killer.StopMovement();
+
+        // Optionally trigger a "Shoot" trigger if present (same as projectile module)
+        bool hasShootTrigger = false;
+        if (animator.parameters != null && animator.parameters.Length > 0)
+        {
+            hasShootTrigger = System.Array.Exists(
+                animator.parameters,
+                p => p.name == "Shoot" && p.type == AnimatorControllerParameterType.Trigger);
+        }
+
+        if (hasShootTrigger)
+        {
+            animator.SetTrigger("Shoot");
+            Debug.Log($"[BeamModule] Playing beam animation via 'Shoot' trigger: {BeamAnimationName}");
+        }
+        else
+        {
+            Debug.LogWarning("[BeamModule] Animator does not have 'Shoot' trigger parameter! Beam will still be fired using timing.");
+        }
+
+        pendingTargetPosition = targetPosition;
+
+        if (beamCoroutine != null)
+        {
+            StopCoroutine(beamCoroutine);
+        }
+        beamCoroutine = StartCoroutine(FireBeamAfterAnimation());
+    }
+
+    /// <summary>
+    /// Waits for the beam animation to reach the fire point, then fires the beam and returns to Chase.
+    /// </summary>
+    private IEnumerator FireBeamAfterAnimation()
+    {
+        float animDuration = GetAnimationDuration(BeamAnimationName);
+        if (animDuration <= 0f)
+        {
+            animDuration = 0.5f;
+        }
+
+        float waitTime = animDuration * FireTimePercent;
+        yield return new WaitForSeconds(waitTime);
+
+        if (!isBeaming || killer == null || killer.CurrentState != EnemyState.Shooting)
+        {
+            beamCoroutine = null;
+            yield break;
+        }
+
+        FireBeam(pendingTargetPosition);
+
+        lastBeamTime = Time.time;
+        isBeaming = false;
+        beamCoroutine = null;
+
+        if (killer != null && killer.CurrentState == EnemyState.Shooting)
+        {
+            killer.ChangeState(EnemyState.Chase);
+        }
+    }
+
+    /// <summary>
+    /// Actually casts the beam, damages the player, and spawns a visual effect.
+    /// </summary>
+    private void FireBeam(Vector3 targetPosition)
+    {
+        if (BeamOrigin == null)
+        {
+            BeamOrigin = killer != null ? killer.transform : transform;
+        }
+
+        Vector3 origin = BeamOrigin.position;
+
+        // Aim horizontally towards the player so the beam travels in a straight line
+        Vector3 flatTarget = targetPosition;
+        flatTarget.y = origin.y;
+        Vector3 dir = (flatTarget - origin).normalized;
+
+        float maxDistance = Range > 0 ? Range : killer.AttackRange;
 
         // Raycast to detect hits
-        if (Physics.Raycast(origin, dir, out RaycastHit hit, Range, HitLayers))
-        {
-            hitPoint = hit.point;
+        bool hitSomething = Physics.Raycast(origin, dir, out RaycastHit hit, maxDistance, HitLayers);
 
-            Player player = Player.Instance;
-            if (player != null && player.Stat != null)
+        Vector3 endPoint = hitSomething ? hit.point : origin + dir * maxDistance;
+
+        // Visual debug line
+        Debug.DrawLine(origin, endPoint, BeamColor, BeamEffectDuration);
+
+        // Spawn visual beam effect between origin and end point
+        SpawnBeamEffect(origin, endPoint);
+
+        if (hitSomething)
+        {
+            // Only damage the player if we actually hit the player object (by tag)
+            if (hit.collider != null && hit.collider.CompareTag("Player"))
             {
-                player.Stat.TakeDamage(BeamDamage);
-                Debug.Log($"[BeamModule] Beam hit player for {BeamDamage} damage!");
+                Player player = hit.collider.GetComponent<Player>();
+                if (player == null)
+                {
+                    player = Player.Instance;
+                }
+
+                if (player != null && player.Stat != null)
+                {
+                    player.Stat.TakeDamage(BeamDamage);
+                    Debug.Log($"[BeamModule] Beam hit player for {BeamDamage} damage!");
+                }
             }
             else
             {
-                Debug.Log("[BeamModule] Beam hit object but no player or stat found.");
+                Debug.Log("[BeamModule] Beam hit something but not the player");
             }
         }
         else
         {
             Debug.Log("[BeamModule] Beam missed");
         }
-
-        Debug.DrawRay(origin, dir * Range, Color.magenta, beamFlashDuration);
-        ShowBeam(origin, hitPoint);
-        nextBeamTime = Time.time + BeamCooldown;
     }
 
-    private void EnsureBeamRenderer()
+    /// <summary>
+    /// Spawns a simple beam effect between origin and endpoint.
+    /// If BeamEffectPrefab is set, it will be instantiated and oriented along the beam.
+    /// Otherwise, a temporary LineRenderer will be created.
+    /// </summary>
+    private void SpawnBeamEffect(Vector3 origin, Vector3 endPoint)
     {
-        if (beamRenderer == null)
+        float distance = Vector3.Distance(origin, endPoint);
+        if (distance <= 0.01f)
+            return;
+
+        if (BeamEffectPrefab != null)
         {
-            beamRenderer = GetComponent<LineRenderer>();
+            GameObject effect = Object.Instantiate(BeamEffectPrefab, origin, Quaternion.LookRotation(endPoint - origin));
+
+            // Try to scale the effect along its forward axis to match the distance
+            effect.transform.localScale = new Vector3(effect.transform.localScale.x, effect.transform.localScale.y, distance);
+
+            Object.Destroy(effect, BeamEffectDuration);
         }
-
-        if (beamRenderer == null)
+        else
         {
-            beamRenderer = gameObject.AddComponent<LineRenderer>();
-            ownsRenderer = true;
-        }
+            // Fallback: LineRenderer beam or zigzag bolt with configurable width and style
+            GameObject go = new GameObject("BeamEffectTemp");
+            LineRenderer lr = go.AddComponent<LineRenderer>();
 
-        beamRenderer.enabled = false;
-        beamRenderer.positionCount = 2;
-        beamRenderer.widthMultiplier = 0.05f;
+            lr.material = new Material(Shader.Find("Sprites/Default"));
+            lr.startColor = BeamColor;
+            lr.endColor = BeamColor;
+            lr.useWorldSpace = true;
 
-        if (beamRenderer.sharedMaterial == null || ownsRenderer)
-        {
-            if (defaultBeamMaterial == null)
+            lr.startWidth = BeamWidth;
+            lr.endWidth = BeamWidth;
+
+            if (UseZigZag && ZigZagSegments >= 2)
             {
-                defaultBeamMaterial = new Material(Shader.Find("Sprites/Default"))
+                int segments = Mathf.Max(2, ZigZagSegments);
+                lr.positionCount = segments + 1;
+
+                Vector3 direction = (endPoint - origin).normalized;
+                float step = distance / segments;
+
+                // Choose a perpendicular axis for jitter
+                Vector3 perp = Vector3.Cross(direction, Vector3.up);
+                if (perp.sqrMagnitude < 0.001f)
                 {
-                    color = Color.magenta
-                };
+                    perp = Vector3.Cross(direction, Vector3.right);
+                }
+                perp.Normalize();
+
+                for (int i = 0; i <= segments; i++)
+                {
+                    float t = i / (float)segments;
+                    Vector3 basePos = origin + direction * (t * distance);
+
+                    // Randomized offset along perpendicular for bolt look
+                    float offset = (i == 0 || i == segments) ? 0f : Random.Range(-ZigZagAmplitude, ZigZagAmplitude);
+                    Vector3 jitter = perp * offset;
+
+                    lr.SetPosition(i, basePos + jitter);
+                }
             }
-            beamRenderer.sharedMaterial = defaultBeamMaterial;
-        }
+            else
+            {
+                // Simple straight beam
+                lr.positionCount = 2;
+                lr.SetPosition(0, origin);
+                lr.SetPosition(1, endPoint);
+            }
 
-        beamRenderer.startColor = Color.magenta;
-        beamRenderer.endColor = new Color(1f, 0f, 1f, 0.4f);
-        beamRenderer.useWorldSpace = true;
+            Object.Destroy(go, BeamEffectDuration);
+        }
     }
 
-    private void ShowBeam(Vector3 start, Vector3 end)
+    /// <summary>
+    /// Gets the duration of a specific animation clip by name.
+    /// </summary>
+    private float GetAnimationDuration(string animationName)
     {
-        EnsureBeamRenderer();
-        if (beamRenderer == null) return;
+        if (animator == null || animator.runtimeAnimatorController == null)
+            return 0.5f;
 
-        beamRenderer.enabled = true;
-        beamRenderer.SetPosition(0, start);
-        beamRenderer.SetPosition(1, end);
+        if (string.IsNullOrEmpty(animationName))
+            return 0.5f;
 
-        if (hideBeamRoutine != null)
+        string shortName = animationName.Contains("|") ? animationName.Split('|')[1] : animationName;
+        foreach (var clip in animator.runtimeAnimatorController.animationClips)
         {
-            StopCoroutine(hideBeamRoutine);
+            if (clip.name == shortName)
+            {
+                return clip.length;
+            }
         }
-        hideBeamRoutine = StartCoroutine(HideBeamAfterDelay());
-    }
 
-    private IEnumerator HideBeamAfterDelay()
-    {
-        yield return new WaitForSeconds(beamFlashDuration);
-        if (beamRenderer != null)
-        {
-            beamRenderer.enabled = false;
-        }
+        Debug.LogWarning($"[BeamModule] Animation clip '{shortName}' not found in animator!");
+        return 0.5f;
     }
 }

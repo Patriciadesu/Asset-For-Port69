@@ -233,6 +233,9 @@ public class KillerAI : MonoBehaviour
 
     private void Start()
     {
+        // Automatically assign the singleton player instance as our target (no manual button needed)
+        AssignPlayerFromSingleton();
+
         // Initialize all modules
         InitializeModules();
 
@@ -983,31 +986,29 @@ public class KillerAI : MonoBehaviour
 
     #region Public API for Modules
     /// <summary>
-    /// Finds and assigns the Player as the target
+    /// Finds and assigns the Player as the target using Player.Instance only.
+    /// This is also used automatically on Start so you don't need a "Find Player" button.
     /// </summary>
     public void FindPlayer()
     {
+        AssignPlayerFromSingleton();
+    }
+
+    /// <summary>
+    /// Helper that assigns TargetPlayer from the Player singleton.
+    /// </summary>
+    private void AssignPlayerFromSingleton()
+    {
         Player player = Player.Instance;
 
-        // Validate that the player instance is actually valid and in the scene
         if (player != null && player.gameObject != null && player.gameObject.scene.IsValid())
         {
             TargetPlayer = player;
-            Debug.Log($"[KillerAI] Found and assigned Player: {player.name}");
+            Debug.Log($"[KillerAI] Auto-assigned Player.Instance as TargetPlayer: {player.name}");
         }
         else
         {
-            // Player.Instance exists but is invalid - try to find player manually
-            Player[] allPlayers = FindObjectsByType<Player>(FindObjectsSortMode.None);
-            if (allPlayers != null && allPlayers.Length > 0)
-            {
-                TargetPlayer = allPlayers[0];
-                Debug.Log($"[KillerAI] Found and assigned Player via search: {allPlayers[0].name}");
-            }
-            else
-            {
-                Debug.LogWarning("[KillerAI] No Player found in scene! Please add a GameObject with the Player script.");
-            }
+            Debug.LogWarning("[KillerAI] Player.Instance is null or not in a valid scene. TargetPlayer was not assigned.");
         }
     }
 

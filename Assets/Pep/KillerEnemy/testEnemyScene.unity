@@ -130,22 +130,34 @@ PrefabInstance:
     - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
       propertyPath: TargetPlayer
       value: 
-      objectReference: {fileID: 2116949931}
+      objectReference: {fileID: 0}
+    - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: modules.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: 'modules.Array.data[2]'
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6088258962875685341, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: m_TagString
+      value: Hand
+      objectReference: {fileID: 0}
     - target: {fileID: 6334826068141619221, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
       propertyPath: m_Name
       value: Demon_default
       objectReference: {fileID: 0}
     - target: {fileID: 6334826068141619242, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.6
+      value: 26.4
       objectReference: {fileID: 0}
     - target: {fileID: 6334826068141619242, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 12.2
+      value: 12.1
       objectReference: {fileID: 0}
     - target: {fileID: 6334826068141619242, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -40.8
+      value: -73.7
       objectReference: {fileID: 0}
     - target: {fileID: 6334826068141619242, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
       propertyPath: m_LocalRotation.w
@@ -175,10 +187,21 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6742221389687199620, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: BeamWidth
+      value: 2.29
+      objectReference: {fileID: 0}
+    - target: {fileID: 6742221389687199620, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: BeamOrigin
+      value: 
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6088258962875685341, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1384496733}
   m_SourcePrefab: {fileID: 100100000, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
 --- !u!1 &147006960
 GameObject:
@@ -750,12 +773,29 @@ Transform:
   m_GameObject: {fileID: 1029166521}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.2619, y: 12.9031, z: -9.744513}
+  m_LocalPosition: {x: 7.9, y: 12.9031, z: -1.8}
   m_LocalScale: {x: 58.552753, y: 9.155862, z: 2.1078}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1384496730 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6088258962875685341, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+  m_PrefabInstance: {fileID: 90806218}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1384496733
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1384496730}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dd970ff6117df647bc70d942c76b344, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1462598252
 GameObject:
   m_ObjectHideFlags: 0
@@ -1046,7 +1086,7 @@ Transform:
   m_GameObject: {fileID: 1810081307}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 17.7, y: 12.9031, z: -21.5}
+  m_LocalPosition: {x: 17.7, y: 12.83, z: -22.55}
   m_LocalScale: {x: 58.552753, y: 9.155862, z: 2.1078}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1249,6 +1289,11 @@ MonoBehaviour:
   IsActive: 1
   DashDistance: 5
   DashCooldown: 3
+  EnableChaseDash: 1
+  chaseTrigger:
+    TriggerChance: 0.3
+    Interval: {x: 2, y: 4}
+    InitialDelay: {x: 0.5, y: 1.2}
 --- !u!54 &2120648542
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1429,6 +1474,9 @@ MonoBehaviour:
   AttackRange: 2
   PatrolSpeed: 3
   ChaseSpeed: 6
+  lockerCheckRadius: 11
+  lockerPointTolerance: 0.5
+  lockerPauseDuration: 1.5
   agent: {fileID: 0}
   animator: {fileID: 0}
   repathInterval: 0.9
