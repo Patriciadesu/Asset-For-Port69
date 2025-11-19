@@ -423,17 +423,17 @@ MonoBehaviour:
   - zoneName: chase
     zoneObject: {fileID: 796351865}
     radius: 40
-    music: {fileID: 8300000, guid: 8167b7c6b7d3b4849976480566fce44a, type: 3}
+    music: {fileID: 8300000, guid: 9e6b0c065f643d548986b6fb8166279d, type: 3}
     isPlayerInside: 0
   - zoneName: layer2
     zoneObject: {fileID: 796351865}
     radius: 80
-    music: {fileID: 8300000, guid: da589010bede68a4db3bf2ad9a749dea, type: 3}
+    music: {fileID: 8300000, guid: 39d9c74f873ac0144b7ee2a896c3a112, type: 3}
     isPlayerInside: 0
   - zoneName: layer1
     zoneObject: {fileID: 796351865}
     radius: 120
-    music: {fileID: 8300000, guid: 3ae8826edd65ecb4885904fcb9bfd11e, type: 3}
+    music: {fileID: 8300000, guid: c6a01df9ac9dde8458b2f43c95667e30, type: 3}
     isPlayerInside: 0
   fadeDuration: 2
   maxVolume: 1
