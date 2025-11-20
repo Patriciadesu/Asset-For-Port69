@@ -179,10 +179,18 @@ void OnValidate()
         cancleGravityComponents.Clear();
         staminaComponentStates.Clear();
 
-        var all = GameObject.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
-        foreach (var x in all.OfType<IInteruptPlayerMovement>()) interuptPlayerMovementComponents.Add(x);
-        foreach (var x in all.OfType<ICancleGravity>()) cancleGravityComponents.Add(x);
-        foreach (var x in all.OfType<IUseStamina>()) staminaComponentStates.Add(x);
+        var ownedComponents = GetComponentsInChildren<MonoBehaviour>(true);
+        foreach (var component in ownedComponents)
+        {
+            if (component is IInteruptPlayerMovement movementGate)
+                interuptPlayerMovementComponents.Add(movementGate);
+
+            if (component is ICancleGravity gravityGate)
+                cancleGravityComponents.Add(gravityGate);
+
+            if (component is IUseStamina staminaUser)
+                staminaComponentStates.Add(staminaUser);
+        }
     }
     #endregion
 

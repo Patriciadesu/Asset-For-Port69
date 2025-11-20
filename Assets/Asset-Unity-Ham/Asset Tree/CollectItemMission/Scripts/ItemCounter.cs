@@ -1,12 +1,16 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
-public partial class ItemCounter : PlayerExtension
+public partial class ItemCounter : Singleton<ItemCounter>
 {
+
+    public TMP_Text counter;
+
     [Min(1),HideInInspector] public int limit = 5;
 
-    [SerializeField] private int count;
+    [SerializeField] private int count =0 ;
     public int Count
     {
         get => count;
@@ -55,6 +59,7 @@ public partial class ItemCounter : PlayerExtension
 
     void CheckLimit()
     {
+        counter.text = $"Collected Item : {count}/{limit}";
         if (count == limit)
         {
             if (!fireOncePerCycle || !hasFired)

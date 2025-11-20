@@ -283,7 +283,7 @@ public class ProjectileModule : EnemyModule
             rb.interpolation = RigidbodyInterpolation.Interpolate;
         }
 
-        rb.velocity = directionToTarget * projectileSpeed;
+        rb.linearVelocity = directionToTarget * projectileSpeed;
 
         // Rotate projectile to face direction of travel
         if (directionToTarget != Vector3.zero)

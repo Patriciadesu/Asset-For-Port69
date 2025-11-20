@@ -78,6 +78,11 @@ namespace DoorScript
         void Awake() { asource = GetComponent<AudioSource>(); EnsurePhysicsAndCollider(); }
         void Start() { SyncColliderToGizmo(); }
 
+        public void SetLock(bool newIsLocked)
+        {
+            isLocked = newIsLocked;
+        }
+
         void Update()
         {
             // Smooth hinge motion
