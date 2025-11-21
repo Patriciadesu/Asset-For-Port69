@@ -113,19 +113,20 @@ public abstract class ObjectEffect : MonoBehaviour
 
     public void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.TryGetComponent<Player>(out Player player))
+        if (collision.gameObject.tag == "Player")
         {
-            ApplyEffect(collision, player);
+            ApplyEffect(collision,collision.gameObject);
         }
     }
     public void OnTriggerEnter(Collider other)
     {
-        if (other.TryGetComponent<Player>(out Player player))
+        if (other.gameObject.tag == "Player")
         {
-            ApplyEffect(player);
+            ApplyEffect(other.gameObject);
         }
     }
 
-    public virtual void ApplyEffect(Player player) { }
-    public virtual void ApplyEffect(Collision collision, Player player) => ApplyEffect(player);
+    public virtual void ApplyEffect(GameObject player) { }
+    public virtual void ApplyEffect(Collision collision,GameObject player)=>ApplyEffect(player);
+    
 }

@@ -29,7 +29,7 @@ public interface INodeInspectorContributor
 
 public interface IPlayerUISetter
 {
-    public void OnStart(PlayerUIManager playerUI);
+    //public void OnStart(PlayerUIManager playerUI);
 }
 
 public interface IInteruptPlayerMovement
