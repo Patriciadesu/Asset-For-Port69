@@ -15,6 +15,15 @@ public class MovementModule : PlayerModule
     [HideInInspector] public float additionalSpeed = 0f;
     #endregion
 
+    #region Input
+    [Header("Input")]
+    [Tooltip("Optional on-screen joystick for movement (from Joystick Pack). If null, only keyboard / gamepad axes are used.")]
+    [SerializeField] private Joystick moveJoystick;
+
+    [Tooltip("If true, joystick input is ADDED on top of the old Horizontal/Vertical axes. If false, joystick will OVERRIDE when present.")]
+    [SerializeField] private bool addJoystickOnTop = false;
+    #endregion
+
     #region Movement Buffer
     public float coyoteTime => 0.1f;
     public float jumpBufferTime => 0.1f;
@@ -59,8 +68,24 @@ CheckGrounded();
 
     private void Move()
     {
+        // Old keyboard / gamepad input
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
+
+        // Optional on‑screen joystick (mobile, etc.)
+        if (moveJoystick != null)
+        {
+            if (addJoystickOnTop)
+            {
+                h += moveJoystick.Horizontal;
+                v += moveJoystick.Vertical;
+            }
+            else
+            {
+                h = moveJoystick.Horizontal;
+                v = moveJoystick.Vertical;
+            }
+        }
 
         if (player.canMove)
         {

@@ -102,8 +102,9 @@ public partial class Player : Singleton<Player>
         SetExtensions();
         SetSpawnPoint(transform.position);
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        // Free cursor so UI / on-screen joystick can be used and camera can still read mouse delta.
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
 
         // Bind modules once
         Stat.Bind(this);
