@@ -22,6 +22,11 @@ public class MovementModule : PlayerModule
 
     [Tooltip("If true, joystick input is ADDED on top of the old Horizontal/Vertical axes. If false, joystick will OVERRIDE when present.")]
     [SerializeField] private bool addJoystickOnTop = false;
+
+    [Tooltip("Optional UI jump button for mobile/touch controls. Assign a UnityEngine.UI.Button here.")]
+    [SerializeField] private UnityEngine.UI.Button jumpButton;
+
+    private bool jumpButtonPressed = false;
     #endregion
 
     #region Movement Buffer
@@ -40,6 +45,22 @@ public class MovementModule : PlayerModule
     #endregion
 
     public MovementModule(Player owner) : base(owner) {}
+
+    public override void Start()
+    {
+        base.Start();
+        
+        // Register jump button listener if assigned
+        if (jumpButton != null)
+        {
+            jumpButton.onClick.AddListener(OnJumpButtonPressed);
+        }
+    }
+
+    private void OnJumpButtonPressed()
+    {
+        jumpButtonPressed = true;
+    }
 
     public override void Update()
     {
@@ -82,8 +103,15 @@ CheckGrounded();
             }
             else
             {
+                // In Editor: ADD joystick to keyboard so WASD maintains control for debugging
+                // On Device: OVERRIDE keyboard with joystick (prevents accidental inputs)
+                #if UNITY_EDITOR
+                h += moveJoystick.Horizontal;
+                v += moveJoystick.Vertical;
+                #else
                 h = moveJoystick.Horizontal;
                 v = moveJoystick.Vertical;
+                #endif
             }
         }
 
@@ -115,8 +143,18 @@ CheckGrounded();
 
     public void JumpHandler()
     {
-        if (Input.GetButtonDown("Jump"))
+        // Check for keyboard/gamepad OR UI button press
+        // Also explicitly check Space key in Editor to ensure debugging always works
+        bool jumpInput = Input.GetButtonDown("Jump") || jumpButtonPressed;
+        #if UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.Space)) jumpInput = true;
+        #endif
+
+        if (jumpInput)
+        {
             lastJumpPressedTime = Time.time;
+            jumpButtonPressed = false; // Reset button state
+        }
 
         if ((Time.time - lastJumpPressedTime) <= jumpBufferTime &&
             (Time.time - lastGroundedTime) <= coyoteTime &&

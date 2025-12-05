@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using NaughtyAttributes;
 using Unity.Cinemachine;
 
@@ -25,6 +26,13 @@ public class CameraModule : PlayerModule
     private float xRotation = 0f;
     private float tpsYaw = 0f;
     private float tpsPitch = 10f;
+
+    [Header("Look Input")]
+    [Tooltip("If true, the camera only rotates while a mouse button is held (drag to look).")]
+    [SerializeField] private bool requireMouseDragForLook = true;
+
+    [Tooltip("Mouse button index used for drag look: 0 = left, 1 = right, 2 = middle.")]
+    [SerializeField] private int dragMouseButton = 1;
 
     // Shortcuts (null-safe)
     private Camera Cam    => player?.camera;
@@ -106,12 +114,110 @@ public class CameraModule : PlayerModule
         // TPS is driven by Cinemachine rig; nothing to place manually.
     }
 
+    private bool IsTouchOverUI(Vector2 position, int fingerId)
+    {
+        // First check with EventSystem
+        if (EventSystem.current != null)
+        {
+            // For touch input
+            if (fingerId >= 0)
+            {
+                if (EventSystem.current.IsPointerOverGameObject(fingerId))
+                    return true;
+            }
+            // For mouse input
+            else
+            {
+                if (EventSystem.current.IsPointerOverGameObject())
+                    return true;
+            }
+        }
+
+        // Additional raycast check for UI elements (more reliable in simulator)
+        PointerEventData eventData = new PointerEventData(EventSystem.current)
+        {
+            position = position
+        };
+
+        var results = new System.Collections.Generic.List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventData, results);
+
+        // Check if any UI element was hit
+        foreach (var result in results)
+        {
+            if (result.gameObject.layer == LayerMask.NameToLayer("UI") || 
+                result.gameObject.GetComponent<UnityEngine.UI.Graphic>() != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void HandleMouseLook()
     {
         if (!Player.Instance.canRotateCamera) return;
 
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        float mouseX = 0f;
+        float mouseY = 0f;
+
+        // Check for touchscreen input
+        if (Input.touchCount > 0)
+        {
+            // In Unity Editor/Simulator: allow single touch for testing
+            // On real mobile devices: require 2 touches (joystick + camera drag)
+            #if !UNITY_EDITOR
+            if (Input.touchCount < 2)
+            {
+                return; // Don't move camera with single touch on real devices
+            }
+            #endif
+
+            bool hasValidTouch = false;
+
+            for (int i = 0; i < Input.touchCount; i++)
+            {
+                Touch touch = Input.GetTouch(i);
+
+                // Skip if touching UI (e.g. Joystick)
+                if (IsTouchOverUI(touch.position, touch.fingerId))
+                {
+                    continue;
+                }
+
+                if (touch.phase == TouchPhase.Moved)
+                {
+                    hasValidTouch = true;
+                    // Scale pixel delta to match mouse sensitivity feel
+                    float touchFactor = 0.1f; 
+                    mouseX += touch.deltaPosition.x * mouseSensitivity * touchFactor;
+                    mouseY += touch.deltaPosition.y * mouseSensitivity * touchFactor;
+                }
+            }
+
+            // In editor with single touch: only move camera if not touching UI
+            #if UNITY_EDITOR
+            if (Input.touchCount == 1 && !hasValidTouch)
+            {
+                return; // Single touch was on UI (joystick), don't move camera
+            }
+            #endif
+        }
+        else if (Input.GetMouseButton(0)) // Fallback for Editor/Mouse
+        {
+            if (IsTouchOverUI(Input.mousePosition, -1))
+            {
+                // Over UI, ignore
+            }
+            else
+            {
+                mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+                mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+            }
+        }
+
+        if (Mathf.Abs(mouseX) < 0.001f && Mathf.Abs(mouseY) < 0.001f) return;
 
         if (cameraType == CameraType.FirstPerson)
         {
