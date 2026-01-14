@@ -1,10 +1,11 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class SpawnPointEffect : ObjectEffect
 {
     [SerializeField] private float yOffset = 1f;
     
-    public override void ApplyEffect(Player player)
+    public override void ApplyEffect(GameObject player)
     {
         if (player != null)
         {
@@ -12,7 +13,12 @@ public class SpawnPointEffect : ObjectEffect
 
             spawnPosition.y += yOffset;
 
-            player.spawnPoint = spawnPosition;
+            if(PlayerSpawnPointData.Instance == null)
+            {
+                this.AddComponent<PlayerSpawnPointData>();
+            }
+
+            PlayerSpawnPointData.Instance.spawnPoint = spawnPosition;
             Debug.Log($"{gameObject.name} set spawn point for {player.gameObject.name} at {spawnPosition}");
         }
     }

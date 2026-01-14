@@ -9,24 +9,22 @@ public class VanishEffect : ObjectEffect
     private Renderer objectRenderer;
     private Collider objectCollider;
 
-    private void Awake()
+    private void Start()
     {
         objectRenderer = GetComponent<Renderer>();
         objectCollider = GetComponent<Collider>();
     }
 
-
-    
-    public override void ApplyEffect(Player player)
+    public override void ApplyEffect(GameObject player)
     {
         if (player != null && !isVanishing)
         {
-            StartCoroutine(VanishRoutine(player));
+            StartCoroutine(VanishRoutine());
             Debug.Log($"{gameObject.name} triggered vanish effect on {player.gameObject.name}");
         }
     }
 
-    private System.Collections.IEnumerator VanishRoutine(Player player)
+    private System.Collections.IEnumerator VanishRoutine()
     {
         isVanishing = true;
 

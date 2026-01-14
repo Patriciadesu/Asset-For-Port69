@@ -7,7 +7,7 @@ public class CollectItem : ObjectEffect
     public ItemData itemData;
     public UnityEvent onItemCollected;
 
-    public override void ApplyEffect(Player _player)
+    public override void ApplyEffect(GameObject _player)
     {
         Inventory itemslot = FindAnyObjectByType<Inventory>();
         if (itemData.type is IPerformOnCollect)

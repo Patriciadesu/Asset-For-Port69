@@ -88,7 +88,7 @@ public class BlockBreakEffect : ObjectEffect
         fragment.SetActive(false);
         return fragment;
     }
-    public override void ApplyEffect(Collision playerCollision, Player player)
+    public override void ApplyEffect(Collision playerCollision, GameObject player)
     {
         if (playerCollision.contacts == null || playerCollision.contacts.Length == 0)
         {

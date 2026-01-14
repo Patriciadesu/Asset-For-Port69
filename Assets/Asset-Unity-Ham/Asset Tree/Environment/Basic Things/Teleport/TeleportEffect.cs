@@ -15,7 +15,7 @@ public class TeleportEffect : ObjectEffect
     [SerializeField] private Transform targetObject;
     [SerializeField] private Vector3 offset;
 
-    public override void ApplyEffect(Player player)
+    public override void ApplyEffect(GameObject player)
     {
         if (player != null)
         {

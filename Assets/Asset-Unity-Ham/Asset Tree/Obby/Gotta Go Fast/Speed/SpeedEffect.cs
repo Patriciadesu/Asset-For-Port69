@@ -9,9 +9,9 @@ public class SpeedEffect : ObjectEffect
     private Coroutine activeCoroutine;
     private float currentElapsedTime = -1f;
 
-    public override void ApplyEffect(Player player)
+    public override void ApplyEffect(GameObject go)
     {
-        if (player != null)
+        if (go.TryGetComponent<Player>(out Player player))
         {
             if (activeCoroutine == null)
             {

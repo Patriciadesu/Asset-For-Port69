@@ -4,19 +4,13 @@ using UnityEngine;
 public class InteractableObject : MonoBehaviour
 {
     [SerializeField] bool isTrigger = false;
-    [SerializeField, HideIf("isTrigger")] bool usePhysic = true;
-    [SerializeField,HideIf("isTrigger")] bool useGravity = true;
     
     private ObjectEffect[] effects;
     void Start()
     {
         if (isTrigger)
         {
-            useGravity = false;
-            usePhysic = false;
         }
-        GetComponent<Rigidbody>().isKinematic = !usePhysic;   
-        GetComponent<Rigidbody>().useGravity = useGravity;
         effects = GetComponents<ObjectEffect>();
         EnsureColliderExists();
         EnsureRigidbodyExists();
@@ -113,19 +107,19 @@ public abstract class ObjectEffect : MonoBehaviour
 
     public void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.TryGetComponent<Player>(out Player player))
+        if (collision.gameObject.CompareTag("Player"))
         {
-            ApplyEffect(collision, player);
+            ApplyEffect(collision, collision.gameObject);
         }
     }
     public void OnTriggerEnter(Collider other)
     {
-        if (other.TryGetComponent<Player>(out Player player))
+        if (other.CompareTag("Player"))
         {
-            ApplyEffect(player);
+            ApplyEffect(other.gameObject);
         }
     }
 
-    public virtual void ApplyEffect(Player player) { }
-    public virtual void ApplyEffect(Collision collision, Player player) => ApplyEffect(player);
+    public virtual void ApplyEffect(GameObject player) { }
+    public virtual void ApplyEffect(Collision collision, GameObject player) => ApplyEffect(player);
 }

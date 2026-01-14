@@ -9,7 +9,7 @@ public class BounceEffect : ObjectEffect
     [SerializeField] private float randomBounceStrength = 5f;
 
 
-    public override void ApplyEffect(Player player)
+    public override void ApplyEffect(GameObject player)
     {
         if (player != null)
         {
@@ -28,8 +28,9 @@ public class BounceEffect : ObjectEffect
             }
 
             // Apply bounce force
-            player.rigidbody.linearVelocity = Vector3.zero; // Reset current velocity
-            player.rigidbody.AddForce(finalBounceDirection * bounceForce, ForceMode.Impulse);
+            Rigidbody rb = player.GetComponent<Rigidbody>();
+            rb.linearVelocity = Vector3.zero; // Reset current velocity
+            rb.AddForce(finalBounceDirection * bounceForce, ForceMode.Impulse);
 
         }
     }

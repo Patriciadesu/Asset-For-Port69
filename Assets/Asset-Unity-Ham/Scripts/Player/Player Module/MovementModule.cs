@@ -19,7 +19,7 @@ public class MovementModule : PlayerModule
     public float coyoteTime => 0.1f;
     public float jumpBufferTime => 0.1f;
     [HideInInspector]public float lastGroundedTime;
-    [HideInInspector]public float lastJumpPressedTime;
+    [HideInInspector]public float lastJumpPressedTime ;
     #endregion
 
     #region Ground Check
@@ -30,7 +30,11 @@ public class MovementModule : PlayerModule
     private float CapsuleRadius => capsuleCollider ? capsuleCollider.radius : 0.5f;
     #endregion
 
-    public MovementModule(Player owner) : base(owner) {}
+    public MovementModule(Player owner) : base(owner) 
+    {
+        lastJumpPressedTime = -999f;
+        lastGroundedTime = -999f;
+    }
 
     public override void Update()
     {
@@ -90,6 +94,8 @@ CheckGrounded();
 
     public void JumpHandler()
     {
+        if (Time.time < 0.1f) return;
+
         if (Input.GetButtonDown("Jump"))
             lastJumpPressedTime = Time.time;
 

@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections;
 using NaughtyAttributes;
+using System.Collections.Generic;
+
 public class MovingEffect : ObjectEffect
 {
     public enum MovingType
@@ -28,6 +30,7 @@ public class MovingEffect : ObjectEffect
     }
     [SerializeField] private float moveSpeed = 2f;
     private Vector3 originalPosition;
+    private HashSet<GameObject> playersOnPlatform = new HashSet<GameObject>();
 
     private void Start()
     {
@@ -42,8 +45,17 @@ public class MovingEffect : ObjectEffect
         {
             while (Vector3.Distance(transform.position, targetPosition) > 0.1f)
             {
+                Vector3 previousPos = transform.position;
                 transform.position = Vector3.Lerp(transform.position, targetPosition,
                     moveSpeed * Time.deltaTime);
+                Vector3 delta = transform.position - previousPos;
+                foreach (var player in playersOnPlatform)
+                {
+                    if (player != null)
+                    {
+                        player.transform.position += delta;
+                    }
+                }
                 yield return null;
             }
 
@@ -51,8 +63,17 @@ public class MovingEffect : ObjectEffect
 
             while (Vector3.Distance(transform.position, originalPosition) > 0.1f)
             {
+                Vector3 previousPos = transform.position;
                 transform.position = Vector3.Lerp(transform.position, originalPosition,
                     moveSpeed * Time.deltaTime);
+                Vector3 delta = transform.position - previousPos;
+                foreach (var player in playersOnPlatform)
+                {
+                    if (player != null)
+                    {
+                        player.transform.position += delta;
+                    }
+                }
                 yield return null;
             }
 
@@ -61,9 +82,24 @@ public class MovingEffect : ObjectEffect
     }
 
     
-    public override void ApplyEffect(Player player)
+       public override void ApplyEffect(GameObject player)
     {
-        // Moving effect doesn't need player interaction, it moves continuously
+        playersOnPlatform.Add(player);
+    }
+
+    public void OnTriggerExit(Collider other)
+    {
+        if(other.tag == "Player")
+        {
+            playersOnPlatform.Remove(other.gameObject);
+        }
+    }
+    public void OnCollisionExit(Collision collision)
+    {
+        if(collision.gameObject.tag == "Player")
+        {
+            playersOnPlatform.Remove(collision.gameObject);
+        }
     }
 
     public void OnDrawGizmos()

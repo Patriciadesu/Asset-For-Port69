@@ -57,6 +57,7 @@ namespace DoorScript
         [Foldout(G)] public Vector3 gizmoPivot = Vector3.zero;
         [Foldout(G)] public Color gizmoColor = Color.green;
         [Foldout(G), Range(0.1f, 1f)] public float gizmoAlpha = 0.3f;
+        private const float MinBidirectionalDepth = 0.6f;
 
         [Foldout(G), Header("Player Detection")]
         public string playerTag = "Player";
@@ -76,6 +77,11 @@ namespace DoorScript
         void OnValidate() => SyncColliderToGizmo();
         void Awake() { asource = GetComponent<AudioSource>(); EnsurePhysicsAndCollider(); }
         void Start() { SyncColliderToGizmo(); }
+
+        public void SetLock(bool newIsLocked)
+        {
+            isLocked = newIsLocked;
+        }
 
         void Update()
         {
@@ -281,8 +287,13 @@ namespace DoorScript
 
             if (col is BoxCollider box)
             {
-                box.size = gizmoSize;
-                box.center = gizmoPivot;
+                Vector3 size = gizmoSize;
+                size.z = Mathf.Max(MinBidirectionalDepth, size.z);
+                box.size = size;
+
+                Vector3 pivot = gizmoPivot;
+                pivot.z = 0f;
+                box.center = pivot;
             }
             else if (col is SphereCollider sphere)
             {

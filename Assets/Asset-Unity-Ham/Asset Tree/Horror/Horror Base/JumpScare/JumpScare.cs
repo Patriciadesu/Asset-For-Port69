@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,9 +10,9 @@ public class JumpScare : ObjectEffect
     private AudioSource jumpScareSource;
     private GameObject canvas;
 
-    private void OnTriggerEnter(Collider other)
+    public override void ApplyEffect(GameObject other)
     {
-        if (other.gameObject.CompareTag("Player"))
+        if (other.gameObject != null)
         {
             canvas = new GameObject();
             canvas.AddComponent<RectTransform>();
