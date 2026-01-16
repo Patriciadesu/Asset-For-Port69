@@ -100,6 +100,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Demon
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: c3d73ba06daaeef40b556c623d33fc02, type: 3}
+      propertyPath: m_TagString
+      value: Enemy
+      objectReference: {fileID: 0}
     - target: {fileID: 1041781708020795772, guid: c3d73ba06daaeef40b556c623d33fc02, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -120,7 +124,7 @@ PrefabInstance:
       addedObject: {fileID: 1116626310052461161}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: c3d73ba06daaeef40b556c623d33fc02, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 2976706926095170771}
+      addedObject: {fileID: 2856182410391480955}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: c3d73ba06daaeef40b556c623d33fc02, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7331087869552518207}
@@ -193,8 +197,8 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 126
   m_CollisionDetection: 0
---- !u!64 &2976706926095170771
-MeshCollider:
+--- !u!136 &2856182410391480955
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -211,10 +215,11 @@ MeshCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 0}
+  serializedVersion: 2
+  m_Radius: 0.7077315
+  m_Height: 5.5480676
+  m_Direction: 1
+  m_Center: {x: 0.050275326, y: 2.9686215, z: 0.20490152}
 --- !u!195 &7331087869552518207
 NavMeshAgent:
   m_ObjectHideFlags: 0

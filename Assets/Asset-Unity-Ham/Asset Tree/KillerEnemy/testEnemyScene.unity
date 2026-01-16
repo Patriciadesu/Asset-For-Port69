@@ -127,6 +127,50 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: modules.Array.size
+      value: 11
+      objectReference: {fileID: 0}
+    - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: 'modules.Array.data[1]'
+      value: 
+      objectReference: {fileID: 1756492401}
+    - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: 'modules.Array.data[2]'
+      value: 
+      objectReference: {fileID: 1756492400}
+    - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: 'modules.Array.data[3]'
+      value: 
+      objectReference: {fileID: 1756492417}
+    - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: 'modules.Array.data[4]'
+      value: 
+      objectReference: {fileID: 1756492416}
+    - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: 'modules.Array.data[5]'
+      value: 
+      objectReference: {fileID: 1756492414}
+    - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: 'modules.Array.data[6]'
+      value: 
+      objectReference: {fileID: 1756492411}
+    - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: 'modules.Array.data[7]'
+      value: 
+      objectReference: {fileID: 1756492407}
+    - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: 'modules.Array.data[8]'
+      value: 
+      objectReference: {fileID: 1756492405}
+    - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: 'modules.Array.data[9]'
+      value: 
+      objectReference: {fileID: 1756492404}
+    - target: {fileID: 819147307574753790, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: 'modules.Array.data[10]'
+      value: 
+      objectReference: {fileID: 1756492418}
     - target: {fileID: 5792592034335851674, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
       propertyPath: m_LocalPosition.x
       value: -7.5
@@ -138,6 +182,10 @@ PrefabInstance:
     - target: {fileID: 6334826068141619221, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
       propertyPath: m_Name
       value: Demon_default
+      objectReference: {fileID: 0}
+    - target: {fileID: 6334826068141619221, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+      propertyPath: m_TagString
+      value: Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 6334826068141619242, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
       propertyPath: m_RootOrder
@@ -436,6 +484,114 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &427530025
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 427530029}
+  - component: {fileID: 427530028}
+  - component: {fileID: 427530027}
+  - component: {fileID: 427530026}
+  m_Layer: 0
+  m_Name: Cube
+  m_TagString: Enemy
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!65 &427530026
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 427530025}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &427530027
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 427530025}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &427530028
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 427530025}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &427530029
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 427530025}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 21.4725, y: 12.83, z: -59.03633}
+  m_LocalScale: {x: 3.5279, y: 3.5279, z: 3.5279}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &488896232
 GameObject:
   m_ObjectHideFlags: 0
@@ -693,6 +849,11 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0
+--- !u!1 &550162104 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6147652721812047367, guid: ebc7295ac5ea5f843a6863c6d40fda9f, type: 3}
+  m_PrefabInstance: {fileID: 2018803016}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1029166521
 GameObject:
   m_ObjectHideFlags: 0
@@ -864,6 +1025,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1592494590
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1592494591}
+  m_Layer: 0
+  m_Name: Spawn Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1592494591
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1592494590}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.19, z: 0.46}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2116949935}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1639992529
 GameObject:
   m_ObjectHideFlags: 0
@@ -1033,6 +1225,9 @@ MonoBehaviour:
   AttackRange: 2
   PatrolSpeed: 3
   ChaseSpeed: 3.06
+  lockerCheckRadius: 11
+  lockerPointTolerance: 0.5
+  lockerPauseDuration: 1.5
   agent: {fileID: 0}
   animator: {fileID: 0}
   repathInterval: 0.9
@@ -1062,16 +1257,14 @@ MonoBehaviour:
   AttackCooldown: 5
   AttackDamage: 10
   modules:
+  - {fileID: 1756492419}
   - {fileID: 1756492401}
   - {fileID: 1756492400}
   - {fileID: 1756492417}
   - {fileID: 1756492416}
   - {fileID: 1756492414}
   - {fileID: 1756492411}
-  - {fileID: 1756492410}
-  - {fileID: 1756492408}
   - {fileID: 1756492407}
-  - {fileID: 1756492406}
   - {fileID: 1756492405}
   - {fileID: 1756492404}
   - {fileID: 1756492418}
@@ -1166,10 +1359,20 @@ MonoBehaviour:
   IsActive: 0
   Range: 20
   BeamDamage: 20
-  FireOnAttackEnter: 0
+  BeamCooldown: 3
+  BeamOrigin: {fileID: 0}
   HitLayers:
     serializedVersion: 2
     m_Bits: 128
+  BeamEffectPrefab: {fileID: 0}
+  BeamColor: {r: 0, g: 1, b: 1, a: 1}
+  BeamWidth: 0.05
+  BeamEffectDuration: 0.15
+  UseZigZag: 0
+  ZigZagSegments: 12
+  ZigZagAmplitude: 0.25
+  BeamAnimationName: Demon|Shoot2
+  FireTimePercent: 1
 --- !u!114 &1756492401
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1219,9 +1422,15 @@ MonoBehaviour:
   IsActive: 0
   TeleportBehindDistance: 5.47
   TeleportBehindTargetOnAttack: 1
+  EnableChaseTeleport: 1
+  PostTeleportCooldown: 4
   NavMeshSampleRadius: 5
   ValidateNavMesh: 1
   DebugTeleport: 1
+  chaseTrigger:
+    TriggerChance: 0.35
+    Interval: {x: 3, y: 6}
+    InitialDelay: {x: 0.5, y: 1.5}
 --- !u!114 &1756492406
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1234,11 +1443,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46d73b3e89c56354b915ffb8228c9bbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  IsActive: 0
-  MinionPrefab: {fileID: 0}
-  Count: 1
-  Radius: 3
-  SummonOnAttackEnter: 0
 --- !u!114 &1756492407
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1253,6 +1457,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   IsActive: 0
   SprintMultiplier: 1.5
+  SprintDuration: 2
+  SprintCooldown: 4
+  chaseTrigger:
+    TriggerChance: 0.3
+    Interval: {x: 2, y: 4}
+    InitialDelay: {x: 0.5, y: 1.5}
 --- !u!114 &1756492408
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1265,9 +1475,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8367cbc0d75e7a4ca694b101fec6dba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  IsActive: 0
-  DamageRange: 2
-  SlashDamage: 15
 --- !u!114 &1756492410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1280,9 +1487,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a93b19bda65ad3f4c9fd5102a8ff0c95, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  IsActive: 0
-  SpeedMultiplier: 1.5
-  AttackRangeMultiplier: 1.2
 --- !u!114 &1756492411
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1319,6 +1523,9 @@ MonoBehaviour:
   HideInPatrol: 0
   HideInChase: 1
   HideInAttack: 0
+  UseCooldown: 1
+  InvisibleDuration: 2.5
+  CooldownDuration: 6
 --- !u!114 &1756492416
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1349,7 +1556,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   IsActive: 0
   DashDistance: 5
+  DashDuration: 0.3
   DashCooldown: 3
+  EnableChaseDash: 1
+  chaseTrigger:
+    TriggerChance: 0.3
+    Interval: {x: 2, y: 4}
+    InitialDelay: {x: 0.5, y: 1.2}
 --- !u!114 &1756492418
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1369,6 +1582,18 @@ MonoBehaviour:
   firingRange: 0
   shootAnimationName: Demon|Shoot1
   shootCooldown: 1.5
+  spawnTimePercent: 1
+--- !u!114 &1756492419 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2400156435783906897, guid: 5bba62d8b65dae44898012275d24ba9e, type: 3}
+  m_PrefabInstance: {fileID: 90806218}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1756492390}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 528e59831f36ae742ae19548ac217931, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1810081307
 GameObject:
   m_ObjectHideFlags: 0
@@ -1619,20 +1844,46 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 1359799449778664167, guid: ebc7295ac5ea5f843a6863c6d40fda9f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1592494591}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6147652721812047367, guid: ebc7295ac5ea5f843a6863c6d40fda9f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2116949937}
   m_SourcePrefab: {fileID: 100100000, guid: ebc7295ac5ea5f843a6863c6d40fda9f, type: 3}
 --- !u!114 &2116949931 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2772025416414814380, guid: ebc7295ac5ea5f843a6863c6d40fda9f, type: 3}
   m_PrefabInstance: {fileID: 2018803016}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 550162104}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7e7d606cc1939cd4392d578f305cf0b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!4 &2116949935 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1359799449778664167, guid: ebc7295ac5ea5f843a6863c6d40fda9f, type: 3}
+  m_PrefabInstance: {fileID: 2018803016}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2116949937
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 550162104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7750dd22ae9597d4cbdfd45ca49d4222, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bulletPrefab: {fileID: 8898082382286496931, guid: d8281f86cb01a06468c4d0404bcce5bb, type: 3}
+  spawnPoint: {fileID: 1592494591}
+  bulletSpeed: 50
 --- !u!1 &2120648537
 GameObject:
   m_ObjectHideFlags: 0
@@ -1690,7 +1941,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   IsActive: 1
   DashDistance: 5
+  DashDuration: 0.3
   DashCooldown: 3
+  EnableChaseDash: 1
+  chaseTrigger:
+    TriggerChance: 0.3
+    Interval: {x: 2, y: 4}
+    InitialDelay: {x: 0.5, y: 1.2}
 --- !u!54 &2120648542
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1871,6 +2128,9 @@ MonoBehaviour:
   AttackRange: 2
   PatrolSpeed: 3
   ChaseSpeed: 6
+  lockerCheckRadius: 11
+  lockerPointTolerance: 0.5
+  lockerPauseDuration: 1.5
   agent: {fileID: 0}
   animator: {fileID: 0}
   repathInterval: 0.9
@@ -1955,3 +2215,4 @@ SceneRoots:
   - {fileID: 1815445857}
   - {fileID: 2018803016}
   - {fileID: 90806218}
+  - {fileID: 427530029}
